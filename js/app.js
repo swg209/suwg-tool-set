@@ -1,0 +1,616 @@
+// ===== AI工具集应用主文件 =====
+
+class AIToolsApp {
+  constructor() {
+    this.tools = [];
+    this.categories = [];
+    this.currentCategory = 'all';
+    this.currentView = 'grid';
+    this.searchQuery = '';
+    this.sortBy = 'default';
+    
+    this.init();
+  }
+
+  // 初始化应用
+  async init() {
+    this.setupEventListeners();
+    this.initTheme();
+    await this.loadTools();
+    this.renderCategories();
+    this.renderTools();
+    this.hideLoading();
+  }
+
+  // 设置事件监听器
+  setupEventListeners() {
+    // 搜索功能
+    const searchInput = document.getElementById('searchInput');
+    const searchClear = document.getElementById('searchClear');
+    
+    searchInput.addEventListener('input', this.handleSearch.bind(this));
+    searchInput.addEventListener('keydown', this.handleSearchKeydown.bind(this));
+    searchClear.addEventListener('click', this.clearSearch.bind(this));
+
+    // 主题切换
+    document.getElementById('themeToggle').addEventListener('click', this.toggleTheme.bind(this));
+
+    // 侧边栏切换
+    document.getElementById('sidebarToggle').addEventListener('click', this.toggleSidebar.bind(this));
+    document.getElementById('mobileMenuToggle').addEventListener('click', this.toggleMobileSidebar.bind(this));
+
+    // 视图切换
+    document.querySelectorAll('.view-btn').forEach(btn => {
+      btn.addEventListener('click', this.handleViewChange.bind(this));
+    });
+
+    // 排序
+    document.getElementById('sortSelect').addEventListener('change', this.handleSortChange.bind(this));
+
+    // 返回顶部
+    document.getElementById('backToTop').addEventListener('click', this.scrollToTop.bind(this));
+    window.addEventListener('scroll', this.handleScroll.bind(this));
+
+    // 分类导航
+    document.getElementById('categoryList').addEventListener('click', this.handleCategoryClick.bind(this));
+
+    // 响应式处理
+    window.addEventListener('resize', this.handleResize.bind(this));
+  }
+
+  // 初始化主题
+  initTheme() {
+    const savedTheme = localStorage.getItem('ai-tools-theme') || 'light';
+    document.documentElement.setAttribute('data-theme', savedTheme);
+  }
+
+  // 切换主题
+  toggleTheme() {
+    const currentTheme = document.documentElement.getAttribute('data-theme');
+    const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+    
+    document.documentElement.setAttribute('data-theme', newTheme);
+    localStorage.setItem('ai-tools-theme', newTheme);
+  }
+
+  // 加载工具数据
+  async loadTools() {
+    // 模拟API调用
+    await new Promise(resolve => setTimeout(resolve, 1000));
+    
+    this.tools = [
+      {
+        id: 1,
+        name: 'ChatGPT',
+        description: '强大的对话式AI助手，能够回答问题、协助写作、编程等多种任务',
+        category: 'chat',
+        tags: ['对话', 'AI助手', '写作'],
+        icon: 'C',
+        url: 'https://chat.openai.com',
+        popular: true
+      },
+      {
+        id: 2,
+        name: 'Midjourney',
+        description: '顶级AI图像生成工具，通过文字描述创造惊艳的艺术作品',
+        category: 'image',
+        tags: ['图像生成', '艺术', '创意'],
+        icon: 'M',
+        url: 'https://midjourney.com',
+        popular: true
+      },
+      {
+        id: 3,
+        name: 'GitHub Copilot',
+        description: 'AI编程助手，提供智能代码补全和编程建议',
+        category: 'code',
+        tags: ['编程', '代码补全', '开发'],
+        icon: 'G',
+        url: 'https://github.com/features/copilot'
+      },
+      {
+        id: 4,
+        name: 'Notion AI',
+        description: '集成在Notion中的AI写作助手，帮助提升文档创作效率',
+        category: 'writing',
+        tags: ['写作', '文档', '效率'],
+        icon: 'N',
+        url: 'https://notion.so'
+      },
+      {
+        id: 5,
+        name: 'Stable Diffusion',
+        description: '开源的AI图像生成模型，支持本地部署和自定义训练',
+        category: 'image',
+        tags: ['图像生成', '开源', '本地部署'],
+        icon: 'S',
+        url: 'https://stability.ai'
+      },
+      {
+        id: 6,
+        name: 'Claude',
+        description: 'Anthropic开发的AI助手，擅长分析、写作和复杂推理任务',
+        category: 'chat',
+        tags: ['对话', '分析', '推理'],
+        icon: 'C',
+        url: 'https://claude.ai'
+      },
+      {
+        id: 7,
+        name: 'Whisper',
+        description: 'OpenAI的语音识别模型，支持多语言转录和翻译',
+        category: 'audio',
+        tags: ['语音识别', '转录', '翻译'],
+        icon: 'W',
+        url: 'https://openai.com/research/whisper'
+      },
+      {
+        id: 8,
+        name: 'Grammarly',
+        description: 'AI驱动的写作助手，提供语法检查、风格建议和写作优化',
+        category: 'writing',
+        tags: ['语法检查', '写作优化', '英语'],
+        icon: 'G',
+        url: 'https://grammarly.com'
+      },
+      {
+        id: 9,
+        name: 'RunwayML',
+        description: '创意AI工具套件，包含视频编辑、图像处理等多种功能',
+        category: 'video',
+        tags: ['视频编辑', '创意', '多媒体'],
+        icon: 'R',
+        url: 'https://runwayml.com'
+      },
+      {
+        id: 10,
+        name: 'Jasper',
+        description: '专业的AI内容创作平台，适合营销文案和商业写作',
+        category: 'writing',
+        tags: ['内容创作', '营销', '商业写作'],
+        icon: 'J',
+        url: 'https://jasper.ai'
+      },
+      {
+        id: 11,
+        name: 'Replit Ghostwriter',
+        description: '在线编程环境中的AI代码助手，支持多种编程语言',
+        category: 'code',
+        tags: ['在线编程', '代码助手', '多语言'],
+        icon: 'R',
+        url: 'https://replit.com'
+      },
+      {
+        id: 12,
+        name: 'DALL-E 2',
+        description: 'OpenAI的图像生成AI，能根据文字描述创建原创图像',
+        category: 'image',
+        tags: ['图像生成', 'OpenAI', '原创'],
+        icon: 'D',
+        url: 'https://openai.com/dall-e-2'
+      },
+      // 原创工具
+      {
+        id: 13,
+        name: '文字计数器',
+        description: '实时统计文本的字数、字符数、段落数、阅读时间等详细信息',
+        category: 'utility',
+        tags: ['文字统计', '字数统计', '原创工具'],
+        icon: '文',
+        url: './tools/text-counter/',
+        isLocal: true,
+        isOriginal: true
+      },
+      {
+        id: 14,
+        name: '颜色选择器',
+        description: 'RGB、HEX、HSL颜色格式转换，支持调色板和随机颜色生成',
+        category: 'utility',
+        tags: ['颜色转换', '调色板', '原创工具'],
+        icon: '色',
+        url: './tools/color-picker/',
+        isLocal: true,
+        isOriginal: true
+      },
+      {
+        id: 15,
+        name: '二维码生成器',
+        description: '生成各种类型的二维码，支持文本、网址、WiFi等，可自定义样式',
+        category: 'utility',
+        tags: ['二维码', '生成器', '原创工具'],
+        icon: '码',
+        url: './tools/qr-generator/',
+        isLocal: true,
+        isOriginal: true
+      },
+      {
+        id: 16,
+        name: 'JSON格式化',
+        description: 'JSON美化、压缩、验证工具，支持语法高亮和错误检测',
+        category: 'utility',
+        tags: ['JSON', '格式化', '原创工具'],
+        icon: 'J',
+        url: './tools/json-formatter/',
+        isLocal: true,
+        isOriginal: true
+      }
+    ];
+
+    // 生成分类数据
+    this.categories = [
+      { id: 'all', name: '全部工具', icon: 'grid', count: this.tools.length },
+      { id: 'chat', name: '对话助手', icon: 'message-circle', count: this.tools.filter(t => t.category === 'chat').length },
+      { id: 'image', name: '图像生成', icon: 'image', count: this.tools.filter(t => t.category === 'image').length },
+      { id: 'writing', name: '写作助手', icon: 'edit', count: this.tools.filter(t => t.category === 'writing').length },
+      { id: 'code', name: '编程工具', icon: 'code', count: this.tools.filter(t => t.category === 'code').length },
+      { id: 'video', name: '视频处理', icon: 'video', count: this.tools.filter(t => t.category === 'video').length },
+      { id: 'audio', name: '音频处理', icon: 'headphones', count: this.tools.filter(t => t.category === 'audio').length },
+      { id: 'utility', name: '实用工具', icon: 'tool', count: this.tools.filter(t => t.category === 'utility').length },
+      { id: 'original', name: '原创工具', icon: 'star', count: this.tools.filter(t => t.isOriginal).length }
+    ];
+  }
+
+  // 渲染分类导航
+  renderCategories() {
+    const categoryList = document.getElementById('categoryList');
+    const categoryItems = this.categories.map(category => {
+      const isActive = category.id === this.currentCategory ? 'active' : '';
+      return `
+        <li class="category-item ${isActive}" data-category="${category.id}">
+          <a href="#" class="category-link">
+            ${this.getCategoryIcon(category.icon)}
+            <span class="category-name">${category.name}</span>
+            <span class="category-count" id="count-${category.id}">${category.count}</span>
+          </a>
+        </li>
+      `;
+    }).join('');
+
+    categoryList.innerHTML = categoryItems;
+  }
+
+  // 获取分类图标
+  getCategoryIcon(iconName) {
+    const icons = {
+      'grid': '<svg class="category-icon" width="20" height="20" viewBox="0 0 20 20" fill="none"><rect x="3" y="3" width="6" height="6" rx="1" stroke="currentColor" stroke-width="2"/><rect x="11" y="3" width="6" height="6" rx="1" stroke="currentColor" stroke-width="2"/><rect x="3" y="11" width="6" height="6" rx="1" stroke="currentColor" stroke-width="2"/><rect x="11" y="11" width="6" height="6" rx="1" stroke="currentColor" stroke-width="2"/></svg>',
+      'message-circle': '<svg class="category-icon" width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M18 10c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L2 19l1.395-2.72C2.512 15.042 2 12.574 2 10c0-4.418 4.03-8 9-8s9 3.582 9 8z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+      'image': '<svg class="category-icon" width="20" height="20" viewBox="0 0 20 20" fill="none"><rect x="3" y="3" width="14" height="14" rx="2" stroke="currentColor" stroke-width="2"/><circle cx="8.5" cy="8.5" r="1.5" stroke="currentColor" stroke-width="2"/><path d="M17 13l-5-5L8 12" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+      'edit': '<svg class="category-icon" width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M14.5 2.5a2.121 2.121 0 113 3L6 17l-4 1 1-4L14.5 2.5z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+      'code': '<svg class="category-icon" width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M6 8l-4 4 4 4M14 8l4 4-4 4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+      'video': '<svg class="category-icon" width="20" height="20" viewBox="0 0 20 20" fill="none"><polygon points="5,3 19,12 5,21" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+      'headphones': '<svg class="category-icon" width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M3 12v3a2 2 0 002 2h1a2 2 0 002-2v-3M3 12V8a7 7 0 0114 0v4M3 12h2M17 12v3a2 2 0 01-2 2h-1a2 2 0 01-2-2v-3M17 12h-2" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+      'tool': '<svg class="category-icon" width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M14.7 6.3a1 1 0 000 1.4l1.6 1.6a1 1 0 001.4 0l3.77-3.77a6 6 0 01-7.94 7.94l-6.91 6.91a2.12 2.12 0 01-3-3l6.91-6.91a6 6 0 017.94-7.94l-3.76 3.76z" stroke="currentColor" stroke-width="2"/></svg>',
+      'star': '<svg class="category-icon" width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M10 1l3.09 6.26L20 8.27l-5 4.87 1.18 6.88L10 16.77l-6.18 3.25L5 13.14 0 8.27l6.91-1.01L10 1z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></svg>'
+    };
+    return icons[iconName] || icons['grid'];
+  }
+
+  // 渲染工具卡片
+  renderTools() {
+    const filteredTools = this.getFilteredTools();
+    const toolsGrid = document.getElementById('toolsGrid');
+    const emptyState = document.getElementById('emptyState');
+
+    if (filteredTools.length === 0) {
+      toolsGrid.style.display = 'none';
+      emptyState.style.display = 'flex';
+      return;
+    }
+
+    toolsGrid.style.display = 'grid';
+    emptyState.style.display = 'none';
+
+    const toolCards = filteredTools.map(tool => this.createToolCard(tool)).join('');
+    toolsGrid.innerHTML = toolCards;
+
+    // 添加点击事件
+    toolsGrid.querySelectorAll('.tool-card').forEach((card, index) => {
+      card.addEventListener('click', () => this.openTool(filteredTools[index]));
+    });
+
+    // 更新分类计数
+    this.updateCategoryCounts();
+  }
+
+  // 创建工具卡片HTML
+  createToolCard(tool) {
+    const tags = tool.tags.map(tag => `<span class="card-tag">${tag}</span>`).join('');
+    const originalBadge = tool.isOriginal ? '<span class="original-badge">原创</span>' : '';
+
+    return `
+      <div class="tool-card fade-in" data-tool-id="${tool.id}">
+        <div class="card-icon">${tool.icon}</div>
+        <h3 class="card-title">${tool.name}${originalBadge}</h3>
+        <p class="card-description">${tool.description}</p>
+        <div class="card-tags">${tags}</div>
+        <button class="card-action">使用工具</button>
+      </div>
+    `;
+  }
+
+  // 获取过滤后的工具
+  getFilteredTools() {
+    let filtered = this.tools;
+
+    // 按分类过滤
+    if (this.currentCategory !== 'all') {
+      if (this.currentCategory === 'original') {
+        filtered = filtered.filter(tool => tool.isOriginal);
+      } else {
+        filtered = filtered.filter(tool => tool.category === this.currentCategory);
+      }
+    }
+
+    // 按搜索关键词过滤
+    if (this.searchQuery) {
+      const query = this.searchQuery.toLowerCase();
+      filtered = filtered.filter(tool => 
+        tool.name.toLowerCase().includes(query) ||
+        tool.description.toLowerCase().includes(query) ||
+        tool.tags.some(tag => tag.toLowerCase().includes(query))
+      );
+    }
+
+    // 排序
+    return this.sortTools(filtered);
+  }
+
+  // 排序工具
+  sortTools(tools) {
+    switch (this.sortBy) {
+      case 'name':
+        return tools.sort((a, b) => a.name.localeCompare(b.name));
+      case 'category':
+        return tools.sort((a, b) => a.category.localeCompare(b.category));
+      case 'popular':
+        return tools.sort((a, b) => (b.popular ? 1 : 0) - (a.popular ? 1 : 0));
+      default:
+        return tools;
+    }
+  }
+
+  // 更新分类计数
+  updateCategoryCounts() {
+    this.categories.forEach(category => {
+      const count = category.id === 'all'
+        ? this.getFilteredTools().length
+        : this.tools.filter(tool => tool.category === category.id &&
+            (this.searchQuery === '' || this.toolMatchesSearch(tool))).length;
+
+      const countElement = document.getElementById(`count-${category.id}`);
+      if (countElement) {
+        countElement.textContent = count;
+      }
+    });
+  }
+
+  // 检查工具是否匹配搜索
+  toolMatchesSearch(tool) {
+    if (!this.searchQuery) return true;
+    const query = this.searchQuery.toLowerCase();
+    return tool.name.toLowerCase().includes(query) ||
+           tool.description.toLowerCase().includes(query) ||
+           tool.tags.some(tag => tag.toLowerCase().includes(query));
+  }
+
+  // 处理搜索
+  handleSearch(event) {
+    this.searchQuery = event.target.value.trim();
+    const searchBox = event.target.parentElement;
+
+    if (this.searchQuery) {
+      searchBox.classList.add('has-content');
+    } else {
+      searchBox.classList.remove('has-content');
+    }
+
+    this.renderTools();
+    this.updateCurrentCategoryTitle();
+  }
+
+  // 处理搜索键盘事件
+  handleSearchKeydown(event) {
+    if (event.key === 'Escape') {
+      this.clearSearch();
+    }
+  }
+
+  // 清除搜索
+  clearSearch() {
+    const searchInput = document.getElementById('searchInput');
+    const searchBox = searchInput.parentElement;
+
+    searchInput.value = '';
+    this.searchQuery = '';
+    searchBox.classList.remove('has-content');
+
+    this.renderTools();
+    this.updateCurrentCategoryTitle();
+    searchInput.focus();
+  }
+
+  // 切换侧边栏
+  toggleSidebar() {
+    const main = document.querySelector('.main');
+    main.classList.toggle('sidebar-collapsed');
+
+    const toggle = document.getElementById('sidebarToggle');
+    const icon = toggle.querySelector('svg');
+
+    if (main.classList.contains('sidebar-collapsed')) {
+      icon.style.transform = 'rotate(180deg)';
+    } else {
+      icon.style.transform = 'rotate(0deg)';
+    }
+  }
+
+  // 切换移动端侧边栏
+  toggleMobileSidebar() {
+    const sidebar = document.querySelector('.sidebar');
+    const toggle = document.getElementById('mobileMenuToggle');
+
+    sidebar.classList.toggle('mobile-open');
+    toggle.classList.toggle('active');
+  }
+
+  // 处理视图切换
+  handleViewChange(event) {
+    const viewBtn = event.currentTarget;
+    const view = viewBtn.dataset.view;
+
+    if (view === this.currentView) return;
+
+    // 更新按钮状态
+    document.querySelectorAll('.view-btn').forEach(btn => btn.classList.remove('active'));
+    viewBtn.classList.add('active');
+
+    // 更新视图
+    this.currentView = view;
+    const toolsGrid = document.getElementById('toolsGrid');
+
+    if (view === 'list') {
+      toolsGrid.classList.add('list-view');
+    } else {
+      toolsGrid.classList.remove('list-view');
+    }
+  }
+
+  // 处理排序变化
+  handleSortChange(event) {
+    this.sortBy = event.target.value;
+    this.renderTools();
+  }
+
+  // 处理分类点击
+  handleCategoryClick(event) {
+    event.preventDefault();
+
+    const categoryItem = event.target.closest('.category-item');
+    if (!categoryItem) return;
+
+    const category = categoryItem.dataset.category;
+    if (category === this.currentCategory) return;
+
+    // 更新分类状态
+    document.querySelectorAll('.category-item').forEach(item => item.classList.remove('active'));
+    categoryItem.classList.add('active');
+
+    this.currentCategory = category;
+    this.renderTools();
+    this.updateCurrentCategoryTitle();
+
+    // 移动端自动关闭侧边栏
+    if (window.innerWidth <= 768) {
+      this.toggleMobileSidebar();
+    }
+  }
+
+  // 更新当前分类标题
+  updateCurrentCategoryTitle() {
+    const category = this.categories.find(cat => cat.id === this.currentCategory);
+    const titleElement = document.getElementById('currentCategoryTitle');
+    const subtitleElement = document.getElementById('currentCategorySubtitle');
+
+    if (this.searchQuery) {
+      titleElement.textContent = `搜索结果: "${this.searchQuery}"`;
+      subtitleElement.textContent = `在 ${category.name} 中找到 ${this.getFilteredTools().length} 个工具`;
+    } else {
+      titleElement.textContent = category.name;
+      subtitleElement.textContent = category.id === 'all' ? '发现最新最实用的AI工具' : `${category.count} 个工具`;
+    }
+  }
+
+  // 处理滚动
+  handleScroll() {
+    const backToTop = document.getElementById('backToTop');
+
+    if (window.pageYOffset > 300) {
+      backToTop.classList.add('visible');
+    } else {
+      backToTop.classList.remove('visible');
+    }
+  }
+
+  // 滚动到顶部
+  scrollToTop() {
+    window.scrollTo({
+      top: 0,
+      behavior: 'smooth'
+    });
+  }
+
+  // 处理窗口大小变化
+  handleResize() {
+    if (window.innerWidth > 768) {
+      const sidebar = document.querySelector('.sidebar');
+      const toggle = document.getElementById('mobileMenuToggle');
+
+      sidebar.classList.remove('mobile-open');
+      toggle.classList.remove('active');
+    }
+  }
+
+  // 打开工具
+  openTool(tool) {
+    // 这里可以添加打开工具的逻辑
+    // 例如：在新标签页中打开工具链接
+    if (tool.url) {
+      window.open(tool.url, '_blank', 'noopener,noreferrer');
+    }
+
+    // 可以添加使用统计等功能
+    console.log(`Opening tool: ${tool.name}`);
+  }
+
+  // 隐藏加载状态
+  hideLoading() {
+    const loadingState = document.getElementById('loadingState');
+    loadingState.style.display = 'none';
+  }
+}
+
+// 初始化应用
+document.addEventListener('DOMContentLoaded', () => {
+  new AIToolsApp();
+});
+
+// 添加一些实用的全局函数
+window.AIToolsUtils = {
+  // 防抖函数
+  debounce(func, wait) {
+    let timeout;
+    return function executedFunction(...args) {
+      const later = () => {
+        clearTimeout(timeout);
+        func(...args);
+      };
+      clearTimeout(timeout);
+      timeout = setTimeout(later, wait);
+    };
+  },
+
+  // 节流函数
+  throttle(func, limit) {
+    let inThrottle;
+    return function() {
+      const args = arguments;
+      const context = this;
+      if (!inThrottle) {
+        func.apply(context, args);
+        inThrottle = true;
+        setTimeout(() => inThrottle = false, limit);
+      }
+    };
+  },
+
+  // 格式化数字
+  formatNumber(num) {
+    if (num >= 1000000) {
+      return (num / 1000000).toFixed(1) + 'M';
+    }
+    if (num >= 1000) {
+      return (num / 1000).toFixed(1) + 'K';
+    }
+    return num.toString();
+  }
+};

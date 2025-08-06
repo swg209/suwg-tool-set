@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI工具集 - 智能工具一站式平台</title>
+    <meta name="description" content="现代化AI工具集合平台，提供各类人工智能工具，助力提升工作效率">
+    
+    <!-- Preload critical resources -->
+    <link rel="preload" href="css/styles.css" as="style">
+    <link rel="preload" href="js/app.js" as="script">
+    
+    <!-- Stylesheets -->
+    <link rel="stylesheet" href="css/styles.css">
+    
+    <!-- Favicon -->
+    <link rel="icon" type="image/svg+xml" href="assets/favicon.svg">
+    <link rel="icon" type="image/png" href="assets/favicon.png">
+    
+    <!-- Theme color -->
+    <meta name="theme-color" content="#5B6AFF">
+</head>
+<body>
+    <!-- 顶部导航栏 -->
+    <header class="header">
+        <div class="header-container">
+            <!-- Logo 和标题 -->
+            <div class="header-brand">
+                <div class="logo">
+                    <svg width="32" height="32" viewBox="0 0 32 32" fill="none">
+                        <rect width="32" height="32" rx="8" fill="url(#gradient)"/>
+                        <path d="M8 12h16v2H8v-2zm0 4h16v2H8v-2zm0 4h12v2H8v-2z" fill="white"/>
+                        <defs>
+                            <linearGradient id="gradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                                <stop offset="0%" style="stop-color:#5B6AFF"/>
+                                <stop offset="100%" style="stop-color:#8C54FF"/>
+                            </linearGradient>
+                        </defs>
+                    </svg>
+                </div>
+                <h1 class="site-title">AI工具集</h1>
+            </div>
+            
+            <!-- 全局搜索框 -->
+            <div class="search-container">
+                <div class="search-box">
+                    <svg class="search-icon" width="20" height="20" viewBox="0 0 20 20" fill="none">
+                        <path d="M9 17A8 8 0 1 0 9 1a8 8 0 0 0 0 16zM19 19l-4.35-4.35" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                    <input type="text" id="searchInput" placeholder="搜索AI工具..." autocomplete="off">
+                    <button class="search-clear" id="searchClear" aria-label="清除搜索">
+                        <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                            <path d="M12 4L4 12M4 4l8 8" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                        </svg>
+                    </button>
+                </div>
+                <div class="search-suggestions" id="searchSuggestions"></div>
+            </div>
+            
+            <!-- 右侧操作区 -->
+            <div class="header-actions">
+                <!-- 主题切换按钮 -->
+                <button class="theme-toggle" id="themeToggle" aria-label="切换主题">
+                    <svg class="theme-icon theme-icon-light" width="20" height="20" viewBox="0 0 20 20" fill="none">
+                        <circle cx="10" cy="10" r="4" stroke="currentColor" stroke-width="2"/>
+                        <path d="M10 2v2M10 16v2M18 10h-2M4 10H2M15.66 4.34l-1.41 1.41M5.75 14.25l-1.41 1.41M15.66 15.66l-1.41-1.41M5.75 5.75L4.34 4.34" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                    </svg>
+                    <svg class="theme-icon theme-icon-dark" width="20" height="20" viewBox="0 0 20 20" fill="none">
+                        <path d="M17.293 13.293A8 8 0 0 1 6.707 2.707a8.001 8.001 0 1 0 10.586 10.586z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                </button>
+                
+                <!-- 移动端菜单按钮 -->
+                <button class="mobile-menu-toggle" id="mobileMenuToggle" aria-label="切换菜单">
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- 主要内容区域 -->
+    <main class="main">
+        <!-- 左侧分类导航 -->
+        <aside class="sidebar" id="sidebar">
+            <nav class="category-nav">
+                <div class="category-header">
+                    <h2>工具分类</h2>
+                    <button class="sidebar-toggle" id="sidebarToggle" aria-label="收起侧边栏">
+                        <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                            <path d="M6 4l4 4-4 4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        </svg>
+                    </button>
+                </div>
+                
+                <ul class="category-list" id="categoryList">
+                    <li class="category-item active" data-category="all">
+                        <a href="#" class="category-link">
+                            <svg class="category-icon" width="20" height="20" viewBox="0 0 20 20" fill="none">
+                                <rect x="3" y="3" width="6" height="6" rx="1" stroke="currentColor" stroke-width="2"/>
+                                <rect x="11" y="3" width="6" height="6" rx="1" stroke="currentColor" stroke-width="2"/>
+                                <rect x="3" y="11" width="6" height="6" rx="1" stroke="currentColor" stroke-width="2"/>
+                                <rect x="11" y="11" width="6" height="6" rx="1" stroke="currentColor" stroke-width="2"/>
+                            </svg>
+                            <span class="category-name">全部工具</span>
+                            <span class="category-count" id="count-all">0</span>
+                        </a>
+                    </li>
+                    <!-- 其他分类将通过JavaScript动态生成 -->
+                </ul>
+            </nav>
+        </aside>
+
+        <!-- 主内容区 -->
+        <section class="content">
+            <!-- 内容头部 -->
+            <div class="content-header">
+                <div class="content-title">
+                    <h2 id="currentCategoryTitle">全部工具</h2>
+                    <p class="content-subtitle" id="currentCategorySubtitle">发现最新最实用的AI工具</p>
+                </div>
+                
+                <!-- 筛选和排序 -->
+                <div class="content-filters">
+                    <div class="filter-group">
+                        <label for="sortSelect">排序方式：</label>
+                        <select id="sortSelect" class="sort-select">
+                            <option value="default">默认排序</option>
+                            <option value="name">按名称</option>
+                            <option value="category">按分类</option>
+                            <option value="popular">最受欢迎</option>
+                        </select>
+                    </div>
+                    
+                    <div class="view-toggle">
+                        <button class="view-btn active" data-view="grid" aria-label="网格视图">
+                            <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                                <rect x="1" y="1" width="6" height="6" rx="1" stroke="currentColor" stroke-width="1.5"/>
+                                <rect x="9" y="1" width="6" height="6" rx="1" stroke="currentColor" stroke-width="1.5"/>
+                                <rect x="1" y="9" width="6" height="6" rx="1" stroke="currentColor" stroke-width="1.5"/>
+                                <rect x="9" y="9" width="6" height="6" rx="1" stroke="currentColor" stroke-width="1.5"/>
+                            </svg>
+                        </button>
+                        <button class="view-btn" data-view="list" aria-label="列表视图">
+                            <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                                <path d="M2 4h12M2 8h12M2 12h12" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 工具网格 -->
+            <div class="tools-grid" id="toolsGrid">
+                <!-- 工具卡片将通过JavaScript动态生成 -->
+            </div>
+
+            <!-- 加载状态 -->
+            <div class="loading-state" id="loadingState">
+                <div class="loading-spinner"></div>
+                <p>正在加载工具...</p>
+            </div>
+
+            <!-- 空状态 -->
+            <div class="empty-state" id="emptyState" style="display: none;">
+                <svg class="empty-icon" width="64" height="64" viewBox="0 0 64 64" fill="none">
+                    <circle cx="32" cy="32" r="30" stroke="currentColor" stroke-width="2" stroke-dasharray="4 4"/>
+                    <path d="M32 20v24M20 32h24" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                </svg>
+                <h3>未找到相关工具</h3>
+                <p>尝试调整搜索关键词或选择其他分类</p>
+            </div>
+        </section>
+    </main>
+
+    <!-- 返回顶部按钮 -->
+    <button class="back-to-top" id="backToTop" aria-label="返回顶部">
+        <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+            <path d="M10 15V5M5 10l5-5 5 5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+    </button>
+
+    <!-- JavaScript -->
+    <script src="js/app.js"></script>
+</body>
+</html>

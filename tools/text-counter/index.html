@@ -1,0 +1,446 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>文字计数器 - AI工具集</title>
+    <meta name="description" content="在线文字计数器，支持字数、字符数、段落数、行数等多种统计功能">
+    
+    <!-- 样式文件 -->
+    <link rel="stylesheet" href="../../shared/css/common.css">
+    
+    <!-- 工具特定样式 -->
+    <style>
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: var(--spacing-md);
+            margin-bottom: var(--spacing-lg);
+        }
+        
+        .stat-item {
+            background: linear-gradient(135deg, var(--bg-card), var(--bg-secondary));
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-md);
+            padding: var(--spacing-lg);
+            text-align: center;
+            transition: all var(--transition-fast);
+        }
+        
+        .stat-item:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-md);
+        }
+        
+        .stat-value {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--primary-color);
+            display: block;
+            margin-bottom: var(--spacing-xs);
+        }
+        
+        .stat-label {
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+            font-weight: 500;
+        }
+        
+        .text-input {
+            min-height: 200px;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            line-height: 1.6;
+        }
+        
+        .reading-time {
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            color: white;
+            padding: var(--spacing-md);
+            border-radius: var(--radius-md);
+            text-align: center;
+            margin-top: var(--spacing-lg);
+        }
+        
+        .reading-time-value {
+            font-size: 1.25rem;
+            font-weight: 600;
+        }
+        
+        .reading-time-label {
+            font-size: 0.875rem;
+            opacity: 0.9;
+        }
+        
+        .text-analysis {
+            background-color: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-md);
+            padding: var(--spacing-lg);
+            margin-top: var(--spacing-lg);
+        }
+        
+        .analysis-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: var(--spacing-sm) 0;
+            border-bottom: 1px solid var(--border-color);
+        }
+        
+        .analysis-item:last-child {
+            border-bottom: none;
+        }
+        
+        .analysis-label {
+            color: var(--text-secondary);
+            font-size: 0.875rem;
+        }
+        
+        .analysis-value {
+            color: var(--text-primary);
+            font-weight: 500;
+        }
+    </style>
+</head>
+<body>
+    <div class="tool-container">
+        <!-- 工具头部 -->
+        <header class="tool-header">
+            <div class="tool-header-content">
+                <a href="../../index.html" class="back-btn">
+                    <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                        <path d="M10 4l-4 4 4 4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                    返回工具集
+                </a>
+                
+                <div class="tool-title">
+                    <h1>文字计数器</h1>
+                    <p class="tool-subtitle">实时统计文本的字数、字符数、段落数等信息</p>
+                </div>
+                
+                <button class="theme-toggle" id="themeToggle" aria-label="切换主题">
+                    <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                        <circle cx="10" cy="10" r="4" stroke="currentColor" stroke-width="2"/>
+                        <path d="M10 2v2M10 16v2M18 10h-2M4 10H2M15.66 4.34l-1.41 1.41M5.75 14.25l-1.41 1.41M15.66 15.66l-1.41-1.41M5.75 5.75L4.34 4.34" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                    </svg>
+                </button>
+            </div>
+        </header>
+
+        <!-- 工具主内容 -->
+        <main class="tool-main">
+            <!-- 统计信息卡片 -->
+            <div class="tool-card">
+                <div class="stats-grid" id="statsGrid">
+                    <div class="stat-item">
+                        <span class="stat-value" id="charCount">0</span>
+                        <span class="stat-label">字符数（含空格）</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-value" id="charCountNoSpaces">0</span>
+                        <span class="stat-label">字符数（不含空格）</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-value" id="wordCount">0</span>
+                        <span class="stat-label">单词数</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-value" id="chineseCount">0</span>
+                        <span class="stat-label">中文字符数</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-value" id="englishWordCount">0</span>
+                        <span class="stat-label">英文单词数</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-value" id="lineCount">0</span>
+                        <span class="stat-label">行数</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-value" id="paragraphCount">0</span>
+                        <span class="stat-label">段落数</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-value" id="sentenceCount">0</span>
+                        <span class="stat-label">句子数</span>
+                    </div>
+                </div>
+                
+                <!-- 阅读时间估算 -->
+                <div class="reading-time">
+                    <div class="reading-time-value" id="readingTime">0 分钟</div>
+                    <div class="reading-time-label">预计阅读时间</div>
+                </div>
+            </div>
+
+            <!-- 文本输入区域 -->
+            <div class="tool-card">
+                <div class="tool-section">
+                    <h2>
+                        <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                            <path d="M14.5 2.5a2.121 2.121 0 113 3L6 17l-4 1 1-4L14.5 2.5z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        </svg>
+                        文本输入
+                    </h2>
+                    
+                    <div class="form-group">
+                        <label class="form-label" for="textInput">请输入或粘贴您的文本</label>
+                        <textarea 
+                            id="textInput" 
+                            class="form-textarea text-input" 
+                            placeholder="在这里输入或粘贴您的文本内容，系统将实时统计各项数据..."
+                            rows="12"
+                        ></textarea>
+                    </div>
+                    
+                    <div class="tool-toolbar">
+                        <button class="btn btn-secondary" id="clearBtn">
+                            <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                                <path d="M12 4L4 12M4 4l8 8" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                            </svg>
+                            清除文本
+                        </button>
+                        
+                        <button class="btn btn-secondary" id="copyStatsBtn">
+                            <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                                <rect x="2" y="2" width="8" height="8" rx="1" stroke="currentColor" stroke-width="2"/>
+                                <path d="M6 2v-1a1 1 0 011-1h8a1 1 0 011 1v8a1 1 0 01-1 1h-1" stroke="currentColor" stroke-width="2"/>
+                            </svg>
+                            复制统计信息
+                        </button>
+                        
+                        <button class="btn btn-primary" id="exportBtn">
+                            <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                                <path d="M8 1v10M5 8l3 3 3-3M2 12v2a1 1 0 001 1h10a1 1 0 001-1v-2" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                            </svg>
+                            导出报告
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 详细分析 -->
+            <div class="tool-card">
+                <div class="tool-section">
+                    <h2>
+                        <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                            <path d="M9 12l2 2 4-4M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L2 21l1.395-2.72C2.512 15.042 2 12.574 2 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        </svg>
+                        详细分析
+                    </h2>
+                    
+                    <div class="text-analysis" id="textAnalysis">
+                        <div class="analysis-item">
+                            <span class="analysis-label">平均每行字符数</span>
+                            <span class="analysis-value" id="avgCharsPerLine">0</span>
+                        </div>
+                        <div class="analysis-item">
+                            <span class="analysis-label">平均每段字符数</span>
+                            <span class="analysis-value" id="avgCharsPerParagraph">0</span>
+                        </div>
+                        <div class="analysis-item">
+                            <span class="analysis-label">平均每句字符数</span>
+                            <span class="analysis-value" id="avgCharsPerSentence">0</span>
+                        </div>
+                        <div class="analysis-item">
+                            <span class="analysis-label">中英文比例</span>
+                            <span class="analysis-value" id="languageRatio">-</span>
+                        </div>
+                        <div class="analysis-item">
+                            <span class="analysis-label">文本密度</span>
+                            <span class="analysis-value" id="textDensity">0%</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <!-- 工具页脚 -->
+        <footer class="tool-footer">
+            <p>由 <a href="../../index.html">AI工具集</a> 提供 | 原创工具</p>
+        </footer>
+    </div>
+
+    <!-- JavaScript -->
+    <script src="../../shared/js/utils.js"></script>
+    <script>
+        class TextCounterApp {
+            constructor() {
+                this.init();
+            }
+
+            init() {
+                this.setupEventListeners();
+                this.updateStats(); // 初始化统计
+            }
+
+            setupEventListeners() {
+                const textInput = document.getElementById('textInput');
+                
+                // 实时更新统计
+                textInput.addEventListener('input', () => this.updateStats());
+                textInput.addEventListener('paste', () => {
+                    setTimeout(() => this.updateStats(), 10);
+                });
+                
+                // 按钮事件
+                document.getElementById('clearBtn').addEventListener('click', () => this.clearText());
+                document.getElementById('copyStatsBtn').addEventListener('click', () => this.copyStats());
+                document.getElementById('exportBtn').addEventListener('click', () => this.exportReport());
+            }
+
+            updateStats() {
+                const text = document.getElementById('textInput').value;
+                
+                // 基础统计
+                const stats = {
+                    charCount: ToolUtils.textUtils.countCharacters(text),
+                    charCountNoSpaces: ToolUtils.textUtils.countCharactersNoSpaces(text),
+                    wordCount: ToolUtils.textUtils.countWords(text),
+                    chineseCount: ToolUtils.textUtils.countChineseCharacters(text),
+                    englishWordCount: ToolUtils.textUtils.countEnglishWords(text),
+                    lineCount: ToolUtils.textUtils.countLines(text),
+                    paragraphCount: ToolUtils.textUtils.countParagraphs(text),
+                    sentenceCount: ToolUtils.textUtils.countSentences(text)
+                };
+
+                // 更新显示
+                Object.keys(stats).forEach(key => {
+                    const element = document.getElementById(key);
+                    if (element) {
+                        element.textContent = ToolUtils.formatNumber(stats[key]);
+                    }
+                });
+
+                // 计算阅读时间（按每分钟200字计算）
+                const readingMinutes = Math.ceil(stats.charCount / 200);
+                document.getElementById('readingTime').textContent = 
+                    readingMinutes > 0 ? `${readingMinutes} 分钟` : '< 1 分钟';
+
+                // 更新详细分析
+                this.updateDetailedAnalysis(text, stats);
+            }
+
+            updateDetailedAnalysis(text, stats) {
+                // 平均每行字符数
+                const avgCharsPerLine = stats.lineCount > 0 ? 
+                    Math.round(stats.charCount / stats.lineCount) : 0;
+                document.getElementById('avgCharsPerLine').textContent = avgCharsPerLine;
+
+                // 平均每段字符数
+                const avgCharsPerParagraph = stats.paragraphCount > 0 ? 
+                    Math.round(stats.charCount / stats.paragraphCount) : 0;
+                document.getElementById('avgCharsPerParagraph').textContent = avgCharsPerParagraph;
+
+                // 平均每句字符数
+                const avgCharsPerSentence = stats.sentenceCount > 0 ? 
+                    Math.round(stats.charCount / stats.sentenceCount) : 0;
+                document.getElementById('avgCharsPerSentence').textContent = avgCharsPerSentence;
+
+                // 中英文比例
+                const totalChars = stats.chineseCount + stats.englishWordCount;
+                let languageRatio = '-';
+                if (totalChars > 0) {
+                    const chinesePercent = Math.round((stats.chineseCount / totalChars) * 100);
+                    const englishPercent = 100 - chinesePercent;
+                    languageRatio = `中文 ${chinesePercent}% / 英文 ${englishPercent}%`;
+                }
+                document.getElementById('languageRatio').textContent = languageRatio;
+
+                // 文本密度（非空格字符占比）
+                const textDensity = stats.charCount > 0 ? 
+                    Math.round((stats.charCountNoSpaces / stats.charCount) * 100) : 0;
+                document.getElementById('textDensity').textContent = `${textDensity}%`;
+            }
+
+            clearText() {
+                document.getElementById('textInput').value = '';
+                this.updateStats();
+                ToolUtils.showToast('文本已清除', 'success');
+            }
+
+            copyStats() {
+                const text = document.getElementById('textInput').value;
+                if (!text.trim()) {
+                    ToolUtils.showToast('请先输入文本', 'warning');
+                    return;
+                }
+
+                const stats = this.generateStatsText();
+                ToolUtils.copyToClipboard(stats);
+            }
+
+            exportReport() {
+                const text = document.getElementById('textInput').value;
+                if (!text.trim()) {
+                    ToolUtils.showToast('请先输入文本', 'warning');
+                    return;
+                }
+
+                const report = this.generateReport();
+                const filename = `文字统计报告_${new Date().toISOString().slice(0, 10)}.txt`;
+                ToolUtils.downloadFile(report, filename, 'text/plain');
+            }
+
+            generateStatsText() {
+                const elements = [
+                    'charCount', 'charCountNoSpaces', 'wordCount', 'chineseCount',
+                    'englishWordCount', 'lineCount', 'paragraphCount', 'sentenceCount'
+                ];
+                
+                const labels = {
+                    charCount: '字符数（含空格）',
+                    charCountNoSpaces: '字符数（不含空格）',
+                    wordCount: '单词数',
+                    chineseCount: '中文字符数',
+                    englishWordCount: '英文单词数',
+                    lineCount: '行数',
+                    paragraphCount: '段落数',
+                    sentenceCount: '句子数'
+                };
+
+                let statsText = '文字统计信息：\n\n';
+                elements.forEach(id => {
+                    const value = document.getElementById(id).textContent;
+                    statsText += `${labels[id]}: ${value}\n`;
+                });
+
+                const readingTime = document.getElementById('readingTime').textContent;
+                statsText += `\n预计阅读时间: ${readingTime}`;
+
+                return statsText;
+            }
+
+            generateReport() {
+                const now = new Date();
+                const text = document.getElementById('textInput').value;
+                
+                let report = `文字统计分析报告\n`;
+                report += `生成时间: ${now.toLocaleString()}\n`;
+                report += `${'='.repeat(50)}\n\n`;
+                
+                report += this.generateStatsText();
+                
+                report += `\n\n详细分析：\n`;
+                report += `平均每行字符数: ${document.getElementById('avgCharsPerLine').textContent}\n`;
+                report += `平均每段字符数: ${document.getElementById('avgCharsPerParagraph').textContent}\n`;
+                report += `平均每句字符数: ${document.getElementById('avgCharsPerSentence').textContent}\n`;
+                report += `中英文比例: ${document.getElementById('languageRatio').textContent}\n`;
+                report += `文本密度: ${document.getElementById('textDensity').textContent}\n`;
+                
+                report += `\n\n原文内容：\n`;
+                report += `${'='.repeat(50)}\n`;
+                report += text;
+                
+                return report;
+            }
+        }
+
+        // 初始化应用
+        document.addEventListener('DOMContentLoaded', () => {
+            new TextCounterApp();
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,40 @@
+{
+  "name": "xiaosuqyai-tool-set",
+  "version": "1.0.0",
+  "description": "现代化、响应式的AI工具集网站",
+  "main": "index.html",
+  "scripts": {
+    "start": "python3 -m http.server 8000",
+    "dev": "python3 -m http.server 8000",
+    "test": "open http://localhost:8000/test.html",
+    "build": "echo 'No build process needed for static site'",
+    "deploy": "echo 'Ready for deployment to static hosting'"
+  },
+  "keywords": [
+    "ai",
+    "tools",
+    "website",
+    "responsive",
+    "modern",
+    "javascript",
+    "css",
+    "html"
+  ],
+  "author": "AI工具集团队",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/your-username/xiaosuqyai-tool-set.git"
+  },
+  "bugs": {
+    "url": "https://github.com/your-username/xiaosuqyai-tool-set/issues"
+  },
+  "homepage": "https://your-username.github.io/xiaosuqyai-tool-set",
+  "devDependencies": {},
+  "dependencies": {},
+  "browserslist": [
+    "> 1%",
+    "last 2 versions",
+    "not dead"
+  ]
+}

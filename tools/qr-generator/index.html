@@ -1,0 +1,697 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>二维码生成器 - AI工具集</title>
+    <meta name="description" content="在线二维码生成器，支持文本、网址、WiFi等内容生成二维码，可自定义样式和下载">
+    
+    <!-- 样式文件 -->
+    <link rel="stylesheet" href="../../shared/css/common.css">
+    
+    <!-- QR Code 库 -->
+    <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
+    
+    <!-- 工具特定样式 -->
+    <style>
+        .qr-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: var(--spacing-xl);
+            margin-bottom: var(--spacing-xl);
+        }
+        
+        .qr-display {
+            background-color: var(--bg-secondary);
+            border: 2px dashed var(--border-color);
+            border-radius: var(--radius-lg);
+            padding: var(--spacing-xl);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 300px;
+            transition: all var(--transition-normal);
+        }
+        
+        .qr-display.has-qr {
+            border-style: solid;
+            border-color: var(--primary-color);
+            background-color: var(--bg-card);
+        }
+        
+        .qr-canvas {
+            max-width: 100%;
+            height: auto;
+            border-radius: var(--radius-md);
+            box-shadow: var(--shadow-md);
+        }
+        
+        .qr-placeholder {
+            text-align: center;
+            color: var(--text-muted);
+        }
+        
+        .qr-placeholder svg {
+            margin-bottom: var(--spacing-md);
+            opacity: 0.5;
+        }
+        
+        .qr-settings {
+            display: grid;
+            gap: var(--spacing-lg);
+        }
+        
+        .setting-group {
+            display: grid;
+            gap: var(--spacing-sm);
+        }
+        
+        .setting-row {
+            display: grid;
+            grid-template-columns: 100px 1fr;
+            gap: var(--spacing-md);
+            align-items: center;
+        }
+        
+        .setting-label {
+            font-weight: 500;
+            color: var(--text-primary);
+            font-size: 0.875rem;
+        }
+        
+        .color-input-wrapper {
+            display: flex;
+            align-items: center;
+            gap: var(--spacing-sm);
+        }
+        
+        .color-input {
+            width: 40px;
+            height: 40px;
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-sm);
+            cursor: pointer;
+            background: none;
+            padding: 0;
+        }
+        
+        .color-value {
+            font-family: 'Monaco', 'Menlo', monospace;
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+            min-width: 80px;
+        }
+        
+        .size-slider {
+            -webkit-appearance: none;
+            appearance: none;
+            height: 6px;
+            border-radius: 3px;
+            background: var(--bg-secondary);
+            outline: none;
+            cursor: pointer;
+        }
+        
+        .size-slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: var(--primary-color);
+            cursor: pointer;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+        
+        .qr-types {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: var(--spacing-sm);
+            margin-bottom: var(--spacing-lg);
+        }
+        
+        .qr-type-btn {
+            padding: var(--spacing-md);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-md);
+            background-color: var(--bg-card);
+            color: var(--text-secondary);
+            cursor: pointer;
+            transition: all var(--transition-fast);
+            text-align: center;
+            font-size: 0.875rem;
+        }
+        
+        .qr-type-btn:hover {
+            border-color: var(--primary-color);
+            color: var(--text-primary);
+        }
+        
+        .qr-type-btn.active {
+            background-color: var(--primary-color);
+            color: white;
+            border-color: var(--primary-color);
+        }
+        
+        .wifi-settings {
+            display: none;
+            grid-template-columns: 1fr 1fr;
+            gap: var(--spacing-md);
+            margin-top: var(--spacing-md);
+        }
+        
+        .wifi-settings.active {
+            display: grid;
+        }
+        
+        .download-options {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: var(--spacing-sm);
+            margin-top: var(--spacing-lg);
+        }
+        
+        .qr-info {
+            background-color: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-md);
+            padding: var(--spacing-md);
+            margin-top: var(--spacing-lg);
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+        }
+        
+        .qr-info-item {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: var(--spacing-xs);
+        }
+        
+        .qr-info-item:last-child {
+            margin-bottom: 0;
+        }
+        
+        @media (max-width: 768px) {
+            .qr-container {
+                grid-template-columns: 1fr;
+                gap: var(--spacing-lg);
+            }
+            
+            .setting-row {
+                grid-template-columns: 80px 1fr;
+            }
+            
+            .wifi-settings {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="tool-container">
+        <!-- 工具头部 -->
+        <header class="tool-header">
+            <div class="tool-header-content">
+                <a href="../../index.html" class="back-btn">
+                    <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                        <path d="M10 4l-4 4 4 4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                    返回工具集
+                </a>
+                
+                <div class="tool-title">
+                    <h1>二维码生成器</h1>
+                    <p class="tool-subtitle">生成各种类型的二维码，支持自定义样式和下载</p>
+                </div>
+                
+                <button class="theme-toggle" id="themeToggle" aria-label="切换主题">
+                    <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                        <circle cx="10" cy="10" r="4" stroke="currentColor" stroke-width="2"/>
+                        <path d="M10 2v2M10 16v2M18 10h-2M4 10H2M15.66 4.34l-1.41 1.41M5.75 14.25l-1.41 1.41M15.66 15.66l-1.41-1.41M5.75 5.75L4.34 4.34" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                    </svg>
+                </button>
+            </div>
+        </header>
+
+        <!-- 工具主内容 -->
+        <main class="tool-main">
+            <!-- 二维码生成主界面 -->
+            <div class="tool-card">
+                <div class="qr-container">
+                    <!-- 二维码显示区域 -->
+                    <div class="qr-display" id="qrDisplay">
+                        <div class="qr-placeholder" id="qrPlaceholder">
+                            <svg width="64" height="64" viewBox="0 0 64 64" fill="none">
+                                <rect x="8" y="8" width="16" height="16" rx="2" stroke="currentColor" stroke-width="2"/>
+                                <rect x="40" y="8" width="16" height="16" rx="2" stroke="currentColor" stroke-width="2"/>
+                                <rect x="8" y="40" width="16" height="16" rx="2" stroke="currentColor" stroke-width="2"/>
+                                <rect x="12" y="12" width="8" height="8" rx="1" fill="currentColor"/>
+                                <rect x="44" y="12" width="8" height="8" rx="1" fill="currentColor"/>
+                                <rect x="12" y="44" width="8" height="8" rx="1" fill="currentColor"/>
+                                <rect x="32" y="32" width="4" height="4" fill="currentColor"/>
+                                <rect x="40" y="32" width="4" height="4" fill="currentColor"/>
+                                <rect x="48" y="32" width="4" height="4" fill="currentColor"/>
+                                <rect x="32" y="40" width="4" height="4" fill="currentColor"/>
+                                <rect x="40" y="40" width="4" height="4" fill="currentColor"/>
+                                <rect x="48" y="40" width="4" height="4" fill="currentColor"/>
+                                <rect x="32" y="48" width="4" height="4" fill="currentColor"/>
+                                <rect x="40" y="48" width="4" height="4" fill="currentColor"/>
+                                <rect x="48" y="48" width="4" height="4" fill="currentColor"/>
+                            </svg>
+                            <h3>二维码预览</h3>
+                            <p>输入内容后将在这里显示二维码</p>
+                        </div>
+                        <canvas id="qrCanvas" style="display: none;"></canvas>
+                    </div>
+                    
+                    <!-- 二维码设置 -->
+                    <div class="qr-settings">
+                        <div class="setting-group">
+                            <div class="setting-row">
+                                <label class="setting-label">尺寸</label>
+                                <div class="flex items-center" style="gap: var(--spacing-sm);">
+                                    <input type="range" class="size-slider flex-1" id="sizeSlider" 
+                                           min="128" max="512" value="256" step="32">
+                                    <span class="color-value" id="sizeValue">256px</span>
+                                </div>
+                            </div>
+                            
+                            <div class="setting-row">
+                                <label class="setting-label">前景色</label>
+                                <div class="color-input-wrapper">
+                                    <input type="color" class="color-input" id="foregroundColor" value="#000000">
+                                    <span class="color-value" id="foregroundValue">#000000</span>
+                                </div>
+                            </div>
+                            
+                            <div class="setting-row">
+                                <label class="setting-label">背景色</label>
+                                <div class="color-input-wrapper">
+                                    <input type="color" class="color-input" id="backgroundColor" value="#ffffff">
+                                    <span class="color-value" id="backgroundValue">#ffffff</span>
+                                </div>
+                            </div>
+                            
+                            <div class="setting-row">
+                                <label class="setting-label">容错率</label>
+                                <select class="form-select" id="errorLevel">
+                                    <option value="L">低 (7%)</option>
+                                    <option value="M" selected>中 (15%)</option>
+                                    <option value="Q">较高 (25%)</option>
+                                    <option value="H">高 (30%)</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 内容输入 -->
+            <div class="tool-card">
+                <div class="tool-section">
+                    <h2>
+                        <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                            <path d="M14.5 2.5a2.121 2.121 0 113 3L6 17l-4 1 1-4L14.5 2.5z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        </svg>
+                        内容类型
+                    </h2>
+                    
+                    <div class="qr-types">
+                        <button class="qr-type-btn active" data-type="text">文本</button>
+                        <button class="qr-type-btn" data-type="url">网址</button>
+                        <button class="qr-type-btn" data-type="email">邮箱</button>
+                        <button class="qr-type-btn" data-type="phone">电话</button>
+                        <button class="qr-type-btn" data-type="sms">短信</button>
+                        <button class="qr-type-btn" data-type="wifi">WiFi</button>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label" for="qrContent" id="contentLabel">请输入文本内容</label>
+                        <textarea 
+                            id="qrContent" 
+                            class="form-textarea" 
+                            placeholder="请输入要生成二维码的内容..."
+                            rows="4"
+                        ></textarea>
+                    </div>
+                    
+                    <!-- WiFi 特殊设置 -->
+                    <div class="wifi-settings" id="wifiSettings">
+                        <div class="form-group">
+                            <label class="form-label" for="wifiSSID">网络名称 (SSID)</label>
+                            <input type="text" class="form-input" id="wifiSSID" placeholder="WiFi网络名称">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label" for="wifiPassword">密码</label>
+                            <input type="text" class="form-input" id="wifiPassword" placeholder="WiFi密码">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label" for="wifiSecurity">加密方式</label>
+                            <select class="form-select" id="wifiSecurity">
+                                <option value="WPA">WPA/WPA2</option>
+                                <option value="WEP">WEP</option>
+                                <option value="nopass">无密码</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label" for="wifiHidden">隐藏网络</label>
+                            <select class="form-select" id="wifiHidden">
+                                <option value="false">否</option>
+                                <option value="true">是</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="tool-toolbar">
+                        <button class="btn btn-primary" id="generateBtn">
+                            <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                                <path d="M8 1v14M1 8h14" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                            </svg>
+                            生成二维码
+                        </button>
+                        
+                        <button class="btn btn-secondary" id="clearBtn">
+                            <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                                <path d="M12 4L4 12M4 4l8 8" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                            </svg>
+                            清除
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 下载选项 -->
+            <div class="tool-card" id="downloadSection" style="display: none;">
+                <div class="tool-section">
+                    <h2>
+                        <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                            <path d="M8 1v10M5 8l3 3 3-3M2 12v2a1 1 0 001 1h10a1 1 0 001-1v-2" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        </svg>
+                        下载二维码
+                    </h2>
+                    
+                    <div class="download-options">
+                        <button class="btn btn-success" id="downloadPNG">
+                            <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                                <rect x="2" y="2" width="12" height="12" rx="2" stroke="currentColor" stroke-width="2"/>
+                                <circle cx="5.5" cy="6.5" r="1.5" stroke="currentColor" stroke-width="1"/>
+                                <path d="M14 10l-3-3-4 4-2-2-3 3" stroke="currentColor" stroke-width="2"/>
+                            </svg>
+                            PNG 图片
+                        </button>
+                        
+                        <button class="btn btn-success" id="downloadJPG">
+                            <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                                <rect x="2" y="2" width="12" height="12" rx="2" stroke="currentColor" stroke-width="2"/>
+                                <circle cx="5.5" cy="6.5" r="1.5" stroke="currentColor" stroke-width="1"/>
+                                <path d="M14 10l-3-3-4 4-2-2-3 3" stroke="currentColor" stroke-width="2"/>
+                            </svg>
+                            JPG 图片
+                        </button>
+                        
+                        <button class="btn btn-success" id="downloadSVG">
+                            <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                                <path d="M2 2h12v12H2z" stroke="currentColor" stroke-width="2"/>
+                                <path d="M6 6h4v4H6z" stroke="currentColor" stroke-width="1"/>
+                            </svg>
+                            SVG 矢量
+                        </button>
+                    </div>
+                    
+                    <div class="qr-info" id="qrInfo">
+                        <div class="qr-info-item">
+                            <span>内容长度:</span>
+                            <span id="contentLength">0 字符</span>
+                        </div>
+                        <div class="qr-info-item">
+                            <span>二维码尺寸:</span>
+                            <span id="qrSize">256 x 256 px</span>
+                        </div>
+                        <div class="qr-info-item">
+                            <span>容错级别:</span>
+                            <span id="errorLevelText">中等 (15%)</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <!-- 工具页脚 -->
+        <footer class="tool-footer">
+            <p>由 <a href="../../index.html">AI工具集</a> 提供 | 原创工具</p>
+        </footer>
+    </div>
+
+    <!-- JavaScript -->
+    <script src="../../shared/js/utils.js"></script>
+    <script>
+        class QRGeneratorApp {
+            constructor() {
+                this.currentType = 'text';
+                this.qrOptions = {
+                    width: 256,
+                    height: 256,
+                    color: {
+                        dark: '#000000',
+                        light: '#ffffff'
+                    },
+                    errorCorrectionLevel: 'M'
+                };
+                this.init();
+            }
+
+            init() {
+                this.setupEventListeners();
+            }
+
+            setupEventListeners() {
+                // 类型切换
+                document.querySelectorAll('.qr-type-btn').forEach(btn => {
+                    btn.addEventListener('click', (e) => this.switchType(e.target.dataset.type));
+                });
+
+                // 内容输入
+                document.getElementById('qrContent').addEventListener('input', 
+                    ToolUtils.debounce(() => this.updatePreview(), 300)
+                );
+
+                // WiFi设置
+                ['wifiSSID', 'wifiPassword', 'wifiSecurity', 'wifiHidden'].forEach(id => {
+                    document.getElementById(id).addEventListener('input', 
+                        ToolUtils.debounce(() => this.updateWiFiContent(), 300)
+                    );
+                });
+
+                // 样式设置
+                document.getElementById('sizeSlider').addEventListener('input', (e) => {
+                    this.qrOptions.width = this.qrOptions.height = parseInt(e.target.value);
+                    document.getElementById('sizeValue').textContent = e.target.value + 'px';
+                    this.updatePreview();
+                });
+
+                document.getElementById('foregroundColor').addEventListener('change', (e) => {
+                    this.qrOptions.color.dark = e.target.value;
+                    document.getElementById('foregroundValue').textContent = e.target.value;
+                    this.updatePreview();
+                });
+
+                document.getElementById('backgroundColor').addEventListener('change', (e) => {
+                    this.qrOptions.color.light = e.target.value;
+                    document.getElementById('backgroundValue').textContent = e.target.value;
+                    this.updatePreview();
+                });
+
+                document.getElementById('errorLevel').addEventListener('change', (e) => {
+                    this.qrOptions.errorCorrectionLevel = e.target.value;
+                    this.updateErrorLevelText();
+                    this.updatePreview();
+                });
+
+                // 按钮事件
+                document.getElementById('generateBtn').addEventListener('click', () => this.generateQR());
+                document.getElementById('clearBtn').addEventListener('click', () => this.clearContent());
+                
+                // 下载按钮
+                document.getElementById('downloadPNG').addEventListener('click', () => this.downloadQR('png'));
+                document.getElementById('downloadJPG').addEventListener('click', () => this.downloadQR('jpg'));
+                document.getElementById('downloadSVG').addEventListener('click', () => this.downloadQR('svg'));
+            }
+
+            switchType(type) {
+                this.currentType = type;
+                
+                // 更新按钮状态
+                document.querySelectorAll('.qr-type-btn').forEach(btn => {
+                    btn.classList.toggle('active', btn.dataset.type === type);
+                });
+
+                // 更新标签和占位符
+                const labels = {
+                    text: { label: '请输入文本内容', placeholder: '请输入要生成二维码的文本内容...' },
+                    url: { label: '请输入网址', placeholder: 'https://example.com' },
+                    email: { label: '请输入邮箱地址', placeholder: 'example@email.com' },
+                    phone: { label: '请输入电话号码', placeholder: '+86 138 0000 0000' },
+                    sms: { label: '请输入短信内容', placeholder: '短信内容' },
+                    wifi: { label: 'WiFi 配置', placeholder: '请在下方填写WiFi信息' }
+                };
+
+                const config = labels[type];
+                document.getElementById('contentLabel').textContent = config.label;
+                document.getElementById('qrContent').placeholder = config.placeholder;
+
+                // 显示/隐藏WiFi设置
+                const wifiSettings = document.getElementById('wifiSettings');
+                const contentTextarea = document.getElementById('qrContent');
+                
+                if (type === 'wifi') {
+                    wifiSettings.classList.add('active');
+                    contentTextarea.style.display = 'none';
+                    this.updateWiFiContent();
+                } else {
+                    wifiSettings.classList.remove('active');
+                    contentTextarea.style.display = 'block';
+                }
+
+                this.updatePreview();
+            }
+
+            updateWiFiContent() {
+                if (this.currentType !== 'wifi') return;
+
+                const ssid = document.getElementById('wifiSSID').value;
+                const password = document.getElementById('wifiPassword').value;
+                const security = document.getElementById('wifiSecurity').value;
+                const hidden = document.getElementById('wifiHidden').value;
+
+                const wifiString = `WIFI:T:${security};S:${ssid};P:${password};H:${hidden};;`;
+                document.getElementById('qrContent').value = wifiString;
+                this.updatePreview();
+            }
+
+            updatePreview() {
+                const content = this.getFormattedContent();
+                if (content.trim()) {
+                    this.generateQR();
+                }
+            }
+
+            getFormattedContent() {
+                let content = document.getElementById('qrContent').value;
+                
+                switch (this.currentType) {
+                    case 'email':
+                        return content ? `mailto:${content}` : '';
+                    case 'phone':
+                        return content ? `tel:${content}` : '';
+                    case 'sms':
+                        return content ? `sms:${content}` : '';
+                    default:
+                        return content;
+                }
+            }
+
+            async generateQR() {
+                const content = this.getFormattedContent();
+                
+                if (!content.trim()) {
+                    ToolUtils.showToast('请输入内容', 'warning');
+                    return;
+                }
+
+                try {
+                    const canvas = document.getElementById('qrCanvas');
+                    await QRCode.toCanvas(canvas, content, this.qrOptions);
+                    
+                    // 显示二维码
+                    document.getElementById('qrPlaceholder').style.display = 'none';
+                    canvas.style.display = 'block';
+                    document.getElementById('qrDisplay').classList.add('has-qr');
+                    
+                    // 显示下载选项
+                    document.getElementById('downloadSection').style.display = 'block';
+                    
+                    // 更新信息
+                    this.updateQRInfo(content);
+                    
+                    ToolUtils.showToast('二维码生成成功', 'success');
+                } catch (error) {
+                    console.error('生成二维码失败:', error);
+                    ToolUtils.showToast('生成二维码失败，请检查内容', 'error');
+                }
+            }
+
+            updateQRInfo(content) {
+                document.getElementById('contentLength').textContent = `${content.length} 字符`;
+                document.getElementById('qrSize').textContent = `${this.qrOptions.width} x ${this.qrOptions.height} px`;
+                this.updateErrorLevelText();
+            }
+
+            updateErrorLevelText() {
+                const levels = {
+                    'L': '低 (7%)',
+                    'M': '中等 (15%)',
+                    'Q': '较高 (25%)',
+                    'H': '高 (30%)'
+                };
+                document.getElementById('errorLevelText').textContent = levels[this.qrOptions.errorCorrectionLevel];
+            }
+
+            clearContent() {
+                document.getElementById('qrContent').value = '';
+                document.getElementById('wifiSSID').value = '';
+                document.getElementById('wifiPassword').value = '';
+                
+                // 隐藏二维码
+                document.getElementById('qrPlaceholder').style.display = 'block';
+                document.getElementById('qrCanvas').style.display = 'none';
+                document.getElementById('qrDisplay').classList.remove('has-qr');
+                document.getElementById('downloadSection').style.display = 'none';
+                
+                ToolUtils.showToast('内容已清除', 'success');
+            }
+
+            async downloadQR(format) {
+                const canvas = document.getElementById('qrCanvas');
+                if (!canvas || canvas.style.display === 'none') {
+                    ToolUtils.showToast('请先生成二维码', 'warning');
+                    return;
+                }
+
+                const filename = `qrcode_${new Date().getTime()}`;
+                
+                try {
+                    if (format === 'svg') {
+                        const content = this.getFormattedContent();
+                        const svgString = await QRCode.toString(content, {
+                            ...this.qrOptions,
+                            type: 'svg'
+                        });
+                        ToolUtils.downloadFile(svgString, `${filename}.svg`, 'image/svg+xml');
+                    } else {
+                        canvas.toBlob((blob) => {
+                            const url = URL.createObjectURL(blob);
+                            const link = document.createElement('a');
+                            link.href = url;
+                            link.download = `${filename}.${format}`;
+                            document.body.appendChild(link);
+                            link.click();
+                            document.body.removeChild(link);
+                            URL.revokeObjectURL(url);
+                            ToolUtils.showToast(`${format.toUpperCase()} 文件已下载`, 'success');
+                        }, `image/${format === 'jpg' ? 'jpeg' : format}`);
+                    }
+                } catch (error) {
+                    console.error('下载失败:', error);
+                    ToolUtils.showToast('下载失败', 'error');
+                }
+            }
+        }
+
+        // 初始化应用
+        document.addEventListener('DOMContentLoaded', () => {
+            new QRGeneratorApp();
+        });
+    </script>
+</body>
+</html>
