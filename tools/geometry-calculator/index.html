@@ -1,0 +1,627 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>几何图形面积/体积计算器 - AI工具集</title>
+    <meta name="description" content="几何图形面积/体积计算器">
+    
+    <!-- 样式文件 -->
+    <link rel="stylesheet" href="../../shared/css/common.css">
+    
+    <!-- 工具特定样式 -->
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: var(--spacing-lg);
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white;
+            text-align: center;
+            padding: 40px 20px;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            font-size: 1.1em;
+            opacity: 0.9;
+        }
+
+        .content {
+            padding: 40px;
+        }
+
+        .shape-tabs {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-bottom: 30px;
+            justify-content: center;
+        }
+
+        .tab {
+            padding: 12px 20px;
+            background: #f8f9fa;
+            border: 2px solid #e9ecef;
+            border-radius: var(--radius-md);
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: 500;
+        }
+
+        .tab.active {
+            background: #667eea;
+            color: white;
+            border-color: #667eea;
+        }
+
+        .calculator-section {
+            display: none;
+            background: #f8f9fa;
+            padding: 30px;
+            border-radius: var(--radius-lg);
+            margin-bottom: 30px;
+        }
+
+        .calculator-section.active {
+            display: block;
+        }
+
+        .shape-info {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            align-items: center;
+        }
+
+        .shape-visual {
+            text-align: center;
+            font-size: 80px;
+            color: #667eea;
+        }
+
+        .input-group {
+            margin-bottom: 20px;
+        }
+
+        .input-group label {
+            display: block;
+            font-weight: bold;
+            margin-bottom: 8px;
+            color: var(--text-primary);
+        }
+
+        .input-group input {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid #ddd;
+            border-radius: var(--radius-md);
+            font-size: 16px;
+            transition: border-color 0.3s;
+        }
+
+        .input-group input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .calculate-btn {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            font-size: 18px;
+            border-radius: var(--radius-md);
+            cursor: pointer;
+            width: 100%;
+            margin-top: 20px;
+            transition: transform 0.3s ease;
+        }
+
+        .calculate-btn:hover {
+            transform: translateY(-2px);
+        }
+
+        .result {
+            background: white;
+            padding: 25px;
+            border-radius: var(--radius-lg);
+            margin-top: 20px;
+            border-left: 5px solid #667eea;
+            display: none;
+        }
+
+        .result.show {
+            display: block;
+        }
+
+        .result-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: var(--spacing-md) 0;
+            border-bottom: 1px solid #eee;
+        }
+
+        .result-item:last-child {
+            border-bottom: none;
+        }
+
+        .result-label {
+            font-weight: bold;
+            color: var(--text-primary);
+        }
+
+        .result-value {
+            font-size: 1.2em;
+            color: #667eea;
+            font-weight: bold;
+        }
+
+        .footer {
+            background: #f8f9fa;
+            text-align: center;
+            padding: var(--spacing-lg);
+            color: var(--text-secondary);
+        }
+
+        @media (max-width: 768px) {
+            .shape-info {
+                grid-template-columns: 1fr;
+                gap: 20px;
+            }
+            
+            .shape-visual {
+                font-size: 60px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="tool-container">
+        <!-- 工具头部 -->
+        <header class="tool-header">
+            <div class="tool-header-content">
+                <a href="../../index.html" class="back-btn">
+                    <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                        <path d="M10 4l-4 4 4 4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                    返回工具集
+                </a>
+                
+                <div class="tool-title">
+                    <h1>几何图形面积/体积计算器</h1>
+                    <p class="tool-subtitle">几何图形面积/体积计算器</p>
+                </div>
+                
+                <button class="theme-toggle" id="themeToggle" aria-label="切换主题">
+                    <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                        <circle cx="10" cy="10" r="4" stroke="currentColor" stroke-width="2"/>
+                        <path d="M10 2v2M10 16v2M18 10h-2M4 10H2M15.66 4.34l-1.41 1.41M5.75 14.25l-1.41 1.41M15.66 15.66l-1.41-1.41M5.75 5.75L4.34 4.34" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                    </svg>
+                </button>
+            </div>
+        </header>
+
+        <!-- 工具主内容 -->
+        <main class="tool-main">
+            <div class="tool-card">
+                <div class="tool-section">
+                    <h2>
+                        <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                            <rect x="3" y="3" width="14" height="14" rx="2" stroke="currentColor" stroke-width="2"/>
+                        </svg>
+                        工具功能
+                    </h2>
+                    
+                    
+            <div class="tool-card">
+                <div class="tool-section">
+                    <h2>
+                        <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                            <rect x="3" y="3" width="14" height="14" rx="2" stroke="currentColor" stroke-width="2"/>
+                        </svg>
+                        几何图形面积/体积计算器
+                    </h2>
+                    <div class="container">
+        <div class="header">
+            <h1>📐 几何图形计算器</h1>
+            <p>快速计算常见几何图形的面积和体积</p>
+        </div>
+
+        <div class="content">
+            <div class="shape-tabs">
+                <div class="tab active" data-shape="rectangle">矩形</div>
+                <div class="tab" data-shape="circle">圆形</div>
+                <div class="tab" data-shape="triangle">三角形</div>
+                <div class="tab" data-shape="cube">立方体</div>
+                <div class="tab" data-shape="sphere">球体</div>
+                <div class="tab" data-shape="cylinder">圆柱体</div>
+            </div>
+
+            <!-- 矩形计算器 -->
+            <div class="calculator-section active" id="rectangle">
+                <div class="shape-info">
+                    <div class="shape-visual">⬜</div>
+                    <div class="inputs">
+                        <div class="input-group">
+                            <label for="rect-length">长度 (cm)</label>
+                            <input type="number" id="rect-length" placeholder="请输入长度">
+                        </div>
+                        <div class="input-group">
+                            <label for="rect-width">宽度 (cm)</label>
+                            <input type="number" id="rect-width" placeholder="请输入宽度">
+                        </div>
+                        <button class="calculate-btn" onclick="calculateRectangle()">计算面积</button>
+                    </div>
+                </div>
+                <div class="result" id="rectangle-result">
+                    <div class="result-item">
+                        <span class="result-label">面积</span>
+                        <span class="result-value" id="rect-area">0 cm²</span>
+                    </div>
+                    <div class="result-item">
+                        <span class="result-label">周长</span>
+                        <span class="result-value" id="rect-perimeter">0 cm</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 圆形计算器 -->
+            <div class="calculator-section" id="circle">
+                <div class="shape-info">
+                    <div class="shape-visual">⭕</div>
+                    <div class="inputs">
+                        <div class="input-group">
+                            <label for="circle-radius">半径 (cm)</label>
+                            <input type="number" id="circle-radius" placeholder="请输入半径">
+                        </div>
+                        <button class="calculate-btn" onclick="calculateCircle()">计算面积</button>
+                    </div>
+                </div>
+                <div class="result" id="circle-result">
+                    <div class="result-item">
+                        <span class="result-label">面积</span>
+                        <span class="result-value" id="circle-area">0 cm²</span>
+                    </div>
+                    <div class="result-item">
+                        <span class="result-label">周长</span>
+                        <span class="result-value" id="circle-circumference">0 cm</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 三角形计算器 -->
+            <div class="calculator-section" id="triangle">
+                <div class="shape-info">
+                    <div class="shape-visual">🔺</div>
+                    <div class="inputs">
+                        <div class="input-group">
+                            <label for="triangle-base">底边 (cm)</label>
+                            <input type="number" id="triangle-base" placeholder="请输入底边长度">
+                        </div>
+                        <div class="input-group">
+                            <label for="triangle-height">高 (cm)</label>
+                            <input type="number" id="triangle-height" placeholder="请输入高度">
+                        </div>
+                        <button class="calculate-btn" onclick="calculateTriangle()">计算面积</button>
+                    </div>
+                </div>
+                <div class="result" id="triangle-result">
+                    <div class="result-item">
+                        <span class="result-label">面积</span>
+                        <span class="result-value" id="triangle-area">0 cm²</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 立方体计算器 -->
+            <div class="calculator-section" id="cube">
+                <div class="shape-info">
+                    <div class="shape-visual">🧊</div>
+                    <div class="inputs">
+                        <div class="input-group">
+                            <label for="cube-side">边长 (cm)</label>
+                            <input type="number" id="cube-side" placeholder="请输入边长">
+                        </div>
+                        <button class="calculate-btn" onclick="calculateCube()">计算体积</button>
+                    </div>
+                </div>
+                <div class="result" id="cube-result">
+                    <div class="result-item">
+                        <span class="result-label">体积</span>
+                        <span class="result-value" id="cube-volume">0 cm³</span>
+                    </div>
+                    <div class="result-item">
+                        <span class="result-label">表面积</span>
+                        <span class="result-value" id="cube-surface">0 cm²</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 球体计算器 -->
+            <div class="calculator-section" id="sphere">
+                <div class="shape-info">
+                    <div class="shape-visual">🔮</div>
+                    <div class="inputs">
+                        <div class="input-group">
+                            <label for="sphere-radius">半径 (cm)</label>
+                            <input type="number" id="sphere-radius" placeholder="请输入半径">
+                        </div>
+                        <button class="calculate-btn" onclick="calculateSphere()">计算体积</button>
+                    </div>
+                </div>
+                <div class="result" id="sphere-result">
+                    <div class="result-item">
+                        <span class="result-label">体积</span>
+                        <span class="result-value" id="sphere-volume">0 cm³</span>
+                    </div>
+                    <div class="result-item">
+                        <span class="result-label">表面积</span>
+                        <span class="result-value" id="sphere-surface">0 cm²</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 圆柱体计算器 -->
+            <div class="calculator-section" id="cylinder">
+                <div class="shape-info">
+                    <div class="shape-visual">🥫</div>
+                    <div class="inputs">
+                        <div class="input-group">
+                            <label for="cylinder-radius">半径 (cm)</label>
+                            <input type="number" id="cylinder-radius" placeholder="请输入半径">
+                        </div>
+                        <div class="input-group">
+                            <label for="cylinder-height">高度 (cm)</label>
+                            <input type="number" id="cylinder-height" placeholder="请输入高度">
+                        </div>
+                        <button class="calculate-btn" onclick="calculateCylinder()">计算体积</button>
+                    </div>
+                </div>
+                <div class="result" id="cylinder-result">
+                    <div class="result-item">
+                        <span class="result-label">体积</span>
+                        <span class="result-value" id="cylinder-volume">0 cm³</span>
+                    </div>
+                    <div class="result-item">
+                        <span class="result-label">表面积</span>
+                        <span class="result-value" id="cylinder-surface">0 cm²</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="footer">
+            <p>© 小苏趣研AI | 几何图形计算器</p>
+            <p style="margin-top: 10px; opacity: 0.8;">
+                <a href="#" target="_blank" style="color: #666; text-decoration: none;">小苏趣研AI</a> - 
+                专业的几何计算工具，支持矩形、圆形、三角形、立方体、球体、圆柱体等常见图形的面积和体积计算，让数学学习更轻松。
+            </p>
+        </div>
+    </div>
+
+    
+                </div>
+            </div>
+                    <!-- 结果显示区域 -->
+                    <div class="result-display" id="result">
+                        <pre id="resultContent">处理结果将在这里显示...</pre>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <!-- 工具页脚 -->
+        <footer class="tool-footer">
+            <p>由 <a href="../../index.html">AI工具集</a> 提供 | 原创工具</p>
+        </footer>
+    </div>
+
+    <!-- JavaScript -->
+    <script src="../../shared/js/utils.js"></script>
+    <script>
+        // 工具特定的JavaScript代码
+        class ToolApp {
+            constructor() {
+                this.init();
+            }
+
+            init() {
+                this.setupEventListeners();
+            }
+
+            setupEventListeners() {
+                document.getElementById('processBtn').addEventListener('click', () => this.process());
+                document.getElementById('clearBtn').addEventListener('click', () => this.clear());
+                document.getElementById('copyBtn').addEventListener('click', () => this.copyResult());
+                
+                // 实时处理（可选）
+                document.getElementById('input').addEventListener('input', 
+                    ToolUtils.debounce(() => this.process(), 300)
+                );
+            }
+
+            process() {
+                const input = document.getElementById('input').value;
+                const result = this.processInput(input);
+                this.displayResult(result);
+            }
+
+            processInput(input) {
+                
+        // 选项卡切换
+        document.querySelectorAll('.tab').forEach(tab => {
+            tab.addEventListener('click', () => {
+                document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+                document.querySelectorAll('.calculator-section').forEach(s => s.classList.remove('active'));
+                
+                tab.classList.add('active');
+                document.getElementById(tab.dataset.shape).classList.add('active');
+            });
+        });
+
+        // 矩形计算
+        function calculateRectangle() {
+            const length = parseFloat(document.getElementById('rect-length').value);
+            const width = parseFloat(document.getElementById('rect-width').value);
+            
+            if (!length || !width || length <= 0 || width <= 0) {
+                alert('请输入有效的长度和宽度');
+                return;
+            }
+            
+            const area = length * width;
+            const perimeter = 2 * (length + width);
+            
+            document.getElementById('rect-area').textContent = `${area.toFixed(2)} cm²`;
+            document.getElementById('rect-perimeter').textContent = `${perimeter.toFixed(2)} cm`;
+            document.getElementById('rectangle-result').classList.add('show');
+        }
+
+        // 圆形计算
+        function calculateCircle() {
+            const radius = parseFloat(document.getElementById('circle-radius').value);
+            
+            if (!radius || radius <= 0) {
+                alert('请输入有效的半径');
+                return;
+            }
+            
+            const area = Math.PI * radius * radius;
+            const circumference = 2 * Math.PI * radius;
+            
+            document.getElementById('circle-area').textContent = `${area.toFixed(2)} cm²`;
+            document.getElementById('circle-circumference').textContent = `${circumference.toFixed(2)} cm`;
+            document.getElementById('circle-result').classList.add('show');
+        }
+
+        // 三角形计算
+        function calculateTriangle() {
+            const base = parseFloat(document.getElementById('triangle-base').value);
+            const height = parseFloat(document.getElementById('triangle-height').value);
+            
+            if (!base || !height || base <= 0 || height <= 0) {
+                alert('请输入有效的底边和高度');
+                return;
+            }
+            
+            const area = 0.5 * base * height;
+            
+            document.getElementById('triangle-area').textContent = `${area.toFixed(2)} cm²`;
+            document.getElementById('triangle-result').classList.add('show');
+        }
+
+        // 立方体计算
+        function calculateCube() {
+            const side = parseFloat(document.getElementById('cube-side').value);
+            
+            if (!side || side <= 0) {
+                alert('请输入有效的边长');
+                return;
+            }
+            
+            const volume = side * side * side;
+            const surface = 6 * side * side;
+            
+            document.getElementById('cube-volume').textContent = `${volume.toFixed(2)} cm³`;
+            document.getElementById('cube-surface').textContent = `${surface.toFixed(2)} cm²`;
+            document.getElementById('cube-result').classList.add('show');
+        }
+
+        // 球体计算
+        function calculateSphere() {
+            const radius = parseFloat(document.getElementById('sphere-radius').value);
+            
+            if (!radius || radius <= 0) {
+                alert('请输入有效的半径');
+                return;
+            }
+            
+            const volume = (4/3) * Math.PI * radius * radius * radius;
+            const surface = 4 * Math.PI * radius * radius;
+            
+            document.getElementById('sphere-volume').textContent = `${volume.toFixed(2)} cm³`;
+            document.getElementById('sphere-surface').textContent = `${surface.toFixed(2)} cm²`;
+            document.getElementById('sphere-result').classList.add('show');
+        }
+
+        // 圆柱体计算
+        function calculateCylinder() {
+            const radius = parseFloat(document.getElementById('cylinder-radius').value);
+            const height = parseFloat(document.getElementById('cylinder-height').value);
+            
+            if (!radius || !height || radius <= 0 || height <= 0) {
+                alert('请输入有效的半径和高度');
+                return;
+            }
+            
+            const volume = Math.PI * radius * radius * height;
+            const surface = 2 * Math.PI * radius * (radius + height);
+            
+            document.getElementById('cylinder-volume').textContent = `${volume.toFixed(2)} cm³`;
+            document.getElementById('cylinder-surface').textContent = `${surface.toFixed(2)} cm²`;
+            document.getElementById('cylinder-result').classList.add('show');
+        }
+
+        // 回车键计算
+        document.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                const activeSection = document.querySelector('.calculator-section.active');
+                const button = activeSection.querySelector('.calculate-btn');
+                button.click();
+            }
+        });
+    
+                return input;
+            }
+
+            displayResult(result) {
+                document.getElementById('resultContent').textContent = result;
+            }
+
+            clear() {
+                document.getElementById('input').value = '';
+                document.getElementById('resultContent').textContent = '处理结果将在这里显示...';
+            }
+
+            copyResult() {
+                const result = document.getElementById('resultContent').textContent;
+                if (result && result !== '处理结果将在这里显示...') {
+                    ToolUtils.copyToClipboard(result);
+                } else {
+                    ToolUtils.showToast('没有可复制的内容', 'warning');
+                }
+            }
+        }
+
+        // 初始化应用
+        document.addEventListener('DOMContentLoaded', () => {
+            new ToolApp();
+        });
+    </script>
+</body>
+</html>

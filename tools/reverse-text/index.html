@@ -1,0 +1,716 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>倒放文字生成器 - AI工具集</title>
+    <meta name="description" content="倒放文字生成器">
+    
+    <!-- 样式文件 -->
+    <link rel="stylesheet" href="../../shared/css/common.css">
+    
+    <!-- 工具特定样式 -->
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: var(--spacing-lg);
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white;
+            text-align: center;
+            padding: 40px 20px;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            font-size: 1.1em;
+            opacity: 0.9;
+        }
+
+        .content {
+            padding: 40px;
+        }
+
+        .mode-selector {
+            background: #f8f9fa;
+            padding: var(--spacing-lg);
+            border-radius: var(--radius-lg);
+            margin-bottom: 30px;
+        }
+
+        .mode-title {
+            font-size: 1.2em;
+            font-weight: bold;
+            margin-bottom: 15px;
+            color: var(--text-primary);
+        }
+
+        .mode-options {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+        }
+
+        .mode-option {
+            background: white;
+            border: 2px solid #e9ecef;
+            border-radius: var(--radius-md);
+            padding: 15px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-align: center;
+        }
+
+        .mode-option:hover {
+            border-color: #667eea;
+            background: #f0f4ff;
+        }
+
+        .mode-option.active {
+            border-color: #667eea;
+            background: #667eea;
+            color: white;
+        }
+
+        .mode-option-title {
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        .mode-option-desc {
+            font-size: 0.9em;
+            opacity: 0.8;
+        }
+
+        .input-section {
+            margin-bottom: 30px;
+        }
+
+        .section-title {
+            font-size: 1.3em;
+            font-weight: bold;
+            margin-bottom: 15px;
+            color: var(--text-primary);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .text-input {
+            width: 100%;
+            min-height: 150px;
+            padding: var(--spacing-lg);
+            border: 2px solid #ddd;
+            border-radius: var(--radius-lg);
+            font-size: 16px;
+            font-family: inherit;
+            resize: vertical;
+            transition: border-color 0.3s;
+        }
+
+        .text-input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .controls {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+        }
+
+        .control-btn {
+            padding: 12px 25px;
+            border: none;
+            border-radius: 8px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .process-btn {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white;
+        }
+
+        .clear-btn {
+            background: #dc3545;
+            color: white;
+        }
+
+        .copy-btn {
+            background: #28a745;
+            color: white;
+        }
+
+        .control-btn:hover {
+            transform: translateY(-2px);
+        }
+
+        .control-btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .output-section {
+            margin-bottom: 30px;
+        }
+
+        .text-output {
+            width: 100%;
+            min-height: 150px;
+            padding: var(--spacing-lg);
+            border: 2px solid #e9ecef;
+            border-radius: var(--radius-lg);
+            font-size: 16px;
+            font-family: inherit;
+            background: #f8f9fa;
+            resize: vertical;
+            color: var(--text-primary);
+        }
+
+        .stats-section {
+            background: #e8f2ff;
+            border-left: 4px solid #667eea;
+            padding: var(--spacing-lg);
+            border-radius: var(--radius-md);
+            margin-bottom: 30px;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            margin-top: 15px;
+        }
+
+        .stat-item {
+            text-align: center;
+        }
+
+        .stat-number {
+            font-size: 1.5em;
+            font-weight: bold;
+            color: #667eea;
+        }
+
+        .stat-label {
+            font-size: 0.9em;
+            color: var(--text-secondary);
+        }
+
+        .examples-section {
+            background: #f8f9fa;
+            padding: var(--spacing-lg);
+            border-radius: var(--radius-lg);
+            margin-bottom: 30px;
+        }
+
+        .example-item {
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 10px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        .example-item:hover {
+            background: #f0f4ff;
+        }
+
+        .example-original {
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        .example-reversed {
+            color: #667eea;
+            font-style: italic;
+        }
+
+        .footer {
+            background: #f8f9fa;
+            text-align: center;
+            padding: var(--spacing-lg);
+            color: var(--text-secondary);
+        }
+
+        @media (max-width: 768px) {
+            .mode-options {
+                grid-template-columns: 1fr;
+            }
+            
+            .controls {
+                flex-direction: column;
+                align-items: center;
+            }
+            
+            .control-btn {
+                width: 100%;
+                max-width: 200px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="tool-container">
+        <!-- 工具头部 -->
+        <header class="tool-header">
+            <div class="tool-header-content">
+                <a href="../../index.html" class="back-btn">
+                    <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                        <path d="M10 4l-4 4 4 4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                    返回工具集
+                </a>
+                
+                <div class="tool-title">
+                    <h1>倒放文字生成器</h1>
+                    <p class="tool-subtitle">倒放文字生成器</p>
+                </div>
+                
+                <button class="theme-toggle" id="themeToggle" aria-label="切换主题">
+                    <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                        <circle cx="10" cy="10" r="4" stroke="currentColor" stroke-width="2"/>
+                        <path d="M10 2v2M10 16v2M18 10h-2M4 10H2M15.66 4.34l-1.41 1.41M5.75 14.25l-1.41 1.41M15.66 15.66l-1.41-1.41M5.75 5.75L4.34 4.34" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                    </svg>
+                </button>
+            </div>
+        </header>
+
+        <!-- 工具主内容 -->
+        <main class="tool-main">
+            <div class="tool-card">
+                <div class="tool-section">
+                    <h2>
+                        <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                            <rect x="3" y="3" width="14" height="14" rx="2" stroke="currentColor" stroke-width="2"/>
+                        </svg>
+                        工具功能
+                    </h2>
+                    
+                    
+            <div class="tool-card">
+                <div class="tool-section">
+                    <h2>
+                        <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                            <rect x="3" y="3" width="14" height="14" rx="2" stroke="currentColor" stroke-width="2"/>
+                        </svg>
+                        倒放文字生成器
+                    </h2>
+                    <div class="container">
+        <div class="header">
+            <h1>🔄 倒放文字生成器</h1>
+            <p>多种文字倒序模式，让文字以不同方式反转显示</p>
+        </div>
+
+        <div class="content">
+            <div class="mode-selector">
+                <div class="mode-title">🎯 选择倒序模式</div>
+                <div class="mode-options">
+                    <div class="mode-option active" data-mode="character">
+                        <div class="mode-option-title">字符倒序</div>
+                        <div class="mode-option-desc">整个文本从右到左倒序</div>
+                    </div>
+                    <div class="mode-option" data-mode="word">
+                        <div class="mode-option-title">单词倒序</div>
+                        <div class="mode-option-desc">保持单词完整，倒序排列</div>
+                    </div>
+                    <div class="mode-option" data-mode="line">
+                        <div class="mode-option-title">行倒序</div>
+                        <div class="mode-option-desc">保持行内容，倒序排列行</div>
+                    </div>
+                    <div class="mode-option" data-mode="sentence">
+                        <div class="mode-option-title">句子倒序</div>
+                        <div class="mode-option-desc">保持句子完整，倒序排列</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="examples-section">
+                <div class="section-title">💡 示例效果</div>
+                <div class="example-item" onclick="loadExample('hello')">
+                    <div class="example-original">原文：Hello World 你好世界</div>
+                    <div class="example-reversed">字符倒序：界世好你 dlroW olleH</div>
+                </div>
+                <div class="example-item" onclick="loadExample('poem')">
+                    <div class="example-original">原文：春眠不觉晓 处处闻啼鸟</div>
+                    <div class="example-reversed">单词倒序：鸟啼闻处处 晓觉不眠春</div>
+                </div>
+                <div class="example-item" onclick="loadExample('multiline')">
+                    <div class="example-original">原文：第一行\n第二行\n第三行</div>
+                    <div class="example-reversed">行倒序：第三行\n第二行\n第一行</div>
+                </div>
+            </div>
+
+            <div class="input-section">
+                <div class="section-title">📝 输入文本</div>
+                <textarea class="text-input" id="inputText" placeholder="请输入要倒序的文本..."></textarea>
+            </div>
+
+            <div class="controls">
+                <button class="control-btn process-btn" id="processBtn" onclick="processText()">🔄 开始倒序</button>
+                <button class="control-btn clear-btn" onclick="clearText()">🗑️ 清空内容</button>
+                <button class="control-btn copy-btn" id="copyBtn" onclick="copyResult()" disabled>📋 复制结果</button>
+            </div>
+
+            <div class="output-section">
+                <div class="section-title">📤 倒序结果</div>
+                <textarea class="text-output" id="outputText" placeholder="倒序结果将在这里显示..." readonly></textarea>
+            </div>
+
+            <div class="stats-section" id="statsSection" style="display: none;">
+                <div class="section-title">📊 文本统计</div>
+                <div class="stats-grid">
+                    <div class="stat-item">
+                        <div class="stat-number" id="charCount">0</div>
+                        <div class="stat-label">字符数</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-number" id="wordCount">0</div>
+                        <div class="stat-label">单词数</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-number" id="lineCount">0</div>
+                        <div class="stat-label">行数</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-number" id="sentenceCount">0</div>
+                        <div class="stat-label">句子数</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="footer">
+            <p>© 小苏趣研AI | 倒放文字生成器</p>
+            <p style="margin-top: 10px; opacity: 0.8;">
+                <a href="#" target="_blank" style="color: #666; text-decoration: none;">小苏趣研AI</a> - 
+                多功能文字倒序工具，支持字符、单词、行、句子等多种倒序模式，适用于文字游戏、创意写作等场景。
+            </p>
+        </div>
+    </div>
+
+    
+                </div>
+            </div>
+                    <!-- 结果显示区域 -->
+                    <div class="result-display" id="result">
+                        <pre id="resultContent">处理结果将在这里显示...</pre>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <!-- 工具页脚 -->
+        <footer class="tool-footer">
+            <p>由 <a href="../../index.html">AI工具集</a> 提供 | 原创工具</p>
+        </footer>
+    </div>
+
+    <!-- JavaScript -->
+    <script src="../../shared/js/utils.js"></script>
+    <script>
+        // 工具特定的JavaScript代码
+        class ToolApp {
+            constructor() {
+                this.init();
+            }
+
+            init() {
+                this.setupEventListeners();
+            }
+
+            setupEventListeners() {
+                document.getElementById('processBtn').addEventListener('click', () => this.process());
+                document.getElementById('clearBtn').addEventListener('click', () => this.clear());
+                document.getElementById('copyBtn').addEventListener('click', () => this.copyResult());
+                
+                // 实时处理（可选）
+                document.getElementById('input').addEventListener('input', 
+                    ToolUtils.debounce(() => this.process(), 300)
+                );
+            }
+
+            process() {
+                const input = document.getElementById('input').value;
+                const result = this.processInput(input);
+                this.displayResult(result);
+            }
+
+            processInput(input) {
+                
+        class ReverseTextGenerator {
+            constructor() {
+                this.inputText = document.getElementById('inputText');
+                this.outputText = document.getElementById('outputText');
+                this.processBtn = document.getElementById('processBtn');
+                this.copyBtn = document.getElementById('copyBtn');
+                this.statsSection = document.getElementById('statsSection');
+                this.currentMode = 'character';
+                
+                this.init();
+            }
+
+            init() {
+                this.setupEventListeners();
+                this.setupModeSelector();
+            }
+
+            setupEventListeners() {
+                this.inputText.addEventListener('input', () => {
+                    this.updateStats();
+                    if (this.inputText.value.trim()) {
+                        this.processBtn.disabled = false;
+                    } else {
+                        this.processBtn.disabled = true;
+                        this.copyBtn.disabled = true;
+                        this.outputText.value = '';
+                        this.statsSection.style.display = 'none';
+                    }
+                });
+            }
+
+            setupModeSelector() {
+                const modeOptions = document.querySelectorAll('.mode-option');
+                modeOptions.forEach(option => {
+                    option.addEventListener('click', () => {
+                        modeOptions.forEach(opt => opt.classList.remove('active'));
+                        option.classList.add('active');
+                        this.currentMode = option.dataset.mode;
+                        
+                        // 如果有输入内容，自动重新处理
+                        if (this.inputText.value.trim()) {
+                            this.processText();
+                        }
+                    });
+                });
+            }
+
+            processText() {
+                const text = this.inputText.value.trim();
+                if (!text) {
+                    alert('请输入要倒序的文本');
+                    return;
+                }
+
+                let result = '';
+                
+                switch (this.currentMode) {
+                    case 'character':
+                        result = this.reverseCharacters(text);
+                        break;
+                    case 'word':
+                        result = this.reverseWords(text);
+                        break;
+                    case 'line':
+                        result = this.reverseLines(text);
+                        break;
+                    case 'sentence':
+                        result = this.reverseSentences(text);
+                        break;
+                }
+
+                this.outputText.value = result;
+                this.copyBtn.disabled = false;
+                this.updateStats();
+                this.statsSection.style.display = 'block';
+                
+                this.showMessage('文本倒序完成！');
+            }
+
+            reverseCharacters(text) {
+                return text.split('').reverse().join('');
+            }
+
+            reverseWords(text) {
+                // 按空格和标点符号分割，保留分隔符
+                const words = text.split(/(\s+|[，。！？；：""''（）【】《》、])/);
+                const filteredWords = words.filter(word => word.trim() && !/^[\s，。！？；：""''（）【】《》、]+$/.test(word));
+                return filteredWords.reverse().join(' ');
+            }
+
+            reverseLines(text) {
+                return text.split('\n').reverse().join('\n');
+            }
+
+            reverseSentences(text) {
+                // 按句号、问号、感叹号分割句子
+                const sentences = text.split(/([。！？.!?]+)/).filter(s => s.trim());
+                const result = [];
+                
+                for (let i = 0; i < sentences.length; i += 2) {
+                    const sentence = sentences[i];
+                    const punctuation = sentences[i + 1] || '';
+                    result.unshift(sentence + punctuation);
+                }
+                
+                return result.join('');
+            }
+
+            updateStats() {
+                const text = this.inputText.value;
+                const outputText = this.outputText.value;
+                
+                // 字符数（不包括空格）
+                const charCount = text.replace(/\s/g, '').length;
+                
+                // 单词数（中文按字符计算，英文按单词计算）
+                const chineseChars = (text.match(/[\u4e00-\u9fa5]/g) || []).length;
+                const englishWords = (text.match(/[a-zA-Z]+/g) || []).length;
+                const wordCount = chineseChars + englishWords;
+                
+                // 行数
+                const lineCount = text.split('\n').length;
+                
+                // 句子数
+                const sentenceCount = (text.match(/[。！？.!?]+/g) || []).length;
+
+                document.getElementById('charCount').textContent = charCount;
+                document.getElementById('wordCount').textContent = wordCount;
+                document.getElementById('lineCount').textContent = lineCount;
+                document.getElementById('sentenceCount').textContent = sentenceCount;
+            }
+
+            clearText() {
+                this.inputText.value = '';
+                this.outputText.value = '';
+                this.copyBtn.disabled = true;
+                this.processBtn.disabled = true;
+                this.statsSection.style.display = 'none';
+                this.showMessage('内容已清空');
+            }
+
+            copyResult() {
+                const result = this.outputText.value;
+                if (!result) {
+                    alert('没有可复制的内容');
+                    return;
+                }
+
+                navigator.clipboard.writeText(result).then(() => {
+                    this.showMessage('结果已复制到剪贴板');
+                }).catch(() => {
+                    // 降级方案
+                    this.outputText.select();
+                    document.execCommand('copy');
+                    this.showMessage('结果已复制到剪贴板');
+                });
+            }
+
+            loadExample(type) {
+                const examples = {
+                    'hello': 'Hello World 你好世界',
+                    'poem': '春眠不觉晓\n处处闻啼鸟\n夜来风雨声\n花落知多少',
+                    'multiline': '第一行内容\n第二行内容\n第三行内容'
+                };
+
+                this.inputText.value = examples[type] || '';
+                this.processBtn.disabled = false;
+                this.processText();
+            }
+
+            showMessage(message, type = 'success') {
+                const messageDiv = document.createElement('div');
+                messageDiv.textContent = message;
+                messageDiv.style.cssText = `
+                    position: fixed;
+                    top: 20px;
+                    right: 20px;
+                    background: ${type === 'error' ? '#dc3545' : '#28a745'};
+                    color: white;
+                    padding: 15px 20px;
+                    border-radius: 8px;
+                    z-index: 1000;
+                    font-weight: bold;
+                    box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+                `;
+                
+                document.body.appendChild(messageDiv);
+                
+                setTimeout(() => {
+                    messageDiv.remove();
+                }, 3000);
+            }
+        }
+
+        // 全局函数
+        let reverseGenerator;
+
+        function processText() {
+            reverseGenerator.processText();
+        }
+
+        function clearText() {
+            reverseGenerator.clearText();
+        }
+
+        function copyResult() {
+            reverseGenerator.copyResult();
+        }
+
+        function loadExample(type) {
+            reverseGenerator.loadExample(type);
+        }
+
+        // 初始化
+        document.addEventListener('DOMContentLoaded', () => {
+            reverseGenerator = new ReverseTextGenerator();
+        });
+    
+                return input;
+            }
+
+            displayResult(result) {
+                document.getElementById('resultContent').textContent = result;
+            }
+
+            clear() {
+                document.getElementById('input').value = '';
+                document.getElementById('resultContent').textContent = '处理结果将在这里显示...';
+            }
+
+            copyResult() {
+                const result = document.getElementById('resultContent').textContent;
+                if (result && result !== '处理结果将在这里显示...') {
+                    ToolUtils.copyToClipboard(result);
+                } else {
+                    ToolUtils.showToast('没有可复制的内容', 'warning');
+                }
+            }
+        }
+
+        // 初始化应用
+        document.addEventListener('DOMContentLoaded', () => {
+            new ToolApp();
+        });
+    </script>
+</body>
+</html>

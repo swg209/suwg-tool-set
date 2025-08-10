@@ -1,0 +1,646 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>视觉计时沙漏 - 小苏趣研AI - AI工具集</title>
+    <meta name="description" content="视觉计时沙漏 - 小苏趣研AI">
+    
+    <!-- 样式文件 -->
+    <link rel="stylesheet" href="../../shared/css/common.css">
+    
+    <!-- 工具特定样式 -->
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: var(--spacing-lg);
+        }
+
+        .container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            padding: 40px;
+            text-align: center;
+            max-width: 500px;
+            width: 100%;
+        }
+
+        .header {
+            margin-bottom: 30px;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            color: var(--text-primary);
+            margin-bottom: 10px;
+            font-weight: 700;
+        }
+
+        .header p {
+            color: var(--text-secondary);
+            font-size: 1.1em;
+        }
+
+        .timer-display {
+            font-size: 3em;
+            font-weight: bold;
+            color: #667eea;
+            margin: var(--spacing-lg) 0;
+            font-family: 'Courier New', monospace;
+        }
+
+        .hourglass-container {
+            position: relative;
+            width: 200px;
+            height: 300px;
+            margin: 30px auto;
+        }
+
+        .hourglass {
+            width: 100%;
+            height: 100%;
+            position: relative;
+            background: linear-gradient(45deg, #8B4513, #D2691E);
+            clip-path: polygon(20% 0%, 80% 0%, 60% 40%, 50% 50%, 60% 60%, 80% 100%, 20% 100%, 40% 60%, 50% 50%, 40% 40%);
+            border-radius: var(--radius-md);
+        }
+
+        .sand-container {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            clip-path: polygon(20% 0%, 80% 0%, 60% 40%, 50% 50%, 60% 60%, 80% 100%, 20% 100%, 40% 60%, 50% 50%, 40% 40%);
+        }
+
+        .sand-top {
+            position: absolute;
+            top: 5%;
+            left: 25%;
+            right: 25%;
+            background: #F4A460;
+            transition: height 0.1s linear;
+            border-radius: 0 0 50% 50%;
+        }
+
+        .sand-bottom {
+            position: absolute;
+            bottom: 5%;
+            left: 25%;
+            right: 25%;
+            background: #F4A460;
+            height: 0%;
+            border-radius: 50% 50% 0 0;
+            transition: height 0.1s linear;
+        }
+
+        .sand-stream {
+            position: absolute;
+            left: 50%;
+            top: 50%;
+            width: 2px;
+            height: 0;
+            background: #F4A460;
+            transform: translateX(-50%);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .sand-stream.active {
+            opacity: 1;
+            animation: sandFall 0.5s linear infinite;
+        }
+
+        @keyframes sandFall {
+            0% { height: 0; }
+            100% { height: 40px; }
+        }
+
+        .controls {
+            margin: 30px 0;
+        }
+
+        .time-inputs {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        .time-input {
+            padding: var(--spacing-md);
+            border: 2px solid #ddd;
+            border-radius: var(--radius-md);
+            font-size: 1em;
+            width: 80px;
+            text-align: center;
+        }
+
+        .time-input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .preset-buttons {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        .preset-btn {
+            background: #f8f9fa;
+            border: 2px solid #ddd;
+            padding: 8px 15px;
+            border-radius: 20px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 0.9em;
+        }
+
+        .preset-btn:hover {
+            background: #667eea;
+            color: white;
+            border-color: #667eea;
+        }
+
+        .btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 25px;
+            font-size: 1.1em;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin: 5px;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .btn-secondary {
+            background: #6c757d;
+        }
+
+        .btn-danger {
+            background: #dc3545;
+        }
+
+        .status {
+            margin: var(--spacing-lg) 0;
+            padding: 15px;
+            border-radius: var(--radius-md);
+            font-weight: bold;
+        }
+
+        .status.running {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .status.paused {
+            background: var(--bg-card)3cd;
+            color: #856404;
+            border: 1px solid #ffeaa7;
+        }
+
+        .status.finished {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        .footer {
+            margin-top: 30px;
+            color: var(--text-secondary);
+            font-size: 0.9em;
+        }
+
+        @media (max-width: 480px) {
+            .container {
+                padding: var(--spacing-lg);
+            }
+            
+            .hourglass-container {
+                width: 150px;
+                height: 225px;
+            }
+            
+            .timer-display {
+                font-size: 2em;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="tool-container">
+        <!-- 工具头部 -->
+        <header class="tool-header">
+            <div class="tool-header-content">
+                <a href="../../index.html" class="back-btn">
+                    <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                        <path d="M10 4l-4 4 4 4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                    返回工具集
+                </a>
+                
+                <div class="tool-title">
+                    <h1>视觉计时沙漏 - 小苏趣研AI</h1>
+                    <p class="tool-subtitle">视觉计时沙漏 - 小苏趣研AI</p>
+                </div>
+                
+                <button class="theme-toggle" id="themeToggle" aria-label="切换主题">
+                    <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                        <circle cx="10" cy="10" r="4" stroke="currentColor" stroke-width="2"/>
+                        <path d="M10 2v2M10 16v2M18 10h-2M4 10H2M15.66 4.34l-1.41 1.41M5.75 14.25l-1.41 1.41M15.66 15.66l-1.41-1.41M5.75 5.75L4.34 4.34" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                    </svg>
+                </button>
+            </div>
+        </header>
+
+        <!-- 工具主内容 -->
+        <main class="tool-main">
+            <div class="tool-card">
+                <div class="tool-section">
+                    <h2>
+                        <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                            <rect x="3" y="3" width="14" height="14" rx="2" stroke="currentColor" stroke-width="2"/>
+                        </svg>
+                        工具功能
+                    </h2>
+                    
+                    
+            <div class="tool-card">
+                <div class="tool-section">
+                    <h2>
+                        <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                            <rect x="3" y="3" width="14" height="14" rx="2" stroke="currentColor" stroke-width="2"/>
+                        </svg>
+                        视觉计时沙漏 - 小苏趣研AI
+                    </h2>
+                    <div class="container">
+        <div class="header">
+            <h1>⏳ 视觉计时沙漏</h1>
+            <p>模拟真实沙漏的动画计时器</p>
+        </div>
+
+        <div class="timer-display" id="timerDisplay">00:00</div>
+
+        <div class="hourglass-container">
+            <div class="hourglass">
+                <div class="sand-container">
+                    <div class="sand-top" id="sandTop"></div>
+                    <div class="sand-stream" id="sandStream"></div>
+                    <div class="sand-bottom" id="sandBottom"></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="controls">
+            <div class="time-inputs">
+                <input type="number" id="minutesInput" class="time-input" placeholder="分" min="0" max="59" value="5">
+                <span style="align-self: center; font-size: 1.2em;">:</span>
+                <input type="number" id="secondsInput" class="time-input" placeholder="秒" min="0" max="59" value="0">
+            </div>
+
+            <div class="preset-buttons">
+                <button class="preset-btn" onclick="setPresetTime(1, 0)">1分钟</button>
+                <button class="preset-btn" onclick="setPresetTime(3, 0)">3分钟</button>
+                <button class="preset-btn" onclick="setPresetTime(5, 0)">5分钟</button>
+                <button class="preset-btn" onclick="setPresetTime(10, 0)">10分钟</button>
+                <button class="preset-btn" onclick="setPresetTime(0, 30)">30秒</button>
+            </div>
+
+            <div>
+                <button class="btn" id="startBtn" onclick="startTimer()">▶️ 开始</button>
+                <button class="btn btn-secondary" id="pauseBtn" onclick="pauseTimer()" disabled>⏸️ 暂停</button>
+                <button class="btn btn-danger" id="resetBtn" onclick="resetTimer()">🔄 重置</button>
+            </div>
+        </div>
+
+        <div class="status" id="status" style="display: none;"></div>
+
+        <div class="footer">
+            <p>© <a href="#" target="_blank">小苏趣研AI</a> | 视觉计时沙漏</p>
+            <p style="margin-top: 10px; opacity: 0.8;">
+                美观的沙漏动画计时器，支持自定义时间和预设时间，让计时变得更有趣。
+            </p>
+        </div>
+    </div>
+
+    
+                </div>
+            </div>
+                    <!-- 结果显示区域 -->
+                    <div class="result-display" id="result">
+                        <pre id="resultContent">处理结果将在这里显示...</pre>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <!-- 工具页脚 -->
+        <footer class="tool-footer">
+            <p>由 <a href="../../index.html">AI工具集</a> 提供 | 原创工具</p>
+        </footer>
+    </div>
+
+    <!-- JavaScript -->
+    <script src="../../shared/js/utils.js"></script>
+    <script>
+        // 工具特定的JavaScript代码
+        class ToolApp {
+            constructor() {
+                this.init();
+            }
+
+            init() {
+                this.setupEventListeners();
+            }
+
+            setupEventListeners() {
+                document.getElementById('processBtn').addEventListener('click', () => this.process());
+                document.getElementById('clearBtn').addEventListener('click', () => this.clear());
+                document.getElementById('copyBtn').addEventListener('click', () => this.copyResult());
+                
+                // 实时处理（可选）
+                document.getElementById('input').addEventListener('input', 
+                    ToolUtils.debounce(() => this.process(), 300)
+                );
+            }
+
+            process() {
+                const input = document.getElementById('input').value;
+                const result = this.processInput(input);
+                this.displayResult(result);
+            }
+
+            processInput(input) {
+                
+        class SandTimer {
+            constructor() {
+                this.totalTime = 0;
+                this.remainingTime = 0;
+                this.isRunning = false;
+                this.isPaused = false;
+                this.interval = null;
+                this.startTime = 0;
+                this.pausedTime = 0;
+                
+                this.timerDisplay = document.getElementById('timerDisplay');
+                this.sandTop = document.getElementById('sandTop');
+                this.sandBottom = document.getElementById('sandBottom');
+                this.sandStream = document.getElementById('sandStream');
+                this.status = document.getElementById('status');
+                this.startBtn = document.getElementById('startBtn');
+                this.pauseBtn = document.getElementById('pauseBtn');
+                this.resetBtn = document.getElementById('resetBtn');
+                
+                this.updateDisplay();
+            }
+            
+            setTime(minutes, seconds) {
+                if (this.isRunning) return;
+                
+                this.totalTime = minutes * 60 + seconds;
+                this.remainingTime = this.totalTime;
+                this.updateDisplay();
+                this.updateSandLevels();
+            }
+            
+            startTimer() {
+                const minutes = parseInt(document.getElementById('minutesInput').value) || 0;
+                const seconds = parseInt(document.getElementById('secondsInput').value) || 0;
+                
+                if (!this.isPaused) {
+                    this.setTime(minutes, seconds);
+                }
+                
+                if (this.remainingTime <= 0) {
+                    this.showStatus('请设置计时时间', 'finished');
+                    return;
+                }
+                
+                this.isRunning = true;
+                this.isPaused = false;
+                this.startTime = Date.now() - (this.totalTime - this.remainingTime) * 1000;
+                
+                this.startBtn.disabled = true;
+                this.pauseBtn.disabled = false;
+                
+                this.sandStream.classList.add('active');
+                this.showStatus('计时进行中...', 'running');
+                
+                this.interval = setInterval(() => {
+                    this.tick();
+                }, 100);
+            }
+            
+            pauseTimer() {
+                if (!this.isRunning) return;
+                
+                this.isRunning = false;
+                this.isPaused = true;
+                this.pausedTime = Date.now();
+                
+                clearInterval(this.interval);
+                
+                this.startBtn.disabled = false;
+                this.pauseBtn.disabled = true;
+                this.startBtn.textContent = '▶️ 继续';
+                
+                this.sandStream.classList.remove('active');
+                this.showStatus('计时已暂停', 'paused');
+            }
+            
+            resetTimer() {
+                this.isRunning = false;
+                this.isPaused = false;
+                
+                clearInterval(this.interval);
+                
+                const minutes = parseInt(document.getElementById('minutesInput').value) || 0;
+                const seconds = parseInt(document.getElementById('secondsInput').value) || 0;
+                this.setTime(minutes, seconds);
+                
+                this.startBtn.disabled = false;
+                this.pauseBtn.disabled = true;
+                this.startBtn.textContent = '▶️ 开始';
+                
+                this.sandStream.classList.remove('active');
+                this.hideStatus();
+            }
+            
+            tick() {
+                const elapsed = (Date.now() - this.startTime) / 1000;
+                this.remainingTime = Math.max(0, this.totalTime - elapsed);
+                
+                this.updateDisplay();
+                this.updateSandLevels();
+                
+                if (this.remainingTime <= 0) {
+                    this.finishTimer();
+                }
+            }
+            
+            finishTimer() {
+                this.isRunning = false;
+                this.isPaused = false;
+                
+                clearInterval(this.interval);
+                
+                this.startBtn.disabled = false;
+                this.pauseBtn.disabled = true;
+                this.startBtn.textContent = '▶️ 开始';
+                
+                this.sandStream.classList.remove('active');
+                this.showStatus('⏰ 时间到！', 'finished');
+                
+                // 播放提示音（如果浏览器支持）
+                this.playNotificationSound();
+                
+                // 显示通知
+                if ('Notification' in window && Notification.permission === 'granted') {
+                    new Notification('沙漏计时器', {
+                        body: '时间到了！',
+                        icon: '⏰'
+                    });
+                }
+            }
+            
+            updateDisplay() {
+                const minutes = Math.floor(this.remainingTime / 60);
+                const seconds = Math.floor(this.remainingTime % 60);
+                this.timerDisplay.textContent = 
+                    `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+            }
+            
+            updateSandLevels() {
+                if (this.totalTime === 0) {
+                    this.sandTop.style.height = '40%';
+                    this.sandBottom.style.height = '0%';
+                    return;
+                }
+                
+                const progress = (this.totalTime - this.remainingTime) / this.totalTime;
+                const topHeight = Math.max(0, 40 - (progress * 40));
+                const bottomHeight = Math.min(40, progress * 40);
+                
+                this.sandTop.style.height = topHeight + '%';
+                this.sandBottom.style.height = bottomHeight + '%';
+            }
+            
+            showStatus(message, type) {
+                this.status.textContent = message;
+                this.status.className = `status ${type}`;
+                this.status.style.display = 'block';
+            }
+            
+            hideStatus() {
+                this.status.style.display = 'none';
+            }
+            
+            playNotificationSound() {
+                try {
+                    const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                    const oscillator = audioContext.createOscillator();
+                    const gainNode = audioContext.createGain();
+                    
+                    oscillator.connect(gainNode);
+                    gainNode.connect(audioContext.destination);
+                    
+                    oscillator.frequency.setValueAtTime(800, audioContext.currentTime);
+                    gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+                    gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.5);
+                    
+                    oscillator.start(audioContext.currentTime);
+                    oscillator.stop(audioContext.currentTime + 0.5);
+                } catch (error) {
+                    console.log('无法播放提示音');
+                }
+            }
+        }
+        
+        let timer;
+        
+        function startTimer() {
+            timer.startTimer();
+        }
+        
+        function pauseTimer() {
+            timer.pauseTimer();
+        }
+        
+        function resetTimer() {
+            timer.resetTimer();
+        }
+        
+        function setPresetTime(minutes, seconds) {
+            document.getElementById('minutesInput').value = minutes;
+            document.getElementById('secondsInput').value = seconds;
+            timer.setTime(minutes, seconds);
+        }
+        
+        // 初始化
+        document.addEventListener('DOMContentLoaded', () => {
+            timer = new SandTimer();
+            
+            // 请求通知权限
+            if ('Notification' in window && Notification.permission === 'default') {
+                Notification.requestPermission();
+            }
+        });
+    
+                return input;
+            }
+
+            displayResult(result) {
+                document.getElementById('resultContent').textContent = result;
+            }
+
+            clear() {
+                document.getElementById('input').value = '';
+                document.getElementById('resultContent').textContent = '处理结果将在这里显示...';
+            }
+
+            copyResult() {
+                const result = document.getElementById('resultContent').textContent;
+                if (result && result !== '处理结果将在这里显示...') {
+                    ToolUtils.copyToClipboard(result);
+                } else {
+                    ToolUtils.showToast('没有可复制的内容', 'warning');
+                }
+            }
+        }
+
+        // 初始化应用
+        document.addEventListener('DOMContentLoaded', () => {
+            new ToolApp();
+        });
+    </script>
+</body>
+</html>

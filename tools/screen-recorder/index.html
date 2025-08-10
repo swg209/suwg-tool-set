@@ -1,0 +1,705 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>网页屏幕录制器 - AI工具集</title>
+    <meta name="description" content="网页屏幕录制器">
+    
+    <!-- 样式文件 -->
+    <link rel="stylesheet" href="../../shared/css/common.css">
+    
+    <!-- 工具特定样式 -->
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: var(--spacing-lg);
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white;
+            text-align: center;
+            padding: 40px 20px;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            font-size: 1.1em;
+            opacity: 0.9;
+        }
+
+        .content {
+            padding: 40px;
+        }
+
+        .recorder-section {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        .preview-container {
+            background: #f8f9fa;
+            border: 2px dashed #ddd;
+            border-radius: var(--radius-lg);
+            padding: 40px 20px;
+            margin-bottom: 30px;
+            min-height: 300px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+        }
+
+        .preview-video {
+            max-width: 100%;
+            max-height: 400px;
+            border-radius: var(--radius-md);
+            box-shadow: 0 8px 16px rgba(0,0,0,0.1);
+            display: none;
+        }
+
+        .preview-placeholder {
+            text-align: center;
+            color: var(--text-secondary);
+        }
+
+        .preview-icon {
+            font-size: 4em;
+            margin-bottom: 20px;
+            color: #667eea;
+        }
+
+        .preview-text {
+            font-size: 1.2em;
+            margin-bottom: 10px;
+        }
+
+        .preview-hint {
+            font-size: 0.9em;
+            opacity: 0.7;
+        }
+
+        .controls {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+        }
+
+        .control-btn {
+            padding: 15px 30px;
+            border: none;
+            border-radius: var(--radius-md);
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .start-btn {
+            background: linear-gradient(45deg, #28a745, #20c997);
+            color: white;
+        }
+
+        .start-btn:hover {
+            transform: translateY(-2px);
+        }
+
+        .stop-btn {
+            background: linear-gradient(45deg, #dc3545, #fd7e14);
+            color: white;
+        }
+
+        .stop-btn:hover {
+            transform: translateY(-2px);
+        }
+
+        .download-btn {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white;
+        }
+
+        .download-btn:hover {
+            transform: translateY(-2px);
+        }
+
+        .control-btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .status-indicator {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            margin-bottom: 20px;
+            font-weight: bold;
+        }
+
+        .status-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: #ccc;
+        }
+
+        .status-dot.recording {
+            background: #dc3545;
+            animation: pulse 1s infinite;
+        }
+
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.5; }
+            100% { opacity: 1; }
+        }
+
+        .timer {
+            font-family: monospace;
+            font-size: 1.5em;
+            color: #667eea;
+            margin-bottom: 20px;
+        }
+
+        .settings {
+            background: #f8f9fa;
+            padding: 30px;
+            border-radius: var(--radius-lg);
+            margin-bottom: 30px;
+        }
+
+        .settings-title {
+            font-size: 1.3em;
+            font-weight: bold;
+            margin-bottom: 20px;
+            color: var(--text-primary);
+        }
+
+        .setting-group {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+        }
+
+        .setting-item {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .setting-label {
+            font-weight: bold;
+            color: var(--text-primary);
+        }
+
+        .setting-select {
+            padding: var(--spacing-md) 15px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 14px;
+            transition: border-color 0.3s;
+        }
+
+        .setting-select:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .info-box {
+            background: #e8f2ff;
+            border-left: 4px solid #667eea;
+            padding: var(--spacing-lg);
+            border-radius: var(--radius-md);
+            margin-bottom: 30px;
+        }
+
+        .info-title {
+            font-weight: bold;
+            margin-bottom: 10px;
+            color: var(--text-primary);
+        }
+
+        .info-list {
+            list-style: none;
+            padding-left: 0;
+        }
+
+        .info-list li {
+            margin-bottom: 8px;
+            padding-left: 20px;
+            position: relative;
+        }
+
+        .info-list li:before {
+            content: "✓";
+            position: absolute;
+            left: 0;
+            color: #28a745;
+            font-weight: bold;
+        }
+
+        .footer {
+            background: #f8f9fa;
+            text-align: center;
+            padding: var(--spacing-lg);
+            color: var(--text-secondary);
+        }
+
+        @media (max-width: 768px) {
+            .controls {
+                flex-direction: column;
+                align-items: center;
+            }
+            
+            .control-btn {
+                width: 100%;
+                max-width: 300px;
+            }
+            
+            .setting-group {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="tool-container">
+        <!-- 工具头部 -->
+        <header class="tool-header">
+            <div class="tool-header-content">
+                <a href="../../index.html" class="back-btn">
+                    <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                        <path d="M10 4l-4 4 4 4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                    返回工具集
+                </a>
+                
+                <div class="tool-title">
+                    <h1>网页屏幕录制器</h1>
+                    <p class="tool-subtitle">网页屏幕录制器</p>
+                </div>
+                
+                <button class="theme-toggle" id="themeToggle" aria-label="切换主题">
+                    <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                        <circle cx="10" cy="10" r="4" stroke="currentColor" stroke-width="2"/>
+                        <path d="M10 2v2M10 16v2M18 10h-2M4 10H2M15.66 4.34l-1.41 1.41M5.75 14.25l-1.41 1.41M15.66 15.66l-1.41-1.41M5.75 5.75L4.34 4.34" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                    </svg>
+                </button>
+            </div>
+        </header>
+
+        <!-- 工具主内容 -->
+        <main class="tool-main">
+            <div class="tool-card">
+                <div class="tool-section">
+                    <h2>
+                        <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                            <rect x="3" y="3" width="14" height="14" rx="2" stroke="currentColor" stroke-width="2"/>
+                        </svg>
+                        工具功能
+                    </h2>
+                    
+                    
+            <div class="tool-card">
+                <div class="tool-section">
+                    <h2>
+                        <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                            <rect x="3" y="3" width="14" height="14" rx="2" stroke="currentColor" stroke-width="2"/>
+                        </svg>
+                        网页屏幕录制器
+                    </h2>
+                    <div class="container">
+        <div class="header">
+            <h1>🎥 网页屏幕录制器</h1>
+            <p>录制浏览器标签页内容，支持多种格式和质量选项</p>
+        </div>
+
+        <div class="content">
+            <div class="info-box">
+                <div class="info-title">📋 使用说明</div>
+                <ul class="info-list">
+                    <li>点击"开始录制"选择要录制的屏幕或窗口</li>
+                    <li>录制过程中可以实时预览画面</li>
+                    <li>点击"停止录制"结束录制并生成视频文件</li>
+                    <li>支持WebM格式，兼容主流浏览器</li>
+                </ul>
+            </div>
+
+            <div class="settings">
+                <div class="settings-title">⚙️ 录制设置</div>
+                <div class="setting-group">
+                    <div class="setting-item">
+                        <label class="setting-label">视频质量</label>
+                        <select id="qualitySelect" class="setting-select">
+                            <option value="1080">高清 (1080p)</option>
+                            <option value="720" selected>标清 (720p)</option>
+                            <option value="480">普通 (480p)</option>
+                        </select>
+                    </div>
+                    <div class="setting-item">
+                        <label class="setting-label">帧率</label>
+                        <select id="framerateSelect" class="setting-select">
+                            <option value="60">60 FPS</option>
+                            <option value="30" selected>30 FPS</option>
+                            <option value="15">15 FPS</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <div class="recorder-section">
+                <div class="status-indicator">
+                    <div class="status-dot" id="statusDot"></div>
+                    <span id="statusText">准备就绪</span>
+                </div>
+
+                <div class="timer" id="timer">00:00:00</div>
+
+                <div class="preview-container">
+                    <video id="previewVideo" class="preview-video" autoplay muted></video>
+                    <div class="preview-placeholder" id="placeholder">
+                        <div class="preview-icon">🖥️</div>
+                        <div class="preview-text">屏幕录制预览</div>
+                        <div class="preview-hint">开始录制后将在此处显示预览画面</div>
+                    </div>
+                </div>
+
+                <div class="controls">
+                    <button class="control-btn start-btn" id="startBtn">
+                        <span>🎬</span>
+                        开始录制
+                    </button>
+                    <button class="control-btn stop-btn" id="stopBtn" disabled>
+                        <span>⏹️</span>
+                        停止录制
+                    </button>
+                    <button class="control-btn download-btn" id="downloadBtn" disabled>
+                        <span>💾</span>
+                        下载视频
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <div class="footer">
+            <p>© 小苏趣研AI | 网页屏幕录制器</p>
+            <p style="margin-top: 10px; opacity: 0.8;">
+                <a href="#" target="_blank" style="color: #666; text-decoration: none;">小苏趣研AI</a> - 
+                基于Web技术的屏幕录制工具，无需安装软件即可录制屏幕内容，支持多种质量选项，操作简单便捷。
+            </p>
+        </div>
+    </div>
+
+    
+                </div>
+            </div>
+                    <!-- 结果显示区域 -->
+                    <div class="result-display" id="result">
+                        <pre id="resultContent">处理结果将在这里显示...</pre>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <!-- 工具页脚 -->
+        <footer class="tool-footer">
+            <p>由 <a href="../../index.html">AI工具集</a> 提供 | 原创工具</p>
+        </footer>
+    </div>
+
+    <!-- JavaScript -->
+    <script src="../../shared/js/utils.js"></script>
+    <script>
+        // 工具特定的JavaScript代码
+        class ToolApp {
+            constructor() {
+                this.init();
+            }
+
+            init() {
+                this.setupEventListeners();
+            }
+
+            setupEventListeners() {
+                document.getElementById('processBtn').addEventListener('click', () => this.process());
+                document.getElementById('clearBtn').addEventListener('click', () => this.clear());
+                document.getElementById('copyBtn').addEventListener('click', () => this.copyResult());
+                
+                // 实时处理（可选）
+                document.getElementById('input').addEventListener('input', 
+                    ToolUtils.debounce(() => this.process(), 300)
+                );
+            }
+
+            process() {
+                const input = document.getElementById('input').value;
+                const result = this.processInput(input);
+                this.displayResult(result);
+            }
+
+            processInput(input) {
+                
+        class ScreenRecorder {
+            constructor() {
+                this.mediaRecorder = null;
+                this.recordedChunks = [];
+                this.stream = null;
+                this.startTime = null;
+                this.timerInterval = null;
+                
+                this.startBtn = document.getElementById('startBtn');
+                this.stopBtn = document.getElementById('stopBtn');
+                this.downloadBtn = document.getElementById('downloadBtn');
+                this.previewVideo = document.getElementById('previewVideo');
+                this.placeholder = document.getElementById('placeholder');
+                this.statusDot = document.getElementById('statusDot');
+                this.statusText = document.getElementById('statusText');
+                this.timer = document.getElementById('timer');
+                this.qualitySelect = document.getElementById('qualitySelect');
+                this.framerateSelect = document.getElementById('framerateSelect');
+                
+                this.init();
+            }
+
+            init() {
+                this.checkBrowserSupport();
+                this.setupEventListeners();
+            }
+
+            checkBrowserSupport() {
+                if (!navigator.mediaDevices || !navigator.mediaDevices.getDisplayMedia) {
+                    alert('您的浏览器不支持屏幕录制功能，请使用Chrome、Firefox或Edge浏览器');
+                    this.startBtn.disabled = true;
+                }
+            }
+
+            setupEventListeners() {
+                this.startBtn.addEventListener('click', () => this.startRecording());
+                this.stopBtn.addEventListener('click', () => this.stopRecording());
+                this.downloadBtn.addEventListener('click', () => this.downloadVideo());
+            }
+
+            async startRecording() {
+                try {
+                    const quality = this.qualitySelect.value;
+                    const framerate = parseInt(this.framerateSelect.value);
+                    
+                    const constraints = {
+                        video: {
+                            width: { ideal: parseInt(quality) * 16/9 },
+                            height: { ideal: parseInt(quality) },
+                            frameRate: { ideal: framerate }
+                        },
+                        audio: false // 不录制音频
+                    };
+
+                    this.stream = await navigator.mediaDevices.getDisplayMedia(constraints);
+                    
+                    // 显示预览
+                    this.previewVideo.srcObject = this.stream;
+                    this.previewVideo.style.display = 'block';
+                    this.placeholder.style.display = 'none';
+                    
+                    // 设置MediaRecorder
+                    const options = {
+                        mimeType: 'video/webm;codecs=vp9'
+                    };
+                    
+                    if (!MediaRecorder.isTypeSupported(options.mimeType)) {
+                        options.mimeType = 'video/webm;codecs=vp8';
+                    }
+                    
+                    if (!MediaRecorder.isTypeSupported(options.mimeType)) {
+                        options.mimeType = 'video/webm';
+                    }
+
+                    this.mediaRecorder = new MediaRecorder(this.stream, options);
+                    this.recordedChunks = [];
+
+                    this.mediaRecorder.ondataavailable = (event) => {
+                        if (event.data.size > 0) {
+                            this.recordedChunks.push(event.data);
+                        }
+                    };
+
+                    this.mediaRecorder.onstop = () => {
+                        this.handleRecordingStop();
+                    };
+
+                    // 监听用户停止共享屏幕
+                    this.stream.getVideoTracks()[0].addEventListener('ended', () => {
+                        this.stopRecording();
+                    });
+
+                    this.mediaRecorder.start(1000); // 每秒收集一次数据
+                    this.startTimer();
+                    this.updateUI('recording');
+
+                } catch (error) {
+                    console.error('开始录制时出错:', error);
+                    alert('无法开始录制，请确保允许屏幕共享权限');
+                }
+            }
+
+            stopRecording() {
+                if (this.mediaRecorder && this.mediaRecorder.state !== 'inactive') {
+                    this.mediaRecorder.stop();
+                }
+                
+                if (this.stream) {
+                    this.stream.getTracks().forEach(track => track.stop());
+                }
+                
+                this.stopTimer();
+                this.updateUI('stopped');
+            }
+
+            handleRecordingStop() {
+                const blob = new Blob(this.recordedChunks, { type: 'video/webm' });
+                this.recordedBlob = blob;
+                
+                // 在预览中显示录制的视频
+                this.previewVideo.srcObject = null;
+                this.previewVideo.src = URL.createObjectURL(blob);
+                this.previewVideo.controls = true;
+                
+                this.downloadBtn.disabled = false;
+            }
+
+            downloadVideo() {
+                if (!this.recordedBlob) return;
+                
+                const url = URL.createObjectURL(this.recordedBlob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `screen-recording-${new Date().toISOString().slice(0, 19).replace(/:/g, '-')}.webm`;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+            }
+
+            startTimer() {
+                this.startTime = Date.now();
+                this.timerInterval = setInterval(() => {
+                    const elapsed = Date.now() - this.startTime;
+                    this.updateTimer(elapsed);
+                }, 1000);
+            }
+
+            stopTimer() {
+                if (this.timerInterval) {
+                    clearInterval(this.timerInterval);
+                    this.timerInterval = null;
+                }
+            }
+
+            updateTimer(elapsed) {
+                const seconds = Math.floor(elapsed / 1000);
+                const minutes = Math.floor(seconds / 60);
+                const hours = Math.floor(minutes / 60);
+                
+                const formattedTime = [
+                    hours.toString().padStart(2, '0'),
+                    (minutes % 60).toString().padStart(2, '0'),
+                    (seconds % 60).toString().padStart(2, '0')
+                ].join(':');
+                
+                this.timer.textContent = formattedTime;
+            }
+
+            updateUI(state) {
+                switch (state) {
+                    case 'recording':
+                        this.startBtn.disabled = true;
+                        this.stopBtn.disabled = false;
+                        this.downloadBtn.disabled = true;
+                        this.statusDot.classList.add('recording');
+                        this.statusText.textContent = '正在录制...';
+                        this.qualitySelect.disabled = true;
+                        this.framerateSelect.disabled = true;
+                        break;
+                        
+                    case 'stopped':
+                        this.startBtn.disabled = false;
+                        this.stopBtn.disabled = true;
+                        this.statusDot.classList.remove('recording');
+                        this.statusText.textContent = '录制完成';
+                        this.qualitySelect.disabled = false;
+                        this.framerateSelect.disabled = false;
+                        break;
+                        
+                    default:
+                        this.startBtn.disabled = false;
+                        this.stopBtn.disabled = true;
+                        this.downloadBtn.disabled = true;
+                        this.statusDot.classList.remove('recording');
+                        this.statusText.textContent = '准备就绪';
+                        this.timer.textContent = '00:00:00';
+                        break;
+                }
+            }
+        }
+
+        // 初始化
+        document.addEventListener('DOMContentLoaded', () => {
+            new ScreenRecorder();
+        });
+    
+                return input;
+            }
+
+            displayResult(result) {
+                document.getElementById('resultContent').textContent = result;
+            }
+
+            clear() {
+                document.getElementById('input').value = '';
+                document.getElementById('resultContent').textContent = '处理结果将在这里显示...';
+            }
+
+            copyResult() {
+                const result = document.getElementById('resultContent').textContent;
+                if (result && result !== '处理结果将在这里显示...') {
+                    ToolUtils.copyToClipboard(result);
+                } else {
+                    ToolUtils.showToast('没有可复制的内容', 'warning');
+                }
+            }
+        }
+
+        // 初始化应用
+        document.addEventListener('DOMContentLoaded', () => {
+            new ToolApp();
+        });
+    </script>
+</body>
+</html>

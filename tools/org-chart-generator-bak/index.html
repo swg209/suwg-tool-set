@@ -1,0 +1,729 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>新零售中心组织结构图 - AI工具集</title>
+    <meta name="description" content="新零售中心组织结构图">
+    
+    <!-- 样式文件 -->
+    <link rel="stylesheet" href="../../shared/css/common.css">
+    
+    <!-- 工具特定样式 -->
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'PingFang SC', 'Microsoft YaHei', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: var(--spacing-lg);
+        }
+        
+        .container {
+            max-width: 1800px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.1);
+            backdrop-filter: blur(10px);
+        }
+        
+        .title {
+            text-align: center;
+            color: #2c3e50;
+            font-size: 32px;
+            font-weight: 600;
+            margin-bottom: 30px;
+            position: relative;
+        }
+        
+        .title::after {
+            content: '';
+            width: 80px;
+            height: 4px;
+            background: linear-gradient(90deg, #667eea, #764ba2);
+            position: absolute;
+            bottom: -10px;
+            left: 50%;
+            transform: translateX(-50%);
+            border-radius: 2px;
+        }
+        
+        .horizontal-org {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+        
+        /* 顶层管理 */
+        .top-management {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 30px;
+            margin-bottom: 20px;
+        }
+        
+        .position-card {
+            background: white;
+            border-radius: 12px;
+            padding: 15px 20px;
+            text-align: center;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.08);
+            border: 2px solid transparent;
+            transition: all 0.3s ease;
+            position: relative;
+            min-width: 140px;
+        }
+        
+        .position-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 12px 30px rgba(0, 0, 0, 0.15);
+            border-color: #667eea;
+        }
+        
+        .chairman {
+            background: linear-gradient(135deg, #ff6b6b, #ee5a24);
+            color: white;
+            font-size: 16px;
+            font-weight: 600;
+        }
+        
+        .ceo {
+            background: linear-gradient(135deg, #4834d4, #686de0);
+            color: white;
+            font-size: 16px;
+            font-weight: 600;
+        }
+        
+        .vice-ceo {
+            background: linear-gradient(135deg, #00d2d3, #01a3a4);
+            color: white;
+            font-size: 16px;
+            font-weight: 600;
+        }
+        
+        .arrow {
+            font-size: 24px;
+            color: #bdc3c7;
+            font-weight: bold;
+        }
+        
+        /* 部门水平布局 */
+        .departments-row {
+            display: flex;
+            justify-content: space-between;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+        
+        .dept-container {
+            background: #f8f9fa;
+            border-radius: var(--radius-lg);
+            padding: var(--spacing-lg);
+            border-left: 5px solid #667eea;
+            flex: 1;
+            min-width: 280px;
+            max-width: 350px;
+        }
+        
+        .dept-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #2c3e50;
+            margin-bottom: 15px;
+            text-align: center;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            padding: 8px;
+            border-radius: 8px;
+        }
+        
+        .group {
+            margin-bottom: 15px;
+        }
+        
+        .group-title {
+            font-size: 14px;
+            font-weight: 600;
+            color: #34495e;
+            margin-bottom: 10px;
+            padding: 6px 12px;
+            background: #e3f2fd;
+            border-radius: 6px;
+            border-left: 3px solid #2196f3;
+            cursor: pointer;
+            user-select: none;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: all 0.3s ease;
+        }
+        
+        .group-title:hover {
+            background: #bbdefb;
+            transform: translateX(2px);
+        }
+        
+        .group-toggle {
+            font-size: 12px;
+            transition: transform 0.3s ease;
+        }
+        
+        .group-toggle.collapsed {
+            transform: rotate(-90deg);
+        }
+        
+        .staff-list {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            transition: all 0.3s ease;
+            overflow: hidden;
+        }
+        
+        .staff-list.collapsed {
+            max-height: 0;
+            opacity: 0;
+            margin-top: 0;
+            gap: 0;
+        }
+        
+        .staff-list {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        
+        .manager {
+            background: linear-gradient(135deg, #26de81, #20bf6b);
+            color: white;
+        }
+        
+        .supervisor {
+            background: linear-gradient(135deg, #fed330, #f7b731);
+            color: #2c3e50;
+        }
+        
+        .staff {
+            background: linear-gradient(135deg, #a4b0be, #747d8c);
+            color: white;
+            font-size: 13px;
+        }
+        
+        .staff-name {
+            font-size: 15px !important;
+            font-weight: 500;
+        }
+        
+        .note {
+            font-size: 10px;
+            color: #7f8c8d;
+            margin-top: 3px;
+            font-style: italic;
+        }
+        
+        .staff-card {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 12px;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+            border-left: 4px solid #667eea;
+        }
+        
+        .staff-card:hover {
+            transform: translateX(5px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+        
+        .staff-position {
+            font-size: 12px;
+            color: #7f8c8d;
+        }
+        
+        .staff-name-main {
+            font-size: 15px;
+            font-weight: 600;
+            color: #2c3e50;
+        }
+        
+        .special-note {
+            font-size: 10px;
+            color: #e74c3c;
+            font-weight: 500;
+        }
+        
+        @media (max-width: 1200px) {
+            .departments-row {
+                flex-direction: column;
+                align-items: center;
+            }
+            
+            .dept-container {
+                max-width: 600px;
+                width: 100%;
+            }
+        }
+        
+        @media (max-width: 768px) {
+            .container {
+                padding: 15px;
+            }
+            
+            .title {
+                font-size: 24px;
+            }
+            
+            .top-management {
+                flex-direction: column;
+                gap: 15px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="tool-container">
+        <!-- 工具头部 -->
+        <header class="tool-header">
+            <div class="tool-header-content">
+                <a href="../../index.html" class="back-btn">
+                    <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                        <path d="M10 4l-4 4 4 4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                    返回工具集
+                </a>
+                
+                <div class="tool-title">
+                    <h1>新零售中心组织结构图</h1>
+                    <p class="tool-subtitle">新零售中心组织结构图</p>
+                </div>
+                
+                <button class="theme-toggle" id="themeToggle" aria-label="切换主题">
+                    <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                        <circle cx="10" cy="10" r="4" stroke="currentColor" stroke-width="2"/>
+                        <path d="M10 2v2M10 16v2M18 10h-2M4 10H2M15.66 4.34l-1.41 1.41M5.75 14.25l-1.41 1.41M15.66 15.66l-1.41-1.41M5.75 5.75L4.34 4.34" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                    </svg>
+                </button>
+            </div>
+        </header>
+
+        <!-- 工具主内容 -->
+        <main class="tool-main">
+            <div class="tool-card">
+                <div class="tool-section">
+                    <h2>
+                        <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                            <rect x="3" y="3" width="14" height="14" rx="2" stroke="currentColor" stroke-width="2"/>
+                        </svg>
+                        工具功能
+                    </h2>
+                    
+                    
+            <div class="tool-card">
+                <div class="tool-section">
+                    <h2>
+                        <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                            <rect x="3" y="3" width="14" height="14" rx="2" stroke="currentColor" stroke-width="2"/>
+                        </svg>
+                        新零售中心组织结构图
+                    </h2>
+                    <div class="container">
+        <h1 class="title">新零售中心组织结构图</h1>
+        
+        <div class="horizontal-org">
+            <!-- 顶层管理 -->
+            <div class="top-management">
+                <div class="position-card chairman">
+                    <div>董事长</div>
+                </div>
+                <div class="arrow">→</div>
+                <div class="position-card ceo">
+                    <div>总经理</div>
+                    <div class="staff-name">南星</div>
+                </div>
+                <div class="arrow">→</div>
+                <div class="position-card vice-ceo">
+                    <div>副总经理</div>
+                    <div class="staff-name">川柏</div>
+                </div>
+            </div>
+            
+            <!-- 部门水平布局 -->
+            <div class="departments-row">
+                
+                <!-- 商品部 -->
+                <div class="dept-container">
+                    <div class="dept-title">商品部（川柏）</div>
+                    <div class="group">
+                        <div class="group-title" onclick="toggleGroup(this)">
+                            <span>采购组</span>
+                            <span class="group-toggle">▼</span>
+                        </div>
+                        <div class="staff-list">
+                            <div class="staff-card" style="border-left-color: #fed330;">
+                                <div>
+                                    <div class="staff-name-main">麦冬</div>
+                                    <div class="staff-position">主管</div>
+                                </div>
+                            </div>
+                            <div class="staff-card">
+                                <div>
+                                    <div class="staff-name-main">香蕾</div>
+                                    <div class="staff-position">采购专员</div>
+                                </div>
+                            </div>
+                            <div class="staff-card">
+                                <div>
+                                    <div class="staff-name-main">青黛</div>
+                                    <div class="staff-position">采购专员</div>
+                                </div>
+                            </div>
+                            <div class="staff-card">
+                                <div>
+                                    <div class="staff-name-main">芡实</div>
+                                    <div class="staff-position">采购助理</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- 运营部 -->
+                <div class="dept-container">
+                    <div class="dept-title">运营部（商陆）</div>
+                    <div class="group">
+                        <div class="group-title" onclick="toggleGroup(this)">
+                            <span>运营组</span>
+                            <span class="group-toggle">▼</span>
+                        </div>
+                        <div class="staff-list">
+                            <div class="staff-card" style="border-left-color: #fed330;">
+                                <div>
+                                    <div class="staff-name-main">白苏</div>
+                                    <div class="staff-position">主管</div>
+                                </div>
+                            </div>
+                            <div class="staff-card" style="border-left-color: #fed330;">
+                                <div>
+                                    <div class="staff-name-main">玄参</div>
+                                    <div class="staff-position">主管</div>
+                                </div>
+                            </div>
+                            <div class="staff-card" style="border-left-color: #fed330;">
+                                <div>
+                                    <div class="staff-name-main">冬青</div>
+                                    <div class="staff-position">主管</div>
+                                </div>
+                            </div>
+                            <div class="staff-card" style="border-left-color: #fed330;">
+                                <div>
+                                    <div class="staff-name-main">决明</div>
+                                    <div class="staff-position">主管</div>
+                                </div>
+                            </div>
+                            <div class="staff-card" style="border-left-color: #fed330;">
+                                <div>
+                                    <div class="staff-name-main">熟地</div>
+                                    <div class="staff-position">主管</div>
+                                </div>
+                            </div>
+                            <div class="staff-card" style="border-left-color: #fed330;">
+                                <div>
+                                    <div class="staff-name-main">忘忧</div>
+                                    <div class="staff-position">主管</div>
+                                </div>
+                            </div>
+                            <div class="staff-card">
+                                <div>
+                                    <div class="staff-name-main">细辛</div>
+                                    <div class="staff-position">运营助理</div>
+                                </div>
+                            </div>
+                            <div class="staff-card">
+                                <div>
+                                    <div class="staff-name-main">白笈</div>
+                                    <div class="staff-position">运营助理</div>
+                                </div>
+                            </div>
+                            <div class="staff-card">
+                                <div>
+                                    <div class="staff-name-main">灵芝</div>
+                                    <div class="staff-position">运营助理</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- 质管部 -->
+                <div class="dept-container">
+                    <div class="dept-title">质管部（党参）</div>
+                    <div class="group">
+                        <div class="group-title" onclick="toggleGroup(this)">
+                            <span>质管组</span>
+                            <span class="group-toggle">▼</span>
+                        </div>
+                        <div class="staff-list">
+                            <div class="staff-card" style="border-left-color: #fed330;">
+                                <div>
+                                    <div class="staff-name-main">甘草</div>
+                                    <div class="staff-position">经理</div>
+                                </div>
+                            </div>
+                            <div class="staff-card">
+                                <div>
+                                    <div class="staff-name-main">半夏</div>
+                                    <div class="staff-position">质管员</div>
+                                    <div class="special-note">双线汇报</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="group-title" onclick="toggleGroup(this)">
+                            <span>验收组</span>
+                            <span class="group-toggle">▼</span>
+                        </div>
+                        <div class="staff-list">
+                            <div class="staff-card">
+                                <div>
+                                    <div class="staff-name-main">沉香</div>
+                                    <div class="staff-position">药品验收员</div>
+                                    <div class="note">仓库</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- 客服部 -->
+                <div class="dept-container">
+                    <div class="dept-title">客服部（商陆兼）</div>
+                    <div class="group">
+                        <div class="group-title" onclick="toggleGroup(this)">
+                            <span>售前组（商陆兼）</span>
+                            <span class="group-toggle">▼</span>
+                        </div>
+                        <div class="staff-list">
+                            <div class="staff-card" style="border-left-color: #fed330;">
+                                <div>
+                                    <div class="staff-name-main">三七</div>
+                                    <div class="staff-position">主管</div>
+                                    <div class="note">茵创-粒仁</div>
+                                </div>
+                            </div>
+                            <div class="staff-card">
+                                <div>
+                                    <div class="staff-name-main">豆蔻</div>
+                                    <div class="staff-position">客服</div>
+                                </div>
+                            </div>
+                            <div class="staff-card">
+                                <div>
+                                    <div class="staff-name-main">羽涅</div>
+                                    <div class="staff-position">客服</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="group-title" onclick="toggleGroup(this)">
+                            <span>售后组（商陆兼）</span>
+                            <span class="group-toggle">▼</span>
+                        </div>
+                        <div class="staff-list">
+                            <div class="staff-card">
+                                <div>
+                                    <div class="staff-name-main">佛手</div>
+                                    <div class="staff-position">售后客服</div>
+                                    <div class="note">仓库</div>
+                                </div>
+                            </div>
+                            <div class="staff-card">
+                                <div>
+                                    <div class="staff-name-main">陈皮</div>
+                                    <div class="staff-position">售后客服</div>
+                                    <div class="note">仓库</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- 仓储部 -->
+                <div class="dept-container">
+                    <div class="dept-title">仓储部（苍耳）</div>
+                    <div class="group">
+                        <div class="group-title" onclick="toggleGroup(this)">
+                            <span>打包分拣组（辛一）</span>
+                            <span class="group-toggle">▼</span>
+                        </div>
+                        <div class="staff-list">
+                            <div class="staff-card" style="border-left-color: #fed330;">
+                                <div>
+                                    <div class="staff-name-main">辛一</div>
+                                    <div class="staff-position">组长</div>
+                                </div>
+                            </div>
+                            <div class="staff-card">
+                                <div>
+                                    <div class="staff-name-main">三棱</div>
+                                    <div class="staff-position">打包分拣员</div>
+                                </div>
+                            </div>
+                            <div class="staff-card">
+                                <div>
+                                    <div class="staff-name-main">锦苏</div>
+                                    <div class="staff-position">打包分拣员</div>
+                                </div>
+                            </div>
+                            <div class="staff-card">
+                                <div>
+                                    <div class="staff-name-main">田七</div>
+                                    <div class="staff-position">打包分拣员</div>
+                                </div>
+                            </div>
+                            <div class="staff-card">
+                                <div>
+                                    <div class="staff-name-main">南烛</div>
+                                    <div class="staff-position">打包分拣员</div>
+                                </div>
+                            </div>
+                            <div class="staff-card">
+                                <div>
+                                    <div class="staff-name-main">知母</div>
+                                    <div class="staff-position">打包分拣员</div>
+                                </div>
+                            </div>
+                            <div class="staff-card">
+                                <div>
+                                    <div class="staff-name-main">瑞香</div>
+                                    <div class="staff-position">打包分拣员</div>
+                                </div>
+                            </div>
+                            <div class="staff-card">
+                                <div>
+                                    <div class="staff-name-main">荆芥</div>
+                                    <div class="staff-position">打包分拣员</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="group-title" onclick="toggleGroup(this)">
+                            <span>养护组</span>
+                            <span class="group-toggle">▼</span>
+                        </div>
+                        <div class="staff-list">
+                            <div class="staff-card">
+                                <div>
+                                    <div class="staff-name-main">枸杞</div>
+                                    <div class="staff-position">药品养护员</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+            </div>
+        </div>
+    </div>
+    
+    
+                </div>
+            </div>
+                    <!-- 结果显示区域 -->
+                    <div class="result-display" id="result">
+                        <pre id="resultContent">处理结果将在这里显示...</pre>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <!-- 工具页脚 -->
+        <footer class="tool-footer">
+            <p>由 <a href="../../index.html">AI工具集</a> 提供 | 原创工具</p>
+        </footer>
+    </div>
+
+    <!-- JavaScript -->
+    <script src="../../shared/js/utils.js"></script>
+    <script>
+        // 工具特定的JavaScript代码
+        class ToolApp {
+            constructor() {
+                this.init();
+            }
+
+            init() {
+                this.setupEventListeners();
+            }
+
+            setupEventListeners() {
+                document.getElementById('processBtn').addEventListener('click', () => this.process());
+                document.getElementById('clearBtn').addEventListener('click', () => this.clear());
+                document.getElementById('copyBtn').addEventListener('click', () => this.copyResult());
+                
+                // 实时处理（可选）
+                document.getElementById('input').addEventListener('input', 
+                    ToolUtils.debounce(() => this.process(), 300)
+                );
+            }
+
+            process() {
+                const input = document.getElementById('input').value;
+                const result = this.processInput(input);
+                this.displayResult(result);
+            }
+
+            processInput(input) {
+                
+        function toggleGroup(element) {
+            const staffList = element.nextElementSibling;
+            const toggle = element.querySelector('.group-toggle');
+            
+            if (staffList && staffList.classList.contains('staff-list')) {
+                staffList.classList.toggle('collapsed');
+                toggle.classList.toggle('collapsed');
+                
+                // 更新箭头符号
+                if (staffList.classList.contains('collapsed')) {
+                    toggle.textContent = '▶';
+                } else {
+                    toggle.textContent = '▼';
+                }
+            }
+        }
+    
+                return input;
+            }
+
+            displayResult(result) {
+                document.getElementById('resultContent').textContent = result;
+            }
+
+            clear() {
+                document.getElementById('input').value = '';
+                document.getElementById('resultContent').textContent = '处理结果将在这里显示...';
+            }
+
+            copyResult() {
+                const result = document.getElementById('resultContent').textContent;
+                if (result && result !== '处理结果将在这里显示...') {
+                    ToolUtils.copyToClipboard(result);
+                } else {
+                    ToolUtils.showToast('没有可复制的内容', 'warning');
+                }
+            }
+        }
+
+        // 初始化应用
+        document.addEventListener('DOMContentLoaded', () => {
+            new ToolApp();
+        });
+    </script>
+</body>
+</html>

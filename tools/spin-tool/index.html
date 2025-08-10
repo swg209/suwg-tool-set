@@ -1,0 +1,870 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>发电陀螺小工具 - AI工具集</title>
+    <meta name="description" content="发电陀螺小工具">
+    
+    <!-- 样式文件 -->
+    <link rel="stylesheet" href="../../shared/css/common.css">
+    
+    <!-- 工具特定样式 -->
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            overflow: hidden;
+        }
+
+        .container {
+            text-align: center;
+            max-width: 700px;
+            width: 100%;
+            padding: var(--spacing-lg);
+        }
+
+        h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            text-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+        }
+
+        .subtitle {
+            font-size: 1.1em;
+            opacity: 0.9;
+            margin-bottom: 30px;
+        }
+
+        .power-system {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 40px;
+            margin: 30px 0;
+            flex-wrap: wrap;
+        }
+
+        .spinner-container {
+            position: relative;
+            width: 400px;
+            height: 400px;
+            cursor: grab;
+            user-select: none;
+        }
+
+        .spinner-container:active {
+            cursor: grabbing;
+        }
+
+        .spinner {
+            width: 100%;
+            height: 100%;
+            position: relative;
+            transition: none;
+        }
+
+        .spinner-center {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 60px;
+            height: 60px;
+            background: radial-gradient(circle, #ffd700 0%, #ffb347 100%);
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+            box-shadow: 
+                0 0 30px rgba(255, 215, 0, 0.6),
+                inset 0 3px 8px rgba(0, 0, 0, 0.2);
+            z-index: 10;
+        }
+
+        .spinner-arm {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 160px;
+            height: 40px;
+            transform-origin: center;
+            transform: translate(-50%, -50%);
+        }
+
+        .spinner-arm:nth-child(1) {
+            transform: translate(-50%, -50%) rotate(0deg);
+        }
+
+        .spinner-arm:nth-child(2) {
+            transform: translate(-50%, -50%) rotate(120deg);
+        }
+
+        .spinner-arm:nth-child(3) {
+            transform: translate(-50%, -50%) rotate(240deg);
+        }
+
+        .spinner-weight {
+            position: absolute;
+            width: 70px;
+            height: 70px;
+            background: radial-gradient(circle, #4ecdc4 0%, #44a08d 100%);
+            border-radius: 50%;
+            top: 50%;
+            right: 0;
+            transform: translateY(-50%);
+            box-shadow: 
+                0 6px 20px rgba(78, 205, 196, 0.5),
+                inset 0 3px 8px rgba(255, 255, 255, 0.3);
+        }
+
+        .power-lines {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .wire {
+            width: 4px;
+            height: 60px;
+            background: linear-gradient(to bottom, #ffd700, #ff6b6b);
+            border-radius: 2px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .wire::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 20px;
+            background: rgba(255, 255, 255, 0.8);
+            animation: electricity 0.5s linear infinite;
+            opacity: 0;
+        }
+
+        .wire.active::before {
+            opacity: 1;
+        }
+
+        @keyframes electricity {
+            0% { transform: translateY(-20px); }
+            100% { transform: translateY(80px); }
+        }
+
+        .bulb-container {
+            position: relative;
+            width: 120px;
+            height: 160px;
+        }
+
+        .bulb {
+            width: 80px;
+            height: 100px;
+            background: radial-gradient(circle at 30% 30%, var(--bg-card), #f0f0f0);
+            border-radius: 50% 50% 50% 50% / 60% 60% 40% 40%;
+            position: relative;
+            margin: 0 auto;
+            transition: all 0.3s ease;
+            box-shadow: 
+                0 0 20px rgba(255, 255, 255, 0.3),
+                inset -10px -10px 20px rgba(0, 0, 0, 0.1);
+        }
+
+        .bulb.glowing {
+            background: radial-gradient(circle at 30% 30%, var(--bg-card)f99, #ffeb3b);
+            box-shadow: 
+                0 0 40px rgba(255, 255, 0, 0.8),
+                0 0 80px rgba(255, 255, 0, 0.4),
+                inset -10px -10px 20px rgba(255, 215, 0, 0.2);
+        }
+
+        .bulb-base {
+            width: 40px;
+            height: 30px;
+            background: linear-gradient(to bottom, var(--text-secondary), var(--text-primary));
+            margin: 0 auto;
+            border-radius: 0 0 8px 8px;
+            position: relative;
+        }
+
+        .bulb-base::before {
+            content: '';
+            position: absolute;
+            top: -5px;
+            left: 0;
+            width: 100%;
+            height: 10px;
+            background: #888;
+            border-radius: 2px;
+        }
+
+        .filament {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 30px;
+            height: 40px;
+            opacity: 0.3;
+            transition: opacity 0.3s ease;
+        }
+
+        .filament.active {
+            opacity: 1;
+        }
+
+        .filament::before,
+        .filament::after {
+            content: '';
+            position: absolute;
+            width: 2px;
+            height: 20px;
+            background: #ff6b6b;
+            border-radius: 1px;
+            box-shadow: 0 0 10px #ff6b6b;
+        }
+
+        .filament::before {
+            left: 8px;
+            transform: rotate(15deg);
+        }
+
+        .filament::after {
+            right: 8px;
+            transform: rotate(-15deg);
+        }
+
+        .power-meter {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: var(--radius-lg);
+            padding: var(--spacing-lg);
+            margin: var(--spacing-lg) 0;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .meter-display {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .power-value {
+            font-size: 2em;
+            font-weight: bold;
+            color: #ffd700;
+            text-shadow: 0 0 10px rgba(255, 215, 0, 0.5);
+        }
+
+        .power-bar {
+            width: 100%;
+            height: 20px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: var(--radius-md);
+            overflow: hidden;
+            position: relative;
+        }
+
+        .power-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #4ecdc4, #ffd700, #ff6b6b);
+            border-radius: var(--radius-md);
+            transition: width 0.3s ease;
+            width: 0%;
+            box-shadow: 0 0 20px rgba(255, 215, 0, 0.5);
+        }
+
+        .controls {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin: 30px 0;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            padding: 12px 24px;
+            background: rgba(255, 255, 255, 0.2);
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            color: white;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 1em;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(10px);
+        }
+
+        .btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .stats {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: var(--radius-lg);
+            padding: var(--spacing-lg);
+            margin: var(--spacing-lg) 0;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 15px;
+            margin-top: 15px;
+        }
+
+        .stat-item {
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 1.5em;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        .stat-label {
+            font-size: 0.9em;
+            opacity: 0.8;
+        }
+
+        .instructions {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: var(--radius-lg);
+            padding: var(--spacing-lg);
+            margin: var(--spacing-lg) 0;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            text-align: left;
+        }
+
+        .instructions h3 {
+            margin-bottom: 15px;
+            color: var(--bg-card);
+        }
+
+        .instructions ul {
+            list-style: none;
+            padding: 0;
+        }
+
+        .instructions li {
+            margin: 8px 0;
+            padding-left: 20px;
+            position: relative;
+        }
+
+        .instructions li:before {
+            content: "⚡";
+            position: absolute;
+            left: 0;
+        }
+
+        .footer {
+            margin-top: 30px;
+            opacity: 0.7;
+            font-size: 0.9em;
+        }
+
+        @media (max-width: 768px) {
+            .power-system {
+                flex-direction: column;
+                gap: 20px;
+            }
+            
+            .spinner-container {
+                width: 320px;
+                height: 320px;
+            }
+            
+            .spinner-arm {
+                width: 130px;
+                height: 32px;
+            }
+            
+            .spinner-weight {
+                width: 56px;
+                height: 56px;
+            }
+            
+            .spinner-center {
+                width: 48px;
+                height: 48px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="tool-container">
+        <!-- 工具头部 -->
+        <header class="tool-header">
+            <div class="tool-header-content">
+                <a href="../../index.html" class="back-btn">
+                    <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                        <path d="M10 4l-4 4 4 4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                    返回工具集
+                </a>
+                
+                <div class="tool-title">
+                    <h1>发电陀螺小工具</h1>
+                    <p class="tool-subtitle">发电陀螺小工具</p>
+                </div>
+                
+                <button class="theme-toggle" id="themeToggle" aria-label="切换主题">
+                    <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                        <circle cx="10" cy="10" r="4" stroke="currentColor" stroke-width="2"/>
+                        <path d="M10 2v2M10 16v2M18 10h-2M4 10H2M15.66 4.34l-1.41 1.41M5.75 14.25l-1.41 1.41M15.66 15.66l-1.41-1.41M5.75 5.75L4.34 4.34" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                    </svg>
+                </button>
+            </div>
+        </header>
+
+        <!-- 工具主内容 -->
+        <main class="tool-main">
+            <div class="tool-card">
+                <div class="tool-section">
+                    <h2>
+                        <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                            <rect x="3" y="3" width="14" height="14" rx="2" stroke="currentColor" stroke-width="2"/>
+                        </svg>
+                        工具功能
+                    </h2>
+                    
+                    
+            <div class="tool-card">
+                <div class="tool-section">
+                    <h2>
+                        <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                            <rect x="3" y="3" width="14" height="14" rx="2" stroke="currentColor" stroke-width="2"/>
+                        </svg>
+                        发电陀螺小工具
+                    </h2>
+                    <div class="container">
+        <h1>⚡ 发电陀螺</h1>
+        <p class="subtitle">拖拽旋转发电，点亮你的创意灯泡</p>
+        
+        <div class="power-system">
+            <div class="spinner-container" id="spinnerContainer">
+                <div class="spinner" id="spinner">
+                    <div class="spinner-arm">
+                        <div class="spinner-weight"></div>
+                    </div>
+                    <div class="spinner-arm">
+                        <div class="spinner-weight"></div>
+                    </div>
+                    <div class="spinner-arm">
+                        <div class="spinner-weight"></div>
+                    </div>
+                    <div class="spinner-center"></div>
+                </div>
+            </div>
+
+            <div class="power-lines">
+                <div class="wire" id="wire1"></div>
+                <div class="wire" id="wire2"></div>
+                <div class="wire" id="wire3"></div>
+            </div>
+
+            <div class="bulb-container">
+                <div class="bulb" id="bulb">
+                    <div class="filament" id="filament"></div>
+                </div>
+                <div class="bulb-base"></div>
+            </div>
+        </div>
+
+        <div class="power-meter">
+            <div class="meter-display">
+                <span>发电功率:</span>
+                <span class="power-value" id="powerValue">0W</span>
+            </div>
+            <div class="power-bar">
+                <div class="power-fill" id="powerFill"></div>
+            </div>
+        </div>
+
+        <div class="controls">
+            <button class="btn" id="accelerateBtn">⚡ 加速发电</button>
+            <button class="btn" id="stopBtn">⏹️ 停止</button>
+            <button class="btn" id="resetBtn">🔄 重置</button>
+        </div>
+
+        <div class="stats">
+            <h3>📊 发电统计</h3>
+            <div class="stats-grid">
+                <div class="stat-item">
+                    <div class="stat-value" id="currentSpeed">0</div>
+                    <div class="stat-label">当前转速 (RPM)</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value" id="maxPower">0</div>
+                    <div class="stat-label">最大功率 (W)</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value" id="totalEnergy">0</div>
+                    <div class="stat-label">总发电量 (Wh)</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value" id="efficiency">0</div>
+                    <div class="stat-label">发电效率 (%)</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="instructions">
+            <h3>⚡ 使用说明</h3>
+            <ul>
+                <li>拖拽陀螺旋转，转速越快发电功率越大</li>
+                <li>灯泡亮度随发电功率变化</li>
+                <li>电流会在导线中流动</li>
+                <li>点击"加速发电"可以增加转速</li>
+                <li>体验绿色能源发电的乐趣</li>
+            </ul>
+        </div>
+
+        <div class="footer">
+            <p>© 小苏趣研AI 发电陀螺 | 绿色能源，创意无限 ✨</p>
+        </div>
+    </div>
+
+    
+                </div>
+            </div>
+                    <!-- 结果显示区域 -->
+                    <div class="result-display" id="result">
+                        <pre id="resultContent">处理结果将在这里显示...</pre>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <!-- 工具页脚 -->
+        <footer class="tool-footer">
+            <p>由 <a href="../../index.html">AI工具集</a> 提供 | 原创工具</p>
+        </footer>
+    </div>
+
+    <!-- JavaScript -->
+    <script src="../../shared/js/utils.js"></script>
+    <script>
+        // 工具特定的JavaScript代码
+        class ToolApp {
+            constructor() {
+                this.init();
+            }
+
+            init() {
+                this.setupEventListeners();
+            }
+
+            setupEventListeners() {
+                document.getElementById('processBtn').addEventListener('click', () => this.process());
+                document.getElementById('clearBtn').addEventListener('click', () => this.clear());
+                document.getElementById('copyBtn').addEventListener('click', () => this.copyResult());
+                
+                // 实时处理（可选）
+                document.getElementById('input').addEventListener('input', 
+                    ToolUtils.debounce(() => this.process(), 300)
+                );
+            }
+
+            process() {
+                const input = document.getElementById('input').value;
+                const result = this.processInput(input);
+                this.displayResult(result);
+            }
+
+            processInput(input) {
+                
+        class PowerSpinner {
+            constructor() {
+                this.spinner = document.getElementById('spinner');
+                this.container = document.getElementById('spinnerContainer');
+                this.accelerateBtn = document.getElementById('accelerateBtn');
+                this.stopBtn = document.getElementById('stopBtn');
+                this.resetBtn = document.getElementById('resetBtn');
+                
+                this.bulb = document.getElementById('bulb');
+                this.filament = document.getElementById('filament');
+                this.powerValue = document.getElementById('powerValue');
+                this.powerFill = document.getElementById('powerFill');
+                this.wires = [
+                    document.getElementById('wire1'),
+                    document.getElementById('wire2'),
+                    document.getElementById('wire3')
+                ];
+                
+                // 状态变量
+                this.isSpinning = false;
+                this.isDragging = false;
+                this.currentAngle = 0;
+                this.angularVelocity = 0;
+                this.lastTime = 0;
+                
+                // 发电相关
+                this.currentPower = 0;
+                this.maxPower = 0;
+                this.totalEnergy = 0;
+                this.lastEnergyTime = 0;
+                
+                // 拖拽相关
+                this.dragStartAngle = 0;
+                this.dragHistory = [];
+                
+                this.initEvents();
+                this.updateStats();
+                this.animate();
+            }
+            
+            initEvents() {
+                // 鼠标事件
+                this.container.addEventListener('mousedown', (e) => this.startDrag(e));
+                document.addEventListener('mousemove', (e) => this.drag(e));
+                document.addEventListener('mouseup', () => this.endDrag());
+                
+                // 触摸事件
+                this.container.addEventListener('touchstart', (e) => this.startDrag(e.touches[0]));
+                document.addEventListener('touchmove', (e) => {
+                    e.preventDefault();
+                    this.drag(e.touches[0]);
+                });
+                document.addEventListener('touchend', () => this.endDrag());
+                
+                // 点击停止
+                this.container.addEventListener('click', (e) => {
+                    if (!this.isDragging) {
+                        this.stop();
+                    }
+                });
+                
+                // 按钮事件
+                this.accelerateBtn.addEventListener('click', () => this.accelerate());
+                this.stopBtn.addEventListener('click', () => this.stop());
+                this.resetBtn.addEventListener('click', () => this.reset());
+                
+                this.container.addEventListener('contextmenu', (e) => e.preventDefault());
+            }
+            
+            startDrag(e) {
+                this.isDragging = true;
+                this.dragStartAngle = this.getAngleFromEvent(e);
+                this.dragHistory = [];
+                this.container.style.cursor = 'grabbing';
+            }
+            
+            drag(e) {
+                if (!this.isDragging) return;
+                
+                const currentAngle = this.getAngleFromEvent(e);
+                const currentTime = Date.now();
+                
+                let angleDiff = currentAngle - this.dragStartAngle;
+                if (angleDiff > 180) angleDiff -= 360;
+                if (angleDiff < -180) angleDiff += 360;
+                
+                this.currentAngle += angleDiff;
+                this.dragStartAngle = currentAngle;
+                
+                this.dragHistory.push({
+                    angle: this.currentAngle,
+                    time: currentTime
+                });
+                
+                this.dragHistory = this.dragHistory.filter(h => currentTime - h.time < 200);
+                this.updateSpinnerRotation();
+            }
+            
+            endDrag() {
+                if (!this.isDragging) return;
+                
+                this.isDragging = false;
+                this.container.style.cursor = 'grab';
+                
+                if (this.dragHistory.length >= 2) {
+                    const recent = this.dragHistory.slice(-5);
+                    const timeDiff = recent[recent.length - 1].time - recent[0].time;
+                    const angleDiff = recent[recent.length - 1].angle - recent[0].angle;
+                    
+                    if (timeDiff > 0) {
+                        this.angularVelocity = (angleDiff / timeDiff) * 1000;
+                        this.startSpinning();
+                    }
+                }
+            }
+            
+            getAngleFromEvent(e) {
+                const rect = this.container.getBoundingClientRect();
+                const centerX = rect.left + rect.width / 2;
+                const centerY = rect.top + rect.height / 2;
+                const x = e.clientX - centerX;
+                const y = e.clientY - centerY;
+                return Math.atan2(y, x) * 180 / Math.PI;
+            }
+            
+            startSpinning() {
+                if (Math.abs(this.angularVelocity) < 10) return;
+                
+                this.isSpinning = true;
+                this.lastEnergyTime = Date.now();
+            }
+            
+            accelerate() {
+                if (this.isSpinning) {
+                    this.angularVelocity += this.angularVelocity > 0 ? 300 : -300;
+                } else {
+                    this.angularVelocity = 400;
+                    this.startSpinning();
+                }
+            }
+            
+            stop() {
+                this.isSpinning = false;
+                this.angularVelocity = 0;
+                this.updatePowerSystem(0);
+            }
+            
+            reset() {
+                this.stop();
+                this.currentAngle = 0;
+                this.maxPower = 0;
+                this.totalEnergy = 0;
+                this.updateSpinnerRotation();
+                this.updateStats();
+            }
+            
+            animate() {
+                const currentTime = Date.now();
+                const deltaTime = currentTime - this.lastTime;
+                
+                if (this.isSpinning && !this.isDragging) {
+                    // 摩擦力减速
+                    const friction = 0.985;
+                    this.angularVelocity *= Math.pow(friction, deltaTime / 16.67);
+                    
+                    this.currentAngle += this.angularVelocity * (deltaTime / 1000);
+                    
+                    if (Math.abs(this.angularVelocity) < 5) {
+                        this.isSpinning = false;
+                        this.angularVelocity = 0;
+                    }
+                    
+                    this.updateSpinnerRotation();
+                }
+                
+                // 计算发电功率
+                const rpm = Math.abs(this.angularVelocity / 6);
+                this.currentPower = Math.min(rpm * 0.5, 100); // 最大100W
+                
+                // 累计发电量
+                if (this.isSpinning && this.lastEnergyTime) {
+                    const energyDelta = this.currentPower * (currentTime - this.lastEnergyTime) / 3600000; // Wh
+                    this.totalEnergy += energyDelta;
+                    this.lastEnergyTime = currentTime;
+                }
+                
+                this.updatePowerSystem(this.currentPower);
+                this.updateStats();
+                this.lastTime = currentTime;
+                requestAnimationFrame(() => this.animate());
+            }
+            
+            updateSpinnerRotation() {
+                this.spinner.style.transform = `rotate(${this.currentAngle}deg)`;
+            }
+            
+            updatePowerSystem(power) {
+                const powerPercent = (power / 100) * 100;
+                
+                // 更新功率显示
+                this.powerValue.textContent = `${Math.round(power)}W`;
+                this.powerFill.style.width = `${powerPercent}%`;
+                
+                // 更新灯泡亮度
+                if (power > 5) {
+                    this.bulb.classList.add('glowing');
+                    this.filament.classList.add('active');
+                    this.bulb.style.filter = `brightness(${1 + power / 50})`;
+                } else {
+                    this.bulb.classList.remove('glowing');
+                    this.filament.classList.remove('active');
+                    this.bulb.style.filter = 'brightness(1)';
+                }
+                
+                // 更新导线电流效果
+                this.wires.forEach((wire, index) => {
+                    if (power > 10) {
+                        wire.classList.add('active');
+                        wire.style.animationDelay = `${index * 0.1}s`;
+                        wire.style.animationDuration = `${Math.max(0.2, 1 - power / 200)}s`;
+                    } else {
+                        wire.classList.remove('active');
+                    }
+                });
+                
+                this.maxPower = Math.max(this.maxPower, power);
+            }
+            
+            updateStats() {
+                const rpm = Math.abs(this.angularVelocity / 6);
+                const efficiency = rpm > 0 ? Math.min((this.currentPower / rpm) * 10, 100) : 0;
+                
+                document.getElementById('currentSpeed').textContent = Math.round(rpm);
+                document.getElementById('maxPower').textContent = Math.round(this.maxPower);
+                document.getElementById('totalEnergy').textContent = this.totalEnergy.toFixed(3);
+                document.getElementById('efficiency').textContent = Math.round(efficiency);
+            }
+        }
+        
+        // 初始化发电陀螺
+        document.addEventListener('DOMContentLoaded', () => {
+            new PowerSpinner();
+        });
+    
+                return input;
+            }
+
+            displayResult(result) {
+                document.getElementById('resultContent').textContent = result;
+            }
+
+            clear() {
+                document.getElementById('input').value = '';
+                document.getElementById('resultContent').textContent = '处理结果将在这里显示...';
+            }
+
+            copyResult() {
+                const result = document.getElementById('resultContent').textContent;
+                if (result && result !== '处理结果将在这里显示...') {
+                    ToolUtils.copyToClipboard(result);
+                } else {
+                    ToolUtils.showToast('没有可复制的内容', 'warning');
+                }
+            }
+        }
+
+        // 初始化应用
+        document.addEventListener('DOMContentLoaded', () => {
+            new ToolApp();
+        });
+    </script>
+</body>
+</html>

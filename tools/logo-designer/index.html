@@ -1,0 +1,1312 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>极简 Logo 设计器 - Minimalist Logo Designer - AI工具集</title>
+    <meta name="description" content="极简 Logo 设计器 - Minimalist Logo Designer">
+    
+    <!-- 样式文件 -->
+    <link rel="stylesheet" href="../../shared/css/common.css">
+    
+    <!-- 工具特定样式 -->
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: var(--text-primary);
+        }
+
+        .container {
+            display: flex;
+            height: 100vh;
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            box-shadow: 0 0 50px rgba(0, 0, 0, 0.3);
+        }
+
+        .sidebar {
+            width: 300px;
+            background: #f8f9fa;
+            border-right: 1px solid #e9ecef;
+            display: flex;
+            flex-direction: column;
+            overflow-y: auto;
+        }
+
+        .header {
+            padding: var(--spacing-lg);
+            background: linear-gradient(135deg, #4c51bf, #667eea);
+            color: white;
+            text-align: center;
+        }
+
+        .title {
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin-bottom: 5px;
+        }
+
+        .subtitle {
+            font-size: 0.9rem;
+            opacity: 0.9;
+        }
+
+        .tool-section {
+            padding: var(--spacing-lg);
+            border-bottom: 1px solid #e9ecef;
+        }
+
+        .section-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin-bottom: 15px;
+            color: #495057;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .tool-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+        }
+
+        .tool-btn {
+            aspect-ratio: 1;
+            border: 2px solid #e9ecef;
+            background: white;
+            border-radius: 8px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+
+        .tool-btn:hover {
+            border-color: #667eea;
+            background: #f8f9ff;
+            transform: translateY(-2px);
+        }
+
+        .tool-btn.active {
+            border-color: #667eea;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+        }
+
+        .color-palette {
+            display: grid;
+            grid-template-columns: repeat(6, 1fr);
+            gap: 8px;
+            margin-bottom: 15px;
+        }
+
+        .color-btn {
+            aspect-ratio: 1;
+            border: 2px solid #dee2e6;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+
+        .color-btn:hover {
+            transform: scale(1.1);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+        }
+
+        .color-btn.active::after {
+            content: '✓';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: white;
+            text-shadow: 0 0 3px rgba(0, 0, 0, 0.5);
+            font-weight: bold;
+        }
+
+        .property-group {
+            margin-bottom: 15px;
+        }
+
+        .property-label {
+            display: block;
+            margin-bottom: 8px;
+            font-size: 0.9rem;
+            font-weight: 500;
+            color: #6c757d;
+        }
+
+        .property-input {
+            width: 100%;
+            padding: 8px 12px;
+            border: 1px solid #ced4da;
+            border-radius: 6px;
+            font-size: 0.9rem;
+            transition: border-color 0.3s ease;
+        }
+
+        .property-input:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .range-input {
+            width: 100%;
+            margin: 8px 0;
+        }
+
+        .canvas-container {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            background: #f8f9fa;
+        }
+
+        .canvas-header {
+            padding: 15px 20px;
+            background: white;
+            border-bottom: 1px solid #e9ecef;
+            display: flex;
+            justify-content: between;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .canvas-controls {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            margin-left: auto;
+        }
+
+        .btn {
+            padding: 8px 16px;
+            border: 1px solid #ced4da;
+            background: white;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .btn:hover {
+            background: #f8f9fa;
+            border-color: #adb5bd;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            border-color: #667eea;
+        }
+
+        .btn-primary:hover {
+            background: linear-gradient(135deg, #5a67d8, #6b46c1);
+            transform: translateY(-1px);
+        }
+
+        .canvas-area {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 40px;
+        }
+
+        .design-canvas {
+            width: 400px;
+            height: 400px;
+            background: white;
+            border: 2px solid #e9ecef;
+            border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            position: relative;
+            overflow: hidden;
+        }
+
+        #logoSvg {
+            width: 100%;
+            height: 100%;
+            cursor: default;
+        }
+
+        .element-controls {
+            background: white;
+            border: 1px solid #e9ecef;
+            border-radius: 8px;
+            padding: 15px;
+            margin-top: 15px;
+            display: none;
+        }
+
+        .element-controls.active {
+            display: block;
+        }
+
+        .layers-panel {
+            background: white;
+            border: 1px solid #e9ecef;
+            border-radius: 8px;
+            margin-top: 15px;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+
+        .layer-item {
+            padding: var(--spacing-md) 15px;
+            border-bottom: 1px solid #f1f3f4;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            cursor: pointer;
+            transition: background 0.2s ease;
+        }
+
+        .layer-item:hover {
+            background: #f8f9fa;
+        }
+
+        .layer-item.active {
+            background: #e3f2fd;
+            border-left: 3px solid #667eea;
+        }
+
+        .layer-name {
+            font-size: 0.9rem;
+            color: #495057;
+        }
+
+        .layer-controls {
+            display: flex;
+            gap: 8px;
+        }
+
+        .layer-btn {
+            padding: 4px 8px;
+            border: 1px solid #ced4da;
+            background: white;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.8rem;
+            transition: all 0.2s ease;
+        }
+
+        .layer-btn:hover {
+            background: #f8f9fa;
+        }
+
+        .text-editor {
+            display: none;
+            background: white;
+            border: 1px solid #e9ecef;
+            border-radius: 8px;
+            padding: 15px;
+            margin-top: 15px;
+        }
+
+        .text-editor.active {
+            display: block;
+        }
+
+        .font-controls {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        .quick-templates {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        .template-btn {
+            padding: var(--spacing-lg);
+            border: 2px solid #e9ecef;
+            background: white;
+            border-radius: 8px;
+            cursor: pointer;
+            text-align: center;
+            transition: all 0.3s ease;
+            font-size: 0.8rem;
+        }
+
+        .template-btn:hover {
+            border-color: #667eea;
+            background: #f8f9ff;
+        }
+
+        .footer {
+            padding: 15px 20px;
+            background: #f8f9fa;
+            border-top: 1px solid #e9ecef;
+            text-align: center;
+            font-size: 0.9rem;
+            color: #6c757d;
+        }
+
+        .footer a {
+            color: #667eea;
+            text-decoration: none;
+            font-weight: 500;
+        }
+
+        .footer a:hover {
+            text-decoration: underline;
+        }
+
+        @media (max-width: 1024px) {
+            .container {
+                flex-direction: column;
+                height: auto;
+            }
+
+            .sidebar {
+                width: 100%;
+                order: 2;
+            }
+
+            .canvas-container {
+                order: 1;
+                min-height: 60vh;
+            }
+
+            .design-canvas {
+                width: 300px;
+                height: 300px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .canvas-area {
+                padding: var(--spacing-lg);
+            }
+
+            .design-canvas {
+                width: 250px;
+                height: 250px;
+            }
+
+            .tool-grid {
+                grid-template-columns: repeat(4, 1fr);
+            }
+
+            .color-palette {
+                grid-template-columns: repeat(8, 1fr);
+            }
+        }
+
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: #28a745;
+            color: white;
+            padding: 12px 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(40, 167, 69, 0.3);
+            transform: translateX(300px);
+            transition: transform 0.3s ease;
+            z-index: 1000;
+        }
+
+        .notification.show {
+            transform: translateX(0);
+        }
+    </style>
+</head>
+<body>
+    <div class="tool-container">
+        <!-- 工具头部 -->
+        <header class="tool-header">
+            <div class="tool-header-content">
+                <a href="../../index.html" class="back-btn">
+                    <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                        <path d="M10 4l-4 4 4 4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                    返回工具集
+                </a>
+                
+                <div class="tool-title">
+                    <h1>极简 Logo 设计器 - Minimalist Logo Designer</h1>
+                    <p class="tool-subtitle">极简 Logo 设计器 - Minimalist Logo Designer</p>
+                </div>
+                
+                <button class="theme-toggle" id="themeToggle" aria-label="切换主题">
+                    <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                        <circle cx="10" cy="10" r="4" stroke="currentColor" stroke-width="2"/>
+                        <path d="M10 2v2M10 16v2M18 10h-2M4 10H2M15.66 4.34l-1.41 1.41M5.75 14.25l-1.41 1.41M15.66 15.66l-1.41-1.41M5.75 5.75L4.34 4.34" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                    </svg>
+                </button>
+            </div>
+        </header>
+
+        <!-- 工具主内容 -->
+        <main class="tool-main">
+            <div class="tool-card">
+                <div class="tool-section">
+                    <h2>
+                        <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                            <rect x="3" y="3" width="14" height="14" rx="2" stroke="currentColor" stroke-width="2"/>
+                        </svg>
+                        工具功能
+                    </h2>
+                    
+                    
+            <div class="tool-card">
+                <div class="tool-section">
+                    <h2>
+                        <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                            <rect x="3" y="3" width="14" height="14" rx="2" stroke="currentColor" stroke-width="2"/>
+                        </svg>
+                        极简 Logo 设计器 - Minimalist Logo Designer
+                    </h2>
+                    <div class="container">
+        <div class="sidebar">
+            <div class="header">
+                <h1 class="title">🎨 极简 Logo 设计器</h1>
+                <p class="subtitle">Minimalist Logo Designer</p>
+            </div>
+
+            <!-- 工具面板 -->
+            <div class="tool-section">
+                <h3 class="section-title">🔧 设计工具</h3>
+                <div class="tool-grid">
+                    <div class="tool-btn active" data-tool="select" title="选择工具">
+                        <span>👆</span>
+                    </div>
+                    <div class="tool-btn" data-tool="rectangle" title="矩形">
+                        <span>⬜</span>
+                    </div>
+                    <div class="tool-btn" data-tool="circle" title="圆形">
+                        <span>⭕</span>
+                    </div>
+                    <div class="tool-btn" data-tool="triangle" title="三角形">
+                        <span>🔺</span>
+                    </div>
+                    <div class="tool-btn" data-tool="line" title="直线">
+                        <span>📏</span>
+                    </div>
+                    <div class="tool-btn" data-tool="text" title="文字">
+                        <span>📝</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 颜色面板 -->
+            <div class="tool-section">
+                <h3 class="section-title">🎨 颜色选择</h3>
+                <div class="color-palette">
+                    <div class="color-btn active" style="background-color: #000000" data-color="#000000"></div>
+                    <div class="color-btn" style="background-color: #ffffff; border-color: #ccc" data-color="#ffffff"></div>
+                    <div class="color-btn" style="background-color: #667eea" data-color="#667eea"></div>
+                    <div class="color-btn" style="background-color: #764ba2" data-color="#764ba2"></div>
+                    <div class="color-btn" style="background-color: #f093fb" data-color="#f093fb"></div>
+                    <div class="color-btn" style="background-color: #f5576c" data-color="#f5576c"></div>
+                    <div class="color-btn" style="background-color: #4facfe" data-color="#4facfe"></div>
+                    <div class="color-btn" style="background-color: #43e97b" data-color="#43e97b"></div>
+                    <div class="color-btn" style="background-color: #fa709a" data-color="#fa709a"></div>
+                    <div class="color-btn" style="background-color: #fee140" data-color="#fee140"></div>
+                    <div class="color-btn" style="background-color: #ff7675" data-color="#ff7675"></div>
+                    <div class="color-btn" style="background-color: #6c5ce7" data-color="#6c5ce7"></div>
+                </div>
+                <div class="property-group">
+                    <label class="property-label">自定义颜色</label>
+                    <input type="color" class="property-input" id="customColor" value="#667eea">
+                </div>
+            </div>
+
+            <!-- 属性面板 -->
+            <div class="tool-section">
+                <h3 class="section-title">⚙️ 元素属性</h3>
+                <div class="element-controls" id="elementControls">
+                    <div class="property-group">
+                        <label class="property-label">大小</label>
+                        <input type="range" class="range-input" id="sizeSlider" min="10" max="200" value="50">
+                    </div>
+                    <div class="property-group">
+                        <label class="property-label">透明度</label>
+                        <input type="range" class="range-input" id="opacitySlider" min="0" max="1" step="0.1" value="1">
+                    </div>
+                    <div class="property-group">
+                        <label class="property-label">旋转角度</label>
+                        <input type="range" class="range-input" id="rotationSlider" min="0" max="360" value="0">
+                    </div>
+                </div>
+
+                <!-- 文字编辑器 -->
+                <div class="text-editor" id="textEditor">
+                    <div class="property-group">
+                        <label class="property-label">文字内容</label>
+                        <input type="text" class="property-input" id="textContent" placeholder="输入文字...">
+                    </div>
+                    <div class="font-controls">
+                        <div class="property-group">
+                            <label class="property-label">字体大小</label>
+                            <input type="range" class="range-input" id="fontSizeSlider" min="12" max="72" value="24">
+                        </div>
+                        <div class="property-group">
+                            <label class="property-label">字体粗细</label>
+                            <select class="property-input" id="fontWeight">
+                                <option value="normal">Normal</option>
+                                <option value="bold">Bold</option>
+                                <option value="100">Thin</option>
+                                <option value="300">Light</option>
+                                <option value="500">Medium</option>
+                                <option value="700">Bold</option>
+                                <option value="900">Black</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 图层面板 -->
+            <div class="tool-section">
+                <h3 class="section-title">📚 图层管理</h3>
+                <div class="layers-panel" id="layersPanel">
+                    <!-- 图层项目将动态添加 -->
+                </div>
+            </div>
+
+            <!-- 快速模板 -->
+            <div class="tool-section">
+                <h3 class="section-title">⚡ 快速模板</h3>
+                <div class="quick-templates">
+                    <div class="template-btn" data-template="tech">
+                        科技风格<br>
+                        <small>圆形 + 文字</small>
+                    </div>
+                    <div class="template-btn" data-template="minimal">
+                        极简风格<br>
+                        <small>几何 + 文字</small>
+                    </div>
+                    <div class="template-btn" data-template="badge">
+                        徽章风格<br>
+                        <small>框架 + 图标</small>
+                    </div>
+                    <div class="template-btn" data-template="modern">
+                        现代风格<br>
+                        <small>渐变 + 排版</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="canvas-container">
+            <div class="canvas-header">
+                <div class="canvas-info">
+                    <span id="canvasInfo">Logo 设计画布 - 400×400px</span>
+                </div>
+                <div class="canvas-controls">
+                    <button class="btn" id="undoBtn">↶ 撤销</button>
+                    <button class="btn" id="redoBtn">↷ 重做</button>
+                    <button class="btn" id="clearBtn">🗑️ 清空</button>
+                    <button class="btn btn-primary" id="exportBtn">📥 导出SVG</button>
+                </div>
+            </div>
+
+            <div class="canvas-area">
+                <div class="design-canvas">
+                    <svg id="logoSvg" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400">
+                        <defs>
+                            <pattern id="grid" width="20" height="20" patternUnits="userSpaceOnUse">
+                                <path d="M 20 0 L 0 0 0 20" fill="none" stroke="#f1f3f4" stroke-width="1"/>
+                            </pattern>
+                        </defs>
+                        <rect width="100%" height="100%" fill="url(#grid)" opacity="0.5"/>
+                    </svg>
+                </div>
+            </div>
+
+            <div class="footer">
+                <p>💡 <strong>使用提示：</strong>选择工具 → 点击画布创建元素 → 调整属性 → 导出SVG</p>
+                <p style="margin-top: 8px;">
+                    <a href="#" target="_blank">小苏趣研AI</a> - 让工作更智能，让生活更有趣
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <div class="notification" id="notification">
+        SVG文件已导出成功！
+    </div>
+
+    
+                </div>
+            </div>
+                    <!-- 结果显示区域 -->
+                    <div class="result-display" id="result">
+                        <pre id="resultContent">处理结果将在这里显示...</pre>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <!-- 工具页脚 -->
+        <footer class="tool-footer">
+            <p>由 <a href="../../index.html">AI工具集</a> 提供 | 原创工具</p>
+        </footer>
+    </div>
+
+    <!-- JavaScript -->
+    <script src="../../shared/js/utils.js"></script>
+    <script>
+        // 工具特定的JavaScript代码
+        class ToolApp {
+            constructor() {
+                this.init();
+            }
+
+            init() {
+                this.setupEventListeners();
+            }
+
+            setupEventListeners() {
+                document.getElementById('processBtn').addEventListener('click', () => this.process());
+                document.getElementById('clearBtn').addEventListener('click', () => this.clear());
+                document.getElementById('copyBtn').addEventListener('click', () => this.copyResult());
+                
+                // 实时处理（可选）
+                document.getElementById('input').addEventListener('input', 
+                    ToolUtils.debounce(() => this.process(), 300)
+                );
+            }
+
+            process() {
+                const input = document.getElementById('input').value;
+                const result = this.processInput(input);
+                this.displayResult(result);
+            }
+
+            processInput(input) {
+                
+        class LogoDesigner {
+            constructor() {
+                this.svg = document.getElementById('logoSvg');
+                this.currentTool = 'select';
+                this.currentColor = '#000000';
+                this.selectedElement = null;
+                this.elements = [];
+                this.history = [];
+                this.historyIndex = -1;
+                this.elementCounter = 0;
+                
+                this.init();
+                this.bindEvents();
+            }
+            
+            init() {
+                this.svg.addEventListener('click', this.handleCanvasClick.bind(this));
+                this.updateLayersPanel();
+                this.saveState();
+            }
+            
+            bindEvents() {
+                // 工具选择
+                document.querySelectorAll('.tool-btn').forEach(btn => {
+                    btn.addEventListener('click', (e) => {
+                        document.querySelectorAll('.tool-btn').forEach(b => b.classList.remove('active'));
+                        btn.classList.add('active');
+                        this.currentTool = btn.dataset.tool;
+                        this.updateUI();
+                    });
+                });
+                
+                // 颜色选择
+                document.querySelectorAll('.color-btn').forEach(btn => {
+                    btn.addEventListener('click', (e) => {
+                        document.querySelectorAll('.color-btn').forEach(b => b.classList.remove('active'));
+                        btn.classList.add('active');
+                        this.currentColor = btn.dataset.color;
+                        this.updateSelectedElement();
+                    });
+                });
+                
+                // 自定义颜色
+                document.getElementById('customColor').addEventListener('change', (e) => {
+                    this.currentColor = e.target.value;
+                    this.updateSelectedElement();
+                });
+                
+                // 属性控制
+                document.getElementById('sizeSlider').addEventListener('input', this.updateSelectedElement.bind(this));
+                document.getElementById('opacitySlider').addEventListener('input', this.updateSelectedElement.bind(this));
+                document.getElementById('rotationSlider').addEventListener('input', this.updateSelectedElement.bind(this));
+                
+                // 文字控制
+                document.getElementById('textContent').addEventListener('input', this.updateSelectedElement.bind(this));
+                document.getElementById('fontSizeSlider').addEventListener('input', this.updateSelectedElement.bind(this));
+                document.getElementById('fontWeight').addEventListener('change', this.updateSelectedElement.bind(this));
+                
+                // 画布控制
+                document.getElementById('undoBtn').addEventListener('click', this.undo.bind(this));
+                document.getElementById('redoBtn').addEventListener('click', this.redo.bind(this));
+                document.getElementById('clearBtn').addEventListener('click', this.clearCanvas.bind(this));
+                document.getElementById('exportBtn').addEventListener('click', this.exportSVG.bind(this));
+                
+                // 模板
+                document.querySelectorAll('.template-btn').forEach(btn => {
+                    btn.addEventListener('click', (e) => {
+                        this.loadTemplate(btn.dataset.template);
+                    });
+                });
+            }
+            
+            handleCanvasClick(e) {
+                if (this.currentTool === 'select') {
+                    this.selectElement(e.target);
+                    return;
+                }
+                
+                const rect = this.svg.getBoundingClientRect();
+                const x = (e.clientX - rect.left) * (400 / rect.width);
+                const y = (e.clientY - rect.top) * (400 / rect.height);
+                
+                this.createElement(this.currentTool, x, y);
+            }
+            
+            createElement(type, x, y) {
+                let element;
+                const id = `element_${++this.elementCounter}`;
+                
+                switch (type) {
+                    case 'rectangle':
+                        element = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+                        element.setAttribute('x', x - 25);
+                        element.setAttribute('y', y - 25);
+                        element.setAttribute('width', 50);
+                        element.setAttribute('height', 50);
+                        element.setAttribute('fill', this.currentColor);
+                        break;
+                        
+                    case 'circle':
+                        element = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+                        element.setAttribute('cx', x);
+                        element.setAttribute('cy', y);
+                        element.setAttribute('r', 25);
+                        element.setAttribute('fill', this.currentColor);
+                        break;
+                        
+                    case 'triangle':
+                        element = document.createElementNS('http://www.w3.org/2000/svg', 'polygon');
+                        const points = `${x},${y-25} ${x-25},${y+25} ${x+25},${y+25}`;
+                        element.setAttribute('points', points);
+                        element.setAttribute('fill', this.currentColor);
+                        break;
+                        
+                    case 'line':
+                        element = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+                        element.setAttribute('x1', x - 25);
+                        element.setAttribute('y1', y);
+                        element.setAttribute('x2', x + 25);
+                        element.setAttribute('y2', y);
+                        element.setAttribute('stroke', this.currentColor);
+                        element.setAttribute('stroke-width', 3);
+                        break;
+                        
+                    case 'text':
+                        element = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+                        element.setAttribute('x', x);
+                        element.setAttribute('y', y);
+                        element.setAttribute('fill', this.currentColor);
+                        element.setAttribute('font-size', 24);
+                        element.setAttribute('font-family', 'Arial, sans-serif');
+                        element.setAttribute('text-anchor', 'middle');
+                        element.setAttribute('dominant-baseline', 'middle');
+                        element.textContent = 'Logo';
+                        break;
+                }
+                
+                if (element) {
+                    element.setAttribute('id', id);
+                    element.style.cursor = 'pointer';
+                    element.addEventListener('click', (e) => {
+                        e.stopPropagation();
+                        this.selectElement(element);
+                    });
+                    
+                    this.svg.appendChild(element);
+                    this.elements.push({
+                        id: id,
+                        element: element,
+                        type: type,
+                        name: `${this.getTypeName(type)} ${this.elementCounter}`
+                    });
+                    
+                    this.selectElement(element);
+                    this.updateLayersPanel();
+                    this.saveState();
+                }
+            }
+            
+            selectElement(element) {
+                // 移除之前的选中状态
+                if (this.selectedElement) {
+                    this.selectedElement.style.outline = '';
+                }
+                
+                if (element && element !== this.svg) {
+                    this.selectedElement = element;
+                    element.style.outline = '2px dashed #667eea';
+                    element.style.outlineOffset = '2px';
+                    this.updateElementControls();
+                } else {
+                    this.selectedElement = null;
+                    document.getElementById('elementControls').classList.remove('active');
+                    document.getElementById('textEditor').classList.remove('active');
+                }
+                
+                this.updateLayersPanel();
+            }
+            
+            updateElementControls() {
+                if (!this.selectedElement) return;
+                
+                const controls = document.getElementById('elementControls');
+                const textEditor = document.getElementById('textEditor');
+                
+                controls.classList.add('active');
+                
+                // 更新滑块值
+                const type = this.selectedElement.tagName.toLowerCase();
+                let size = 50;
+                
+                switch (type) {
+                    case 'rect':
+                        size = parseInt(this.selectedElement.getAttribute('width'));
+                        break;
+                    case 'circle':
+                        size = parseInt(this.selectedElement.getAttribute('r')) * 2;
+                        break;
+                    case 'text':
+                        size = parseInt(this.selectedElement.getAttribute('font-size'));
+                        textEditor.classList.add('active');
+                        document.getElementById('textContent').value = this.selectedElement.textContent;
+                        document.getElementById('fontSizeSlider').value = size;
+                        document.getElementById('fontWeight').value = this.selectedElement.getAttribute('font-weight') || 'normal';
+                        break;
+                    default:
+                        textEditor.classList.remove('active');
+                }
+                
+                document.getElementById('sizeSlider').value = size;
+                document.getElementById('opacitySlider').value = this.selectedElement.style.opacity || 1;
+                document.getElementById('rotationSlider').value = this.getRotationAngle(this.selectedElement);
+            }
+            
+            updateSelectedElement() {
+                if (!this.selectedElement) return;
+                
+                const type = this.selectedElement.tagName.toLowerCase();
+                const size = parseInt(document.getElementById('sizeSlider').value);
+                const opacity = document.getElementById('opacitySlider').value;
+                const rotation = document.getElementById('rotationSlider').value;
+                
+                // 更新颜色
+                if (type === 'line') {
+                    this.selectedElement.setAttribute('stroke', this.currentColor);
+                } else {
+                    this.selectedElement.setAttribute('fill', this.currentColor);
+                }
+                
+                // 更新大小
+                switch (type) {
+                    case 'rect':
+                        this.selectedElement.setAttribute('width', size);
+                        this.selectedElement.setAttribute('height', size);
+                        break;
+                    case 'circle':
+                        this.selectedElement.setAttribute('r', size / 2);
+                        break;
+                    case 'text':
+                        this.selectedElement.setAttribute('font-size', size);
+                        this.selectedElement.textContent = document.getElementById('textContent').value;
+                        this.selectedElement.setAttribute('font-weight', document.getElementById('fontWeight').value);
+                        break;
+                }
+                
+                // 更新透明度
+                this.selectedElement.style.opacity = opacity;
+                
+                // 更新旋转
+                this.updateRotation(this.selectedElement, rotation);
+                
+                this.saveState();
+            }
+            
+            updateRotation(element, angle) {
+                const bbox = element.getBBox();
+                const centerX = bbox.x + bbox.width / 2;
+                const centerY = bbox.y + bbox.height / 2;
+                element.setAttribute('transform', `rotate(${angle} ${centerX} ${centerY})`);
+            }
+            
+            getRotationAngle(element) {
+                const transform = element.getAttribute('transform');
+                if (transform && transform.includes('rotate')) {
+                    const match = transform.match(/rotate\(([^)]+)\)/);
+                    if (match) {
+                        return parseInt(match[1].split(' ')[0]);
+                    }
+                }
+                return 0;
+            }
+            
+            updateLayersPanel() {
+                const panel = document.getElementById('layersPanel');
+                panel.innerHTML = '';
+                
+                this.elements.forEach((item, index) => {
+                    const layerItem = document.createElement('div');
+                    layerItem.className = 'layer-item';
+                    if (this.selectedElement === item.element) {
+                        layerItem.classList.add('active');
+                    }
+                    
+                    layerItem.innerHTML = `
+                        <span class="layer-name">${item.name}</span>
+                        <div class="layer-controls">
+                            <button class="layer-btn" data-action="up" data-index="${index}">↑</button>
+                            <button class="layer-btn" data-action="down" data-index="${index}">↓</button>
+                            <button class="layer-btn" data-action="delete" data-index="${index}">×</button>
+                        </div>
+                    `;
+                    
+                    layerItem.addEventListener('click', (e) => {
+                        if (e.target.classList.contains('layer-btn')) {
+                            const action = e.target.dataset.action;
+                            const idx = parseInt(e.target.dataset.index);
+                            
+                            switch (action) {
+                                case 'up':
+                                case 'down':
+                                    this.moveLayer(idx, action);
+                                    break;
+                                case 'delete':
+                                    this.deleteElement(idx);
+                                    break;
+                            }
+                        } else {
+                            this.selectElement(item.element);
+                        }
+                    });
+                    
+                    panel.appendChild(layerItem);
+                });
+            }
+            
+            moveLayer(index, direction) {
+                const element = this.elements[index].element;
+                if (direction === 'up' && element.nextElementSibling) {
+                    element.parentNode.insertBefore(element.nextElementSibling, element);
+                } else if (direction === 'down' && element.previousElementSibling) {
+                    element.parentNode.insertBefore(element, element.previousElementSibling);
+                }
+                this.saveState();
+            }
+            
+            deleteElement(index) {
+                const item = this.elements[index];
+                item.element.remove();
+                this.elements.splice(index, 1);
+                
+                if (this.selectedElement === item.element) {
+                    this.selectedElement = null;
+                    document.getElementById('elementControls').classList.remove('active');
+                    document.getElementById('textEditor').classList.remove('active');
+                }
+                
+                this.updateLayersPanel();
+                this.saveState();
+            }
+            
+            loadTemplate(templateName) {
+                this.clearCanvas();
+                
+                switch (templateName) {
+                    case 'tech':
+                        this.createElement('circle', 200, 150);
+                        this.selectedElement.setAttribute('fill', '#667eea');
+                        this.selectedElement.setAttribute('r', 40);
+                        
+                        this.createElement('text', 200, 250);
+                        this.selectedElement.textContent = 'TECH';
+                        this.selectedElement.setAttribute('font-size', 32);
+                        this.selectedElement.setAttribute('font-weight', 'bold');
+                        break;
+                        
+                    case 'minimal':
+                        this.createElement('rectangle', 200, 160);
+                        this.selectedElement.setAttribute('fill', '#000000');
+                        this.selectedElement.setAttribute('width', 60);
+                        this.selectedElement.setAttribute('height', 20);
+                        
+                        this.createElement('text', 200, 220);
+                        this.selectedElement.textContent = 'MINIMAL';
+                        this.selectedElement.setAttribute('font-size', 24);
+                        this.selectedElement.setAttribute('font-weight', '300');
+                        break;
+                        
+                    case 'badge':
+                        this.createElement('circle', 200, 180);
+                        this.selectedElement.setAttribute('fill', 'none');
+                        this.selectedElement.setAttribute('stroke', '#667eea');
+                        this.selectedElement.setAttribute('stroke-width', 3);
+                        this.selectedElement.setAttribute('r', 50);
+                        
+                        this.createElement('text', 200, 185);
+                        this.selectedElement.textContent = 'BADGE';
+                        this.selectedElement.setAttribute('font-size', 18);
+                        this.selectedElement.setAttribute('font-weight', 'bold');
+                        break;
+                        
+                    case 'modern':
+                        this.createElement('triangle', 180, 170);
+                        this.selectedElement.setAttribute('fill', '#764ba2');
+                        
+                        this.createElement('text', 200, 220);
+                        this.selectedElement.textContent = 'MODERN';
+                        this.selectedElement.setAttribute('font-size', 28);
+                        this.selectedElement.setAttribute('font-weight', '500');
+                        break;
+                }
+                
+                this.updateLayersPanel();
+                this.saveState();
+            }
+            
+            updateUI() {
+                // 更新UI状态
+                if (this.currentTool === 'text') {
+                    document.getElementById('textEditor').classList.add('active');
+                } else {
+                    document.getElementById('textEditor').classList.remove('active');
+                }
+            }
+            
+            saveState() {
+                const state = this.svg.innerHTML;
+                this.history = this.history.slice(0, this.historyIndex + 1);
+                this.history.push(state);
+                this.historyIndex++;
+                
+                // 限制历史记录数量
+                if (this.history.length > 50) {
+                    this.history.shift();
+                    this.historyIndex--;
+                }
+            }
+            
+            undo() {
+                if (this.historyIndex > 0) {
+                    this.historyIndex--;
+                    this.restoreState();
+                }
+            }
+            
+            redo() {
+                if (this.historyIndex < this.history.length - 1) {
+                    this.historyIndex++;
+                    this.restoreState();
+                }
+            }
+            
+            restoreState() {
+                this.svg.innerHTML = this.history[this.historyIndex];
+                this.rebindElements();
+                this.selectedElement = null;
+                document.getElementById('elementControls').classList.remove('active');
+                document.getElementById('textEditor').classList.remove('active');
+                this.updateLayersPanel();
+            }
+            
+            rebindElements() {
+                this.elements = [];
+                this.elementCounter = 0;
+                
+                const svgElements = this.svg.querySelectorAll('[id^="element_"]');
+                svgElements.forEach(element => {
+                    const id = element.getAttribute('id');
+                    const match = id.match(/element_(\d+)/);
+                    if (match) {
+                        const num = parseInt(match[1]);
+                        this.elementCounter = Math.max(this.elementCounter, num);
+                    }
+                    
+                    element.style.cursor = 'pointer';
+                    element.addEventListener('click', (e) => {
+                        e.stopPropagation();
+                        this.selectElement(element);
+                    });
+                    
+                    this.elements.push({
+                        id: id,
+                        element: element,
+                        type: element.tagName.toLowerCase(),
+                        name: `${this.getTypeName(element.tagName.toLowerCase())} ${id.split('_')[1]}`
+                    });
+                });
+            }
+            
+            clearCanvas() {
+                // 保留网格背景
+                const gridPattern = this.svg.querySelector('defs');
+                const gridRect = this.svg.querySelector('rect[fill="url(#grid)"]');
+                
+                this.svg.innerHTML = '';
+                
+                if (gridPattern) this.svg.appendChild(gridPattern);
+                if (gridRect) this.svg.appendChild(gridRect);
+                
+                this.elements = [];
+                this.selectedElement = null;
+                document.getElementById('elementControls').classList.remove('active');
+                document.getElementById('textEditor').classList.remove('active');
+                this.updateLayersPanel();
+                this.saveState();
+            }
+            
+            exportSVG() {
+                // 创建一个干净的SVG副本
+                const cleanSvg = this.svg.cloneNode(true);
+                
+                // 移除网格背景
+                const defs = cleanSvg.querySelector('defs');
+                const gridRect = cleanSvg.querySelector('rect[fill="url(#grid)"]');
+                if (defs) defs.remove();
+                if (gridRect) gridRect.remove();
+                
+                // 移除选中状态的样式
+                cleanSvg.querySelectorAll('*').forEach(el => {
+                    el.style.outline = '';
+                    el.style.outlineOffset = '';
+                    el.style.cursor = '';
+                });
+                
+                // 创建完整的SVG文档
+                const svgContent = `<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400" width="400" height="400">
+${cleanSvg.innerHTML}
+</svg>`;
+                
+                // 下载文件
+                const blob = new Blob([svgContent], { type: 'image/svg+xml' });
+                const url = URL.createObjectURL(blob);
+                
+                const link = document.createElement('a');
+                link.href = url;
+                link.download = `logo_${Date.now()}.svg`;
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                
+                URL.revokeObjectURL(url);
+                
+                // 显示通知
+                this.showNotification();
+            }
+            
+            showNotification() {
+                const notification = document.getElementById('notification');
+                notification.classList.add('show');
+                setTimeout(() => {
+                    notification.classList.remove('show');
+                }, 3000);
+            }
+            
+            getTypeName(type) {
+                const names = {
+                    'rect': '矩形',
+                    'circle': '圆形',
+                    'polygon': '三角形',
+                    'line': '直线',
+                    'text': '文字'
+                };
+                return names[type] || type;
+            }
+        }
+        
+        // 初始化Logo设计器
+        let logoDesigner;
+        document.addEventListener('DOMContentLoaded', () => {
+            logoDesigner = new LogoDesigner();
+        });
+        
+        // 键盘快捷键
+        document.addEventListener('keydown', (e) => {
+            if (e.ctrlKey || e.metaKey) {
+                switch (e.key) {
+                    case 'z':
+                        e.preventDefault();
+                        if (e.shiftKey) {
+                            logoDesigner.redo();
+                        } else {
+                            logoDesigner.undo();
+                        }
+                        break;
+                    case 's':
+                        e.preventDefault();
+                        logoDesigner.exportSVG();
+                        break;
+                }
+            } else if (e.key === 'Delete' && logoDesigner.selectedElement) {
+                const index = logoDesigner.elements.findIndex(item => item.element === logoDesigner.selectedElement);
+                if (index !== -1) {
+                    logoDesigner.deleteElement(index);
+                }
+            }
+        });
+    
+                return input;
+            }
+
+            displayResult(result) {
+                document.getElementById('resultContent').textContent = result;
+            }
+
+            clear() {
+                document.getElementById('input').value = '';
+                document.getElementById('resultContent').textContent = '处理结果将在这里显示...';
+            }
+
+            copyResult() {
+                const result = document.getElementById('resultContent').textContent;
+                if (result && result !== '处理结果将在这里显示...') {
+                    ToolUtils.copyToClipboard(result);
+                } else {
+                    ToolUtils.showToast('没有可复制的内容', 'warning');
+                }
+            }
+        }
+
+        // 初始化应用
+        document.addEventListener('DOMContentLoaded', () => {
+            new ToolApp();
+        });
+    </script>
+</body>
+</html>

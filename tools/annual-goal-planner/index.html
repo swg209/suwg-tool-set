@@ -1,0 +1,962 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>只管去做 - 年度目标制定系统 - AI工具集</title>
+    <meta name="description" content="只管去做 - 年度目标制定系统">
+    
+    <!-- 样式文件 -->
+    <link rel="stylesheet" href="../../shared/css/common.css">
+    
+    <!-- 工具特定样式 -->
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Microsoft YaHei', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: var(--text-primary);
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: var(--spacing-lg);
+        }
+
+        .header {
+            text-align: center;
+            color: white;
+            margin-bottom: 30px;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .nav-tabs {
+            display: flex;
+            background: rgba(255,255,255,0.1);
+            border-radius: var(--radius-lg);
+            padding: 5px;
+            margin-bottom: 20px;
+            backdrop-filter: blur(10px);
+        }
+
+        .nav-tab {
+            flex: 1;
+            padding: 15px;
+            background: none;
+            border: none;
+            color: white;
+            cursor: pointer;
+            border-radius: var(--radius-md);
+            transition: all 0.3s;
+            font-size: 16px;
+        }
+
+        .nav-tab.active {
+            background: white;
+            color: var(--text-primary);
+            font-weight: bold;
+        }
+
+        .tab-content {
+            display: none;
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .section-title {
+            font-size: 1.5em;
+            margin-bottom: 20px;
+            color: var(--text-primary);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        /* 愿景板样式 */
+        .vision-board {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .vision-card {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            padding: 25px;
+            border-radius: var(--radius-lg);
+            text-align: center;
+            cursor: pointer;
+            transition: transform 0.3s;
+        }
+
+        .vision-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .vision-icon {
+            font-size: 3em;
+            margin-bottom: 15px;
+        }
+
+        .vision-title {
+            font-size: 1.2em;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+
+        /* 目标设定样式 */
+        .goal-form {
+            background: #f8f9fa;
+            padding: 25px;
+            border-radius: var(--radius-lg);
+            margin-bottom: 20px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: bold;
+            color: var(--text-primary);
+        }
+
+        .form-input, .form-select, .form-textarea {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: border-color 0.3s;
+        }
+
+        .form-input:focus, .form-select:focus, .form-textarea:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .form-textarea {
+            min-height: 100px;
+            resize: vertical;
+        }
+
+        /* SMART目标检查 */
+        .smart-check {
+            background: #e3f2fd;
+            padding: var(--spacing-lg);
+            border-radius: var(--radius-md);
+            margin: var(--spacing-lg) 0;
+        }
+
+        .smart-item {
+            display: flex;
+            align-items: center;
+            margin-bottom: 10px;
+            padding: var(--spacing-md);
+            background: white;
+            border-radius: 8px;
+        }
+
+        .smart-checkbox {
+            width: 20px;
+            height: 20px;
+            margin-right: 15px;
+        }
+
+        /* 目标卡片 */
+        .goals-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 20px;
+        }
+
+        .goal-card {
+            background: white;
+            border: 2px solid #e9ecef;
+            border-radius: var(--radius-lg);
+            padding: var(--spacing-lg);
+            transition: all 0.3s;
+        }
+
+        .goal-card:hover {
+            border-color: #667eea;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+        }
+
+        .goal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .goal-category {
+            background: #667eea;
+            color: white;
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+        }
+
+        .goal-title {
+            font-size: 1.2em;
+            font-weight: bold;
+            margin-bottom: 10px;
+            color: var(--text-primary);
+        }
+
+        .goal-progress {
+            width: 100%;
+            height: 8px;
+            background: #e9ecef;
+            border-radius: 4px;
+            overflow: hidden;
+            margin: 15px 0;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            transition: width 0.3s;
+        }
+
+        /* 行动计划 */
+        .action-plan {
+            background: #f8f9fa;
+            padding: var(--spacing-lg);
+            border-radius: var(--radius-md);
+            margin-top: 15px;
+        }
+
+        .milestone {
+            background: white;
+            padding: 15px;
+            margin-bottom: 10px;
+            border-radius: 8px;
+            border-left: 4px solid #667eea;
+        }
+
+        .milestone-date {
+            font-size: 12px;
+            color: var(--text-secondary);
+            margin-bottom: 5px;
+        }
+
+        /* 按钮样式 */
+        .btn {
+            padding: 12px 20px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: bold;
+            transition: all 0.3s;
+        }
+
+        .btn-primary {
+            background: #667eea;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #5a6fd8;
+        }
+
+        .btn-success {
+            background: #28a745;
+            color: white;
+        }
+
+        .btn-warning {
+            background: #ffc107;
+            color: var(--text-primary);
+        }
+
+        .btn-danger {
+            background: #dc3545;
+            color: white;
+        }
+
+        /* 统计面板 */
+        .stats-panel {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .stat-card {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            padding: var(--spacing-lg);
+            border-radius: var(--radius-lg);
+            text-align: center;
+        }
+
+        .stat-number {
+            font-size: 2.5em;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        .stat-label {
+            opacity: 0.9;
+            font-size: 14px;
+        }
+
+        /* 模态框 */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 1000;
+        }
+
+        .modal-content {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: white;
+            padding: 30px;
+            border-radius: var(--radius-lg);
+            width: 90%;
+            max-width: 600px;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+
+        .footer {
+            text-align: center;
+            color: white;
+            margin-top: 30px;
+            opacity: 0.8;
+        }
+        
+        @media (max-width: 768px) {
+            .container {
+                padding: var(--spacing-md);
+                margin: var(--spacing-sm);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="tool-container">
+        <!-- 工具头部 -->
+        <header class="tool-header">
+            <div class="tool-header-content">
+                <a href="../../index.html" class="back-btn">
+                    <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                        <path d="M10 4l-4 4 4 4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                    返回工具集
+                </a>
+                
+                <div class="tool-title">
+                    <h1>只管去做 - 年度目标制定系统</h1>
+                    <p class="tool-subtitle">只管去做 - 年度目标制定系统</p>
+                </div>
+                
+                <button class="theme-toggle" id="themeToggle" aria-label="切换主题">
+                    <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                        <circle cx="10" cy="10" r="4" stroke="currentColor" stroke-width="2"/>
+                        <path d="M10 2v2M10 16v2M18 10h-2M4 10H2M15.66 4.34l-1.41 1.41M5.75 14.25l-1.41 1.41M15.66 15.66l-1.41-1.41M5.75 5.75L4.34 4.34" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                    </svg>
+                </button>
+            </div>
+        </header>
+
+        <!-- 工具主内容 -->
+        <main class="tool-main">
+            <div class="tool-card">
+                <div class="tool-section">
+                    <h2>
+                        <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                            <rect x="3" y="3" width="14" height="14" rx="2" stroke="currentColor" stroke-width="2"/>
+                        </svg>
+                        工具功能
+                    </h2>
+                    
+                    
+            <div class="tool-card">
+                <div class="tool-section">
+                    <h2>
+                        <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                            <rect x="3" y="3" width="14" height="14" rx="2" stroke="currentColor" stroke-width="2"/>
+                        </svg>
+                        只管去做 - 年度目标制定系统
+                    </h2>
+                    <div class="container">
+        <div class="header">
+            <h1>🎯 只管去做 - 年度目标制定系统</h1>
+            <p>设定目标 → 制定计划 → 持续行动 → 达成成果</p>
+        </div>
+
+        <div class="nav-tabs">
+            <button class="nav-tab active" onclick="showTab('vision')">🌟 愿景规划</button>
+            <button class="nav-tab" onclick="showTab('goals')">🎯 目标设定</button>
+            <button class="nav-tab" onclick="showTab('planning')">📋 行动计划</button>
+            <button class="nav-tab" onclick="showTab('tracking')">📊 进度跟踪</button>
+            <button class="nav-tab" onclick="showTab('review')">🔄 定期回顾</button>
+        </div>
+
+        <!-- 愿景规划 -->
+        <div id="vision" class="tab-content active">
+            <div class="section-title">🌟 愿景规划 - 描绘理想的一年</div>
+            
+            <div class="vision-board">
+                <div class="vision-card" onclick="openVisionModal('career')">
+                    <div class="vision-icon">💼</div>
+                    <div class="vision-title">事业发展</div>
+                    <div>职业成长与技能提升</div>
+                </div>
+                <div class="vision-card" onclick="openVisionModal('health')">
+                    <div class="vision-icon">🏃</div>
+                    <div class="vision-title">健康生活</div>
+                    <div>身心健康与生活品质</div>
+                </div>
+                <div class="vision-card" onclick="openVisionModal('relationship')">
+                    <div class="vision-icon">👥</div>
+                    <div class="vision-title">人际关系</div>
+                    <div>家庭朋友与社交网络</div>
+                </div>
+                <div class="vision-card" onclick="openVisionModal('finance')">
+                    <div class="vision-icon">💰</div>
+                    <div class="vision-title">财务规划</div>
+                    <div>收入增长与理财投资</div>
+                </div>
+                <div class="vision-card" onclick="openVisionModal('learning')">
+                    <div class="vision-icon">📚</div>
+                    <div class="vision-title">学习成长</div>
+                    <div>知识技能与个人发展</div>
+                </div>
+                <div class="vision-card" onclick="openVisionModal('lifestyle')">
+                    <div class="vision-icon">🎨</div>
+                    <div class="vision-title">生活方式</div>
+                    <div>兴趣爱好与生活享受</div>
+                </div>
+            </div>
+
+            <div id="visionSummary"></div>
+        </div>
+
+        <!-- 目标设定 -->
+        <div id="goals" class="tab-content">
+            <div class="section-title">🎯 SMART目标设定</div>
+            
+            <div class="goal-form">
+                <div class="form-group">
+                    <label class="form-label">目标类别</label>
+                    <select class="form-select" id="goalCategory">
+                        <option value="career">💼 事业发展</option>
+                        <option value="health">🏃 健康生活</option>
+                        <option value="relationship">👥 人际关系</option>
+                        <option value="finance">💰 财务规划</option>
+                        <option value="learning">📚 学习成长</option>
+                        <option value="lifestyle">🎨 生活方式</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">目标描述</label>
+                    <input type="text" class="form-input" id="goalTitle" placeholder="例如：今年读完24本书">
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">详细说明</label>
+                    <textarea class="form-textarea" id="goalDescription" placeholder="详细描述这个目标的具体内容和意义..."></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">目标截止日期</label>
+                    <input type="date" class="form-input" id="goalDeadline">
+                </div>
+
+                <div class="smart-check">
+                    <h4>SMART目标检查</h4>
+                    <div class="smart-item">
+                        <input type="checkbox" class="smart-checkbox" id="specific">
+                        <label for="specific"><strong>Specific (具体的)</strong> - 目标是否明确具体？</label>
+                    </div>
+                    <div class="smart-item">
+                        <input type="checkbox" class="smart-checkbox" id="measurable">
+                        <label for="measurable"><strong>Measurable (可衡量)</strong> - 目标是否可以量化？</label>
+                    </div>
+                    <div class="smart-item">
+                        <input type="checkbox" class="smart-checkbox" id="achievable">
+                        <label for="achievable"><strong>Achievable (可实现)</strong> - 目标是否现实可行？</label>
+                    </div>
+                    <div class="smart-item">
+                        <input type="checkbox" class="smart-checkbox" id="relevant">
+                        <label for="relevant"><strong>Relevant (相关的)</strong> - 目标是否与愿景相关？</label>
+                    </div>
+                    <div class="smart-item">
+                        <input type="checkbox" class="smart-checkbox" id="timebound">
+                        <label for="timebound"><strong>Time-bound (有时限)</strong> - 目标是否有明确期限？</label>
+                    </div>
+                </div>
+
+                <button class="btn btn-primary" onclick="addGoal()">添加目标</button>
+            </div>
+
+            <div id="goalsList"></div>
+        </div>
+
+        <!-- 行动计划 -->
+        <div id="planning" class="tab-content">
+            <div class="section-title">📋 行动计划制定</div>
+            <div id="actionPlans"></div>
+        </div>
+
+        <!-- 进度跟踪 -->
+        <div id="tracking" class="tab-content">
+            <div class="section-title">📊 进度跟踪</div>
+            
+            <div class="stats-panel">
+                <div class="stat-card">
+                    <div class="stat-number" id="totalGoals">0</div>
+                    <div class="stat-label">总目标数</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number" id="completedGoals">0</div>
+                    <div class="stat-label">已完成</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number" id="avgProgress">0%</div>
+                    <div class="stat-label">平均进度</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number" id="daysLeft">365</div>
+                    <div class="stat-label">剩余天数</div>
+                </div>
+            </div>
+
+            <div id="progressCharts"></div>
+        </div>
+
+        <!-- 定期回顾 -->
+        <div id="review" class="tab-content">
+            <div class="section-title">🔄 定期回顾与调整</div>
+            
+            <div class="review-section">
+                <h3>月度回顾问题</h3>
+                <div class="form-group">
+                    <label class="form-label">1. 这个月最大的成就是什么？</label>
+                    <textarea class="form-textarea" id="achievement" placeholder="记录你的成就..."></textarea>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">2. 遇到了哪些挑战？如何克服？</label>
+                    <textarea class="form-textarea" id="challenges" placeholder="反思挑战和解决方案..."></textarea>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">3. 下个月的重点行动是什么？</label>
+                    <textarea class="form-textarea" id="nextActions" placeholder="制定下月计划..."></textarea>
+                </div>
+                <button class="btn btn-primary" onclick="saveReview()">保存回顾</button>
+            </div>
+
+            <div id="reviewHistory"></div>
+        </div>
+
+        <div class="footer">
+            <p>© 小苏趣研AI | 基于《只管去做》方法论</p>
+        </div>
+    </div>
+
+    <!-- 愿景模态框 -->
+    <div id="visionModal" class="modal">
+        <div class="modal-content">
+            <h3 id="visionModalTitle">愿景规划</h3>
+            <div class="form-group">
+                <label class="form-label">描述你在这个领域的理想状态</label>
+                <textarea class="form-textarea" id="visionText" placeholder="详细描述你希望在这个领域达到的状态..."></textarea>
+            </div>
+            <div class="form-group">
+                <label class="form-label">为什么这对你很重要？</label>
+                <textarea class="form-textarea" id="visionWhy" placeholder="说明这个愿景的意义和价值..."></textarea>
+            </div>
+            <div style="text-align: right; margin-top: 20px;">
+                <button class="btn btn-danger" onclick="closeVisionModal()">取消</button>
+                <button class="btn btn-primary" onclick="saveVision()">保存</button>
+            </div>
+        </div>
+    </div>
+
+    
+                </div>
+            </div>
+                    <!-- 结果显示区域 -->
+                    <div class="result-display" id="result">
+                        <pre id="resultContent">处理结果将在这里显示...</pre>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <!-- 工具页脚 -->
+        <footer class="tool-footer">
+            <p>由 <a href="../../index.html">AI工具集</a> 提供 | 原创工具</p>
+        </footer>
+    </div>
+
+    <!-- JavaScript -->
+    <script src="../../shared/js/utils.js"></script>
+    <script>
+        // 工具特定的JavaScript代码
+        class ToolApp {
+            constructor() {
+                this.init();
+            }
+
+            init() {
+                this.setupEventListeners();
+            }
+
+            setupEventListeners() {
+                document.getElementById('processBtn').addEventListener('click', () => this.process());
+                document.getElementById('clearBtn').addEventListener('click', () => this.clear());
+                document.getElementById('copyBtn').addEventListener('click', () => this.copyResult());
+                
+                // 实时处理（可选）
+                document.getElementById('input').addEventListener('input', 
+                    ToolUtils.debounce(() => this.process(), 300)
+                );
+            }
+
+            process() {
+                const input = document.getElementById('input').value;
+                const result = this.processInput(input);
+                this.displayResult(result);
+            }
+
+            processInput(input) {
+                
+        // 数据存储
+        let annualData = {
+            visions: {},
+            goals: [],
+            reviews: []
+        };
+
+        const categoryNames = {
+            career: '💼 事业发展',
+            health: '🏃 健康生活',
+            relationship: '👥 人际关系',
+            finance: '💰 财务规划',
+            learning: '📚 学习成长',
+            lifestyle: '🎨 生活方式'
+        };
+
+        let currentVisionCategory = '';
+
+        // 加载数据
+        function loadData() {
+            const saved = localStorage.getItem('annualGoalData');
+            if (saved) {
+                annualData = JSON.parse(saved);
+            }
+            renderAll();
+        }
+
+        // 保存数据
+        function saveData() {
+            localStorage.setItem('annualGoalData', JSON.stringify(annualData));
+        }
+
+        // 标签页切换
+        function showTab(tabName) {
+            document.querySelectorAll('.tab-content').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            document.querySelectorAll('.nav-tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            
+            document.getElementById(tabName).classList.add('active');
+            event.target.classList.add('active');
+            
+            if (tabName === 'tracking') {
+                updateStats();
+            }
+        }
+
+        // 愿景规划
+        function openVisionModal(category) {
+            currentVisionCategory = category;
+            document.getElementById('visionModalTitle').textContent = categoryNames[category] + ' - 愿景规划';
+            
+            if (annualData.visions[category]) {
+                document.getElementById('visionText').value = annualData.visions[category].text || '';
+                document.getElementById('visionWhy').value = annualData.visions[category].why || '';
+            } else {
+                document.getElementById('visionText').value = '';
+                document.getElementById('visionWhy').value = '';
+            }
+            
+            document.getElementById('visionModal').style.display = 'block';
+        }
+
+        function closeVisionModal() {
+            document.getElementById('visionModal').style.display = 'none';
+        }
+
+        function saveVision() {
+            const text = document.getElementById('visionText').value.trim();
+            const why = document.getElementById('visionWhy').value.trim();
+            
+            if (text && why) {
+                annualData.visions[currentVisionCategory] = { text, why };
+                saveData();
+                renderVisionSummary();
+                closeVisionModal();
+            }
+        }
+
+        function renderVisionSummary() {
+            const container = document.getElementById('visionSummary');
+            const visions = Object.keys(annualData.visions);
+            
+            if (visions.length > 0) {
+                container.innerHTML = `
+                    <h3>已设定的愿景</h3>
+                    ${visions.map(category => `
+                        <div class="milestone">
+                            <strong>${categoryNames[category]}</strong>
+                            <p>${annualData.visions[category].text}</p>
+                            <small style="color: #666;">意义：${annualData.visions[category].why}</small>
+                        </div>
+                    `).join('')}
+                `;
+            }
+        }
+
+        // 目标设定
+        function addGoal() {
+            const category = document.getElementById('goalCategory').value;
+            const title = document.getElementById('goalTitle').value.trim();
+            const description = document.getElementById('goalDescription').value.trim();
+            const deadline = document.getElementById('goalDeadline').value;
+            
+            // 检查SMART标准
+            const smartChecks = ['specific', 'measurable', 'achievable', 'relevant', 'timebound'];
+            const checkedCount = smartChecks.filter(id => document.getElementById(id).checked).length;
+            
+            if (!title || !description || !deadline) {
+                alert('请填写完整的目标信息');
+                return;
+            }
+            
+            if (checkedCount < 5) {
+                if (!confirm('SMART检查未全部通过，确定要添加这个目标吗？')) {
+                    return;
+                }
+            }
+            
+            const goal = {
+                id: Date.now(),
+                category,
+                title,
+                description,
+                deadline,
+                progress: 0,
+                milestones: [],
+                createdAt: new Date().toISOString()
+            };
+            
+            annualData.goals.push(goal);
+            saveData();
+            renderGoals();
+            
+            // 清空表单
+            document.getElementById('goalTitle').value = '';
+            document.getElementById('goalDescription').value = '';
+            document.getElementById('goalDeadline').value = '';
+            smartChecks.forEach(id => document.getElementById(id).checked = false);
+        }
+
+        function renderGoals() {
+            const container = document.getElementById('goalsList');
+            container.innerHTML = `
+                <div class="goals-grid">
+                    ${annualData.goals.map(goal => `
+                        <div class="goal-card">
+                            <div class="goal-header">
+                                <span class="goal-category">${categoryNames[goal.category]}</span>
+                                <button class="btn btn-warning" onclick="editGoal(${goal.id})">编辑</button>
+                            </div>
+                            <div class="goal-title">${goal.title}</div>
+                            <div style="color: #666; margin-bottom: 10px;">${goal.description}</div>
+                            <div style="font-size: 14px; color: #666;">截止日期：${new Date(goal.deadline).toLocaleDateString()}</div>
+                            <div class="goal-progress">
+                                <div class="progress-fill" style="width: ${goal.progress}%"></div>
+                            </div>
+                            <div style="text-align: center; margin-top: 10px;">
+                                <span style="font-weight: bold;">${goal.progress}% 完成</span>
+                            </div>
+                            <div style="margin-top: 15px;">
+                                <button class="btn btn-success" onclick="updateProgress(${goal.id})">更新进度</button>
+                                <button class="btn btn-primary" onclick="addMilestone(${goal.id})">添加里程碑</button>
+                                <button class="btn btn-danger" onclick="deleteGoal(${goal.id})">删除</button>
+                            </div>
+                        </div>
+                    `).join('')}
+                </div>
+            `;
+        }
+
+        function updateProgress(goalId) {
+            const newProgress = prompt('请输入新的进度百分比 (0-100):');
+            if (newProgress !== null && !isNaN(newProgress)) {
+                const progress = Math.max(0, Math.min(100, parseInt(newProgress)));
+                const goal = annualData.goals.find(g => g.id === goalId);
+                if (goal) {
+                    goal.progress = progress;
+                    saveData();
+                    renderGoals();
+                }
+            }
+        }
+
+        function deleteGoal(goalId) {
+            if (confirm('确定要删除这个目标吗？')) {
+                annualData.goals = annualData.goals.filter(g => g.id !== goalId);
+                saveData();
+                renderGoals();
+            }
+        }
+
+        // 统计更新
+        function updateStats() {
+            const totalGoals = annualData.goals.length;
+            const completedGoals = annualData.goals.filter(g => g.progress === 100).length;
+            const avgProgress = totalGoals > 0 ? 
+                Math.round(annualData.goals.reduce((sum, g) => sum + g.progress, 0) / totalGoals) : 0;
+            
+            const now = new Date();
+            const endOfYear = new Date(now.getFullYear(), 11, 31);
+            const daysLeft = Math.ceil((endOfYear - now) / (1000 * 60 * 60 * 24));
+            
+            document.getElementById('totalGoals').textContent = totalGoals;
+            document.getElementById('completedGoals').textContent = completedGoals;
+            document.getElementById('avgProgress').textContent = avgProgress + '%';
+            document.getElementById('daysLeft').textContent = Math.max(0, daysLeft);
+        }
+
+        // 回顾保存
+        function saveReview() {
+            const achievement = document.getElementById('achievement').value.trim();
+            const challenges = document.getElementById('challenges').value.trim();
+            const nextActions = document.getElementById('nextActions').value.trim();
+            
+            if (achievement || challenges || nextActions) {
+                const review = {
+                    id: Date.now(),
+                    date: new Date().toISOString(),
+                    achievement,
+                    challenges,
+                    nextActions
+                };
+                
+                annualData.reviews.push(review);
+                saveData();
+                renderReviewHistory();
+                
+                // 清空表单
+                document.getElementById('achievement').value = '';
+                document.getElementById('challenges').value = '';
+                document.getElementById('nextActions').value = '';
+                
+                alert('回顾已保存！');
+            }
+        }
+
+        function renderReviewHistory() {
+            const container = document.getElementById('reviewHistory');
+            if (annualData.reviews.length > 0) {
+                container.innerHTML = `
+                    <h3>历史回顾</h3>
+                    ${annualData.reviews.slice(-5).reverse().map(review => `
+                        <div class="milestone">
+                            <div class="milestone-date">${new Date(review.date).toLocaleDateString()}</div>
+                            <div><strong>成就：</strong>${review.achievement}</div>
+                            <div><strong>挑战：</strong>${review.challenges}</div>
+                            <div><strong>下月计划：</strong>${review.nextActions}</div>
+                        </div>
+                    `).join('')}
+                `;
+            }
+        }
+
+        // 渲染所有内容
+        function renderAll() {
+            renderVisionSummary();
+            renderGoals();
+            renderReviewHistory();
+            updateStats();
+        }
+
+        // 初始化
+        document.addEventListener('DOMContentLoaded', function() {
+            loadData();
+            
+            // 设置默认截止日期为年底
+            const endOfYear = new Date();
+            endOfYear.setMonth(11, 31);
+            document.getElementById('goalDeadline').value = endOfYear.toISOString().split('T')[0];
+        });
+    
+                return input;
+            }
+
+            displayResult(result) {
+                document.getElementById('resultContent').textContent = result;
+            }
+
+            clear() {
+                document.getElementById('input').value = '';
+                document.getElementById('resultContent').textContent = '处理结果将在这里显示...';
+            }
+
+            copyResult() {
+                const result = document.getElementById('resultContent').textContent;
+                if (result && result !== '处理结果将在这里显示...') {
+                    ToolUtils.copyToClipboard(result);
+                } else {
+                    ToolUtils.showToast('没有可复制的内容', 'warning');
+                }
+            }
+        }
+
+        // 初始化应用
+        document.addEventListener('DOMContentLoaded', () => {
+            new ToolApp();
+        });
+    </script>
+</body>
+</html>

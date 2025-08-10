@@ -1,0 +1,402 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>网页万花筒 - AI工具集</title>
+    <meta name="description" content="网页万花筒">
+    
+    <!-- 样式文件 -->
+    <link rel="stylesheet" href="../../shared/css/common.css">
+    
+    <!-- 工具特定样式 -->
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            background: #000;
+            overflow: hidden;
+            cursor: none;
+            font-family: Arial, sans-serif;
+        }
+        
+        canvas {
+            display: block;
+            background: radial-gradient(circle, #001122, #000000);
+        }
+        
+        .controls {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            z-index: 100;
+            background: rgba(255, 255, 255, 0.1);
+            padding: 15px;
+            border-radius: var(--radius-md);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        
+        .control-group {
+            margin-bottom: 10px;
+        }
+        
+        label {
+            color: white;
+            font-size: 12px;
+            display: block;
+            margin-bottom: 5px;
+        }
+        
+        input[type="range"] {
+            width: 150px;
+            margin-right: 10px;
+        }
+        
+        input[type="color"] {
+            width: 40px;
+            height: 25px;
+            border: none;
+            border-radius: var(--radius-sm);
+            cursor: pointer;
+        }
+        
+        .value-display {
+            color: var(--bg-card);
+            font-size: 11px;
+        }
+        
+        .title {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: rgba(255, 255, 255, 0.3);
+            font-size: 24px;
+            pointer-events: none;
+            z-index: 1;
+            transition: opacity 0.5s;
+        }
+        
+        .hide-title {
+            opacity: 0;
+        }
+        
+        @media (max-width: 768px) {
+            .container {
+                padding: var(--spacing-md);
+                margin: var(--spacing-sm);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="tool-container">
+        <!-- 工具头部 -->
+        <header class="tool-header">
+            <div class="tool-header-content">
+                <a href="../../index.html" class="back-btn">
+                    <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                        <path d="M10 4l-4 4 4 4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                    返回工具集
+                </a>
+                
+                <div class="tool-title">
+                    <h1>网页万花筒</h1>
+                    <p class="tool-subtitle">网页万花筒</p>
+                </div>
+                
+                <button class="theme-toggle" id="themeToggle" aria-label="切换主题">
+                    <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                        <circle cx="10" cy="10" r="4" stroke="currentColor" stroke-width="2"/>
+                        <path d="M10 2v2M10 16v2M18 10h-2M4 10H2M15.66 4.34l-1.41 1.41M5.75 14.25l-1.41 1.41M15.66 15.66l-1.41-1.41M5.75 5.75L4.34 4.34" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                    </svg>
+                </button>
+            </div>
+        </header>
+
+        <!-- 工具主内容 -->
+        <main class="tool-main">
+            <div class="tool-card">
+                <div class="tool-section">
+                    <h2>
+                        <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                            <rect x="3" y="3" width="14" height="14" rx="2" stroke="currentColor" stroke-width="2"/>
+                        </svg>
+                        工具功能
+                    </h2>
+                    
+                    
+            <div class="tool-card">
+                <div class="tool-section">
+                    <h2>
+                        <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                            <rect x="3" y="3" width="14" height="14" rx="2" stroke="currentColor" stroke-width="2"/>
+                        </svg>
+                        网页万花筒
+                    </h2>
+                    <div class="container">
+                        <canvas id="kaleidoscope"></canvas>
+    
+    <div class="title" id="title">移动鼠标开始万花筒之旅</div>
+    
+    <div class="controls">
+        <div class="control-group">
+            <label>对称数量: <span class="value-display" id="symmetryValue">6</span></label>
+            <input type="range" id="symmetry" min="3" max="12" value="6">
+        </div>
+        <div class="control-group">
+            <label>轨迹长度: <span class="value-display" id="trailValue">50</span></label>
+            <input type="range" id="trail" min="10" max="100" value="50">
+        </div>
+        <div class="control-group">
+            <label>粒子大小: <span class="value-display" id="sizeValue">3</span></label>
+            <input type="range" id="size" min="1" max="10" value="3">
+        </div>
+        <div class="control-group">
+            <label>颜色: </label>
+            <input type="color" id="color" value="#ff6b6b">
+        </div>
+    </div>
+
+    
+                    </div>
+                </div>
+            </div>
+                    <!-- 结果显示区域 -->
+                    <div class="result-display" id="result">
+                        <pre id="resultContent">处理结果将在这里显示...</pre>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <!-- 工具页脚 -->
+        <footer class="tool-footer">
+            <p>由 <a href="../../index.html">AI工具集</a> 提供 | 原创工具</p>
+        </footer>
+    </div>
+
+    <!-- JavaScript -->
+    <script src="../../shared/js/utils.js"></script>
+    <script>
+        // 工具特定的JavaScript代码
+        class ToolApp {
+            constructor() {
+                this.init();
+            }
+
+            init() {
+                this.setupEventListeners();
+            }
+
+            setupEventListeners() {
+                document.getElementById('processBtn').addEventListener('click', () => this.process());
+                document.getElementById('clearBtn').addEventListener('click', () => this.clear());
+                document.getElementById('copyBtn').addEventListener('click', () => this.copyResult());
+                
+                // 实时处理（可选）
+                document.getElementById('input').addEventListener('input', 
+                    ToolUtils.debounce(() => this.process(), 300)
+                );
+            }
+
+            process() {
+                const input = document.getElementById('input').value;
+                const result = this.processInput(input);
+                this.displayResult(result);
+            }
+
+            processInput(input) {
+                
+        const canvas = document.getElementById('kaleidoscope');
+        const ctx = canvas.getContext('2d');
+        const title = document.getElementById('title');
+
+        let width, height, centerX, centerY;
+        let mouseX = 0, mouseY = 0;
+        let particles = [];
+        let isMouseMoving = false;
+        let lastMoveTime = 0;
+
+        let symmetryCount = 6;
+        let trailLength = 50;
+        let particleSize = 3;
+        let currentColor = '#ff6b6b';
+
+        class Particle {
+            constructor(x, y, color) {
+                this.x = x;
+                this.y = y;
+                this.color = color;
+                this.life = trailLength;
+                this.maxLife = trailLength;
+                this.size = particleSize;
+            }
+
+            update() {
+                this.life--;
+                return this.life > 0;
+            }
+
+            draw() {
+                const alpha = this.life / this.maxLife;
+                ctx.save();
+                ctx.globalAlpha = alpha;
+                ctx.fillStyle = this.color;
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.size * alpha, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.restore();
+            }
+        }
+
+        function resizeCanvas() {
+            width = canvas.width = window.innerWidth;
+            height = canvas.height = window.innerHeight;
+            centerX = width / 2;
+            centerY = height / 2;
+        }
+
+        function addParticle(x, y) {
+            const particle = new Particle(x, y, currentColor);
+            particles.push(particle);
+
+            for (let i = 0; i < symmetryCount; i++) {
+                const angle = (i * 2 * Math.PI) / symmetryCount;
+                const relativeX = x - centerX;
+                const relativeY = y - centerY;
+                
+                const rotatedX = relativeX * Math.cos(angle) - relativeY * Math.sin(angle);
+                const rotatedY = relativeX * Math.sin(angle) + relativeY * Math.cos(angle);
+                
+                const symmetricParticle = new Particle(
+                    centerX + rotatedX,
+                    centerY + rotatedY,
+                    currentColor
+                );
+                particles.push(symmetricParticle);
+
+                const mirroredParticle = new Particle(
+                    centerX - rotatedX,
+                    centerY - rotatedY,
+                    currentColor
+                );
+                particles.push(mirroredParticle);
+            }
+        }
+
+        function animate() {
+            ctx.fillStyle = 'rgba(0, 0, 0, 0.05)';
+            ctx.fillRect(0, 0, width, height);
+
+            particles = particles.filter(particle => {
+                const alive = particle.update();
+                if (alive) {
+                    particle.draw();
+                }
+                return alive;
+            });
+
+            const now = Date.now();
+            if (now - lastMoveTime > 100) {
+                isMouseMoving = false;
+            }
+
+            if (particles.length === 0 && !isMouseMoving) {
+                title.classList.remove('hide-title');
+            } else {
+                title.classList.add('hide-title');
+            }
+
+            requestAnimationFrame(animate);
+        }
+
+        window.addEventListener('resize', resizeCanvas);
+        
+        canvas.addEventListener('mousemove', (e) => {
+            mouseX = e.clientX;
+            mouseY = e.clientY;
+            isMouseMoving = true;
+            lastMoveTime = Date.now();
+            
+            addParticle(mouseX, mouseY);
+        });
+
+        document.getElementById('symmetry').addEventListener('input', (e) => {
+            symmetryCount = parseInt(e.target.value);
+            document.getElementById('symmetryValue').textContent = symmetryCount;
+        });
+
+        document.getElementById('trail').addEventListener('input', (e) => {
+            trailLength = parseInt(e.target.value);
+            document.getElementById('trailValue').textContent = trailLength;
+        });
+
+        document.getElementById('size').addEventListener('input', (e) => {
+            particleSize = parseInt(e.target.value);
+            document.getElementById('sizeValue').textContent = particleSize;
+        });
+
+        document.getElementById('color').addEventListener('input', (e) => {
+            currentColor = e.target.value;
+        });
+
+        canvas.addEventListener('touchmove', (e) => {
+            e.preventDefault();
+            const touch = e.touches[0];
+            mouseX = touch.clientX;
+            mouseY = touch.clientY;
+            isMouseMoving = true;
+            lastMoveTime = Date.now();
+            
+            addParticle(mouseX, mouseY);
+        });
+
+        resizeCanvas();
+        animate();
+
+        let hue = 0;
+        setInterval(() => {
+            if (isMouseMoving) {
+                hue += 2;
+                if (hue >= 360) hue = 0;
+                currentColor = `hsl(${hue}, 70%, 60%)`;
+                document.getElementById('color').value = currentColor;
+            }
+        }, 100);
+    
+                return input;
+            }
+
+            displayResult(result) {
+                document.getElementById('resultContent').textContent = result;
+            }
+
+            clear() {
+                document.getElementById('input').value = '';
+                document.getElementById('resultContent').textContent = '处理结果将在这里显示...';
+            }
+
+            copyResult() {
+                const result = document.getElementById('resultContent').textContent;
+                if (result && result !== '处理结果将在这里显示...') {
+                    ToolUtils.copyToClipboard(result);
+                } else {
+                    ToolUtils.showToast('没有可复制的内容', 'warning');
+                }
+            }
+        }
+
+        // 初始化应用
+        document.addEventListener('DOMContentLoaded', () => {
+            new ToolApp();
+        });
+    </script>
+</body>
+</html>

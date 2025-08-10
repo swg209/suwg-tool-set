@@ -1,0 +1,556 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>"断舍离"决策器 - Decluttering Decision Maker - AI工具集</title>
+    <meta name="description" content=""断舍离"决策器 - Decluttering Decision Maker">
+    
+    <!-- 样式文件 -->
+    <link rel="stylesheet" href="../../shared/css/common.css">
+    
+    <!-- 工具特定样式 -->
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: var(--spacing-lg);
+            color: var(--text-primary);
+        }
+
+        .container {
+            max-width: 700px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(45deg, #ff6b6b, #4ecdc4);
+            color: white;
+            text-align: center;
+            padding: 40px 20px;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .header p {
+            font-size: 1.1em;
+            opacity: 0.9;
+        }
+
+        .content {
+            padding: 40px;
+        }
+
+        .start-section {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .item-input {
+            width: 100%;
+            padding: 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: var(--radius-md);
+            font-size: 16px;
+            margin-bottom: 20px;
+            transition: all 0.3s ease;
+        }
+
+        .item-input:focus {
+            outline: none;
+            border-color: #4ecdc4;
+            box-shadow: 0 5px 15px rgba(78, 205, 196, 0.2);
+        }
+
+        .start-button {
+            background: linear-gradient(45deg, #ff6b6b, #4ecdc4);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            font-size: 16px;
+            font-weight: bold;
+            border-radius: 25px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.15);
+        }
+
+        .start-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(0,0,0,0.2);
+        }
+
+        .quiz-section {
+            display: none;
+        }
+
+        .question-card {
+            background: #f8f9fa;
+            border-radius: var(--radius-lg);
+            padding: 30px;
+            margin-bottom: 20px;
+            border-left: 5px solid #4ecdc4;
+        }
+
+        .question-title {
+            font-size: 1.3em;
+            font-weight: bold;
+            margin-bottom: 20px;
+            color: var(--text-primary);
+        }
+
+        .question-options {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .option-button {
+            background: white;
+            border: 2px solid #e0e0e0;
+            padding: 15px 20px;
+            border-radius: var(--radius-md);
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-align: left;
+            font-size: 16px;
+        }
+
+        .option-button:hover {
+            border-color: #4ecdc4;
+            background: #f0fffe;
+        }
+
+        .option-button.selected {
+            border-color: #4ecdc4;
+            background: #4ecdc4;
+            color: white;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background: #e0e0e0;
+            border-radius: 4px;
+            margin-bottom: 30px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(45deg, #ff6b6b, #4ecdc4);
+            width: 0%;
+            transition: width 0.3s ease;
+        }
+
+        .result-section {
+            display: none;
+            text-align: center;
+        }
+
+        .result-card {
+            background: #f8f9fa;
+            border-radius: var(--radius-lg);
+            padding: 40px;
+            margin-bottom: 20px;
+        }
+
+        .result-icon {
+            font-size: 4em;
+            margin-bottom: 20px;
+        }
+
+        .result-title {
+            font-size: 2em;
+            font-weight: bold;
+            margin-bottom: 15px;
+        }
+
+        .result-description {
+            font-size: 1.1em;
+            line-height: 1.6;
+            color: #555;
+            margin-bottom: 20px;
+        }
+
+        .result-reasons {
+            background: white;
+            border-radius: var(--radius-md);
+            padding: var(--spacing-lg);
+            margin-top: 20px;
+            text-align: left;
+        }
+
+        .restart-button {
+            background: linear-gradient(45deg, #ff6b6b, #4ecdc4);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            font-size: 16px;
+            font-weight: bold;
+            border-radius: 25px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-top: 20px;
+        }
+
+        .footer {
+            text-align: center;
+            padding: var(--spacing-lg);
+            color: var(--text-secondary);
+            font-size: 14px;
+            border-top: 1px solid #eee;
+        }
+        
+        @media (max-width: 768px) {
+            .container {
+                padding: var(--spacing-md);
+                margin: var(--spacing-sm);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="tool-container">
+        <!-- 工具头部 -->
+        <header class="tool-header">
+            <div class="tool-header-content">
+                <a href="../../index.html" class="back-btn">
+                    <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                        <path d="M10 4l-4 4 4 4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                    返回工具集
+                </a>
+                
+                <div class="tool-title">
+                    <h1>"断舍离"决策器 - Decluttering Decision Maker</h1>
+                    <p class="tool-subtitle">"断舍离"决策器 - Decluttering Decision Maker</p>
+                </div>
+                
+                <button class="theme-toggle" id="themeToggle" aria-label="切换主题">
+                    <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                        <circle cx="10" cy="10" r="4" stroke="currentColor" stroke-width="2"/>
+                        <path d="M10 2v2M10 16v2M18 10h-2M4 10H2M15.66 4.34l-1.41 1.41M5.75 14.25l-1.41 1.41M15.66 15.66l-1.41-1.41M5.75 5.75L4.34 4.34" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                    </svg>
+                </button>
+            </div>
+        </header>
+
+        <!-- 工具主内容 -->
+        <main class="tool-main">
+            <div class="tool-card">
+                <div class="tool-section">
+                    <h2>
+                        <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                            <rect x="3" y="3" width="14" height="14" rx="2" stroke="currentColor" stroke-width="2"/>
+                        </svg>
+                        工具功能
+                    </h2>
+                    
+                    
+            <div class="tool-card">
+                <div class="tool-section">
+                    <h2>
+                        <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                            <rect x="3" y="3" width="14" height="14" rx="2" stroke="currentColor" stroke-width="2"/>
+                        </svg>
+                        "断舍离"决策器 - Decluttering Decision Maker
+                    </h2>
+                    <div class="container">
+        <div class="header">
+            <h1>🗂️ "断舍离"决策器</h1>
+            <p>科学决策，告别选择困难症</p>
+        </div>
+
+        <div class="content">
+            <div class="start-section" id="startSection">
+                <h3>你在犹豫要不要扔掉什么物品？</h3>
+                <input type="text" class="item-input" id="itemInput" placeholder="例如：旧衣服、书籍、装饰品...">
+                <br>
+                <button class="start-button" onclick="startQuiz()">开始决策</button>
+            </div>
+
+            <div class="quiz-section" id="quizSection">
+                <div class="progress-bar">
+                    <div class="progress-fill" id="progressFill"></div>
+                </div>
+                
+                <div class="question-card">
+                    <div class="question-title" id="questionTitle"></div>
+                    <div class="question-options" id="questionOptions"></div>
+                </div>
+            </div>
+
+            <div class="result-section" id="resultSection">
+                <div class="result-card">
+                    <div class="result-icon" id="resultIcon"></div>
+                    <div class="result-title" id="resultTitle"></div>
+                    <div class="result-description" id="resultDescription"></div>
+                    <div class="result-reasons" id="resultReasons"></div>
+                </div>
+                <button class="restart-button" onclick="restart()">重新开始</button>
+            </div>
+        </div>
+
+        <div class="footer">
+            <p>© 小苏趣研AI | "断舍离"决策器 - 让整理变得更科学</p>
+        </div>
+    </div>
+
+    
+                </div>
+            </div>
+                    <!-- 结果显示区域 -->
+                    <div class="result-display" id="result">
+                        <pre id="resultContent">处理结果将在这里显示...</pre>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <!-- 工具页脚 -->
+        <footer class="tool-footer">
+            <p>由 <a href="../../index.html">AI工具集</a> 提供 | 原创工具</p>
+        </footer>
+    </div>
+
+    <!-- JavaScript -->
+    <script src="../../shared/js/utils.js"></script>
+    <script>
+        // 工具特定的JavaScript代码
+        class ToolApp {
+            constructor() {
+                this.init();
+            }
+
+            init() {
+                this.setupEventListeners();
+            }
+
+            setupEventListeners() {
+                document.getElementById('processBtn').addEventListener('click', () => this.process());
+                document.getElementById('clearBtn').addEventListener('click', () => this.clear());
+                document.getElementById('copyBtn').addEventListener('click', () => this.copyResult());
+                
+                // 实时处理（可选）
+                document.getElementById('input').addEventListener('input', 
+                    ToolUtils.debounce(() => this.process(), 300)
+                );
+            }
+
+            process() {
+                const input = document.getElementById('input').value;
+                const result = this.processInput(input);
+                this.displayResult(result);
+            }
+
+            processInput(input) {
+                
+        const questions = [
+            {
+                question: "过去一年里，你使用过这个物品吗？",
+                options: [
+                    { text: "经常使用", score: 3 },
+                    { text: "偶尔使用", score: 2 },
+                    { text: "很少使用", score: 1 },
+                    { text: "完全没用过", score: 0 }
+                ]
+            },
+            {
+                question: "这个物品对你有特殊的情感价值吗？",
+                options: [
+                    { text: "非常重要的纪念意义", score: 3 },
+                    { text: "有一定情感价值", score: 2 },
+                    { text: "情感价值不大", score: 1 },
+                    { text: "没有特殊意义", score: 0 }
+                ]
+            },
+            {
+                question: "如果丢掉了，你能轻易买到替代品吗？",
+                options: [
+                    { text: "很难找到替代品", score: 3 },
+                    { text: "可以找到但比较麻烦", score: 2 },
+                    { text: "比较容易找到", score: 1 },
+                    { text: "随时可以买到", score: 0 }
+                ]
+            },
+            {
+                question: "这个物品的状态如何？",
+                options: [
+                    { text: "状态很好，几乎全新", score: 3 },
+                    { text: "有轻微磨损但能正常使用", score: 2 },
+                    { text: "磨损较严重但还能用", score: 1 },
+                    { text: "已经损坏或严重老化", score: 0 }
+                ]
+            },
+            {
+                question: "你觉得未来会需要这个物品吗？",
+                options: [
+                    { text: "肯定会需要", score: 3 },
+                    { text: "可能会需要", score: 2 },
+                    { text: "不太可能需要", score: 1 },
+                    { text: "绝对不会需要", score: 0 }
+                ]
+            },
+            {
+                question: "这个物品占用的空间大吗？",
+                options: [
+                    { text: "几乎不占空间", score: 3 },
+                    { text: "占用空间较小", score: 2 },
+                    { text: "占用较多空间", score: 1 },
+                    { text: "占用大量空间", score: 0 }
+                ]
+            }
+        ];
+
+        let currentQuestion = 0;
+        let totalScore = 0;
+        let itemName = '';
+
+        function startQuiz() {
+            itemName = document.getElementById('itemInput').value.trim();
+            if (!itemName) {
+                alert('请先输入要决策的物品名称');
+                return;
+            }
+
+            document.getElementById('startSection').style.display = 'none';
+            document.getElementById('quizSection').style.display = 'block';
+            
+            currentQuestion = 0;
+            totalScore = 0;
+            showQuestion();
+        }
+
+        function showQuestion() {
+            const question = questions[currentQuestion];
+            document.getElementById('questionTitle').textContent = question.question;
+            
+            const optionsContainer = document.getElementById('questionOptions');
+            optionsContainer.innerHTML = question.options.map((option, index) => 
+                `<button class="option-button" onclick="selectOption(${option.score})">${option.text}</button>`
+            ).join('');
+
+            // 更新进度条
+            const progress = ((currentQuestion + 1) / questions.length) * 100;
+            document.getElementById('progressFill').style.width = progress + '%';
+        }
+
+        function selectOption(score) {
+            totalScore += score;
+            currentQuestion++;
+
+            if (currentQuestion < questions.length) {
+                setTimeout(showQuestion, 300);
+            } else {
+                setTimeout(showResult, 300);
+            }
+        }
+
+        function showResult() {
+            document.getElementById('quizSection').style.display = 'none';
+            document.getElementById('resultSection').style.display = 'block';
+
+            const maxScore = questions.length * 3;
+            const percentage = (totalScore / maxScore) * 100;
+
+            let decision, icon, title, description, reasons;
+
+            if (percentage >= 70) {
+                decision = 'keep';
+                icon = '💝';
+                title = '建议保留';
+                description = `根据分析，"${itemName}"对你来说还是很有价值的，建议继续保留。`;
+                reasons = `
+                    <h4>保留理由：</h4>
+                    <ul>
+                        <li>这个物品在多个维度上都表现良好</li>
+                        <li>具有较高的使用价值或情感价值</li>
+                        <li>丢掉后可能会后悔</li>
+                    </ul>
+                `;
+            } else if (percentage >= 40) {
+                decision = 'consider';
+                icon = '🤔';
+                title = '需要进一步考虑';
+                description = `"${itemName}"的价值评分处于中等水平，建议你再仔细考虑一下。`;
+                reasons = `
+                    <h4>建议：</h4>
+                    <ul>
+                        <li>可以先收纳到不常用的地方</li>
+                        <li>设定一个期限，如果期限内没用到就处理掉</li>
+                        <li>考虑是否可以送给需要的人</li>
+                    </ul>
+                `;
+            } else {
+                decision = 'discard';
+                icon = '🗑️';
+                title = '建议处理掉';
+                description = `根据分析，"${itemName}"对你的价值不大，建议果断处理掉，为生活腾出更多空间。`;
+                reasons = `
+                    <h4>处理建议：</h4>
+                    <ul>
+                        <li>如果状态良好，可以考虑捐赠或转卖</li>
+                        <li>如果已经损坏，直接丢弃</li>
+                        <li>断舍离让生活更简洁美好</li>
+                    </ul>
+                `;
+            }
+
+            document.getElementById('resultIcon').textContent = icon;
+            document.getElementById('resultTitle').textContent = title;
+            document.getElementById('resultDescription').textContent = description;
+            document.getElementById('resultReasons').innerHTML = reasons;
+        }
+
+        function restart() {
+            document.getElementById('resultSection').style.display = 'none';
+            document.getElementById('startSection').style.display = 'block';
+            document.getElementById('itemInput').value = '';
+            document.getElementById('progressFill').style.width = '0%';
+        }
+    
+                return input;
+            }
+
+            displayResult(result) {
+                document.getElementById('resultContent').textContent = result;
+            }
+
+            clear() {
+                document.getElementById('input').value = '';
+                document.getElementById('resultContent').textContent = '处理结果将在这里显示...';
+            }
+
+            copyResult() {
+                const result = document.getElementById('resultContent').textContent;
+                if (result && result !== '处理结果将在这里显示...') {
+                    ToolUtils.copyToClipboard(result);
+                } else {
+                    ToolUtils.showToast('没有可复制的内容', 'warning');
+                }
+            }
+        }
+
+        // 初始化应用
+        document.addEventListener('DOMContentLoaded', () => {
+            new ToolApp();
+        });
+    </script>
+</body>
+</html>

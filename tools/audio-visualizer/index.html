@@ -1,0 +1,878 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>音频可视化器 - AI工具集</title>
+    <meta name="description" content="音频可视化器">
+    
+    <!-- 样式文件 -->
+    <link rel="stylesheet" href="../../shared/css/common.css">
+    
+    <!-- 工具特定样式 -->
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: var(--spacing-lg);
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white;
+            text-align: center;
+            padding: 40px 20px;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            font-size: 1.1em;
+            opacity: 0.9;
+        }
+
+        .content {
+            padding: 40px;
+        }
+
+        .upload-section {
+            background: #f8f9fa;
+            border: 3px dashed #ddd;
+            border-radius: var(--radius-lg);
+            padding: 40px 20px;
+            text-align: center;
+            margin-bottom: 30px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .upload-section:hover {
+            border-color: #667eea;
+            background: #f0f4ff;
+        }
+
+        .upload-section.dragover {
+            border-color: #667eea;
+            background: #e8f2ff;
+            transform: scale(1.02);
+        }
+
+        .upload-icon {
+            font-size: 3em;
+            margin-bottom: 20px;
+            color: #667eea;
+        }
+
+        .upload-text {
+            font-size: 1.2em;
+            color: var(--text-primary);
+            margin-bottom: 10px;
+        }
+
+        .upload-hint {
+            color: var(--text-secondary);
+            font-size: 0.9em;
+        }
+
+        .file-input {
+            display: none;
+        }
+
+        .audio-info {
+            background: #e8f2ff;
+            padding: var(--spacing-lg);
+            border-radius: var(--radius-md);
+            margin-bottom: 30px;
+            display: none;
+        }
+
+        .audio-info.show {
+            display: block;
+        }
+
+        .info-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+        }
+
+        .info-item {
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            text-align: center;
+        }
+
+        .info-label {
+            font-size: 0.9em;
+            color: var(--text-secondary);
+            margin-bottom: 5px;
+        }
+
+        .info-value {
+            font-size: 1.1em;
+            font-weight: bold;
+            color: var(--text-primary);
+        }
+
+        .controls {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+        }
+
+        .control-btn {
+            padding: 12px 25px;
+            border: none;
+            border-radius: var(--radius-md);
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .play-btn {
+            background: linear-gradient(45deg, #28a745, #20c997);
+            color: white;
+        }
+
+        .pause-btn {
+            background: linear-gradient(45deg, #ffc107, #fd7e14);
+            color: white;
+        }
+
+        .stop-btn {
+            background: linear-gradient(45deg, #dc3545, #e83e8c);
+            color: white;
+        }
+
+        .control-btn:hover {
+            transform: translateY(-2px);
+        }
+
+        .control-btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .visualizer-container {
+            background: #000;
+            border-radius: var(--radius-lg);
+            padding: var(--spacing-lg);
+            margin-bottom: 30px;
+            min-height: 400px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .canvas-container {
+            position: relative;
+            width: 100%;
+            height: 360px;
+        }
+
+        .visualizer-canvas {
+            width: 100%;
+            height: 100%;
+            border-radius: var(--radius-md);
+        }
+
+        .visualizer-settings {
+            background: #f8f9fa;
+            padding: 30px;
+            border-radius: var(--radius-lg);
+            margin-bottom: 30px;
+        }
+
+        .settings-title {
+            font-size: 1.3em;
+            font-weight: bold;
+            margin-bottom: 20px;
+            color: var(--text-primary);
+        }
+
+        .settings-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+        }
+
+        .setting-group {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .setting-label {
+            font-weight: bold;
+            color: var(--text-primary);
+        }
+
+        .setting-control {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .setting-slider {
+            flex: 1;
+            height: 6px;
+            border-radius: 3px;
+            background: #ddd;
+            outline: none;
+            -webkit-appearance: none;
+        }
+
+        .setting-slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: #667eea;
+            cursor: pointer;
+        }
+
+        .setting-value {
+            min-width: 50px;
+            font-weight: bold;
+            color: #667eea;
+        }
+
+        .mode-selector {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .mode-btn {
+            flex: 1;
+            padding: 12px 20px;
+            border: 2px solid #ddd;
+            background: white;
+            border-radius: var(--radius-md);
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s;
+        }
+
+        .mode-btn.active {
+            background: #667eea;
+            color: white;
+            border-color: #667eea;
+        }
+
+        .footer {
+            background: #f8f9fa;
+            text-align: center;
+            padding: var(--spacing-lg);
+            color: var(--text-secondary);
+        }
+
+        @media (max-width: 768px) {
+            .controls {
+                flex-direction: column;
+                align-items: center;
+            }
+            
+            .control-btn {
+                width: 100%;
+                max-width: 300px;
+            }
+            
+            .settings-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="tool-container">
+        <!-- 工具头部 -->
+        <header class="tool-header">
+            <div class="tool-header-content">
+                <a href="../../index.html" class="back-btn">
+                    <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                        <path d="M10 4l-4 4 4 4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                    返回工具集
+                </a>
+                
+                <div class="tool-title">
+                    <h1>音频可视化器</h1>
+                    <p class="tool-subtitle">音频可视化器</p>
+                </div>
+                
+                <button class="theme-toggle" id="themeToggle" aria-label="切换主题">
+                    <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                        <circle cx="10" cy="10" r="4" stroke="currentColor" stroke-width="2"/>
+                        <path d="M10 2v2M10 16v2M18 10h-2M4 10H2M15.66 4.34l-1.41 1.41M5.75 14.25l-1.41 1.41M15.66 15.66l-1.41-1.41M5.75 5.75L4.34 4.34" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                    </svg>
+                </button>
+            </div>
+        </header>
+
+        <!-- 工具主内容 -->
+        <main class="tool-main">
+            <div class="tool-card">
+                <div class="tool-section">
+                    <h2>
+                        <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                            <rect x="3" y="3" width="14" height="14" rx="2" stroke="currentColor" stroke-width="2"/>
+                        </svg>
+                        工具功能
+                    </h2>
+                    
+                    
+            <div class="tool-card">
+                <div class="tool-section">
+                    <h2>
+                        <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                            <rect x="3" y="3" width="14" height="14" rx="2" stroke="currentColor" stroke-width="2"/>
+                        </svg>
+                        音频可视化器
+                    </h2>
+                    <div class="container">
+        <div class="header">
+            <h1>🎵 音频可视化器</h1>
+            <p>上传音频文件，实时展示波形和频谱可视化效果</p>
+        </div>
+
+        <div class="content">
+            <div class="upload-section" id="uploadSection">
+                <div class="upload-icon">🎧</div>
+                <div class="upload-text">点击选择音频文件或拖拽到此处</div>
+                <div class="upload-hint">支持 MP3, WAV, OGG, M4A 等格式</div>
+                <input type="file" class="file-input" id="audioInput" accept="audio/*">
+            </div>
+
+            <div class="audio-info" id="audioInfo">
+                <div class="info-grid">
+                    <div class="info-item">
+                        <div class="info-label">文件名</div>
+                        <div class="info-value" id="fileName">-</div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-label">文件大小</div>
+                        <div class="info-value" id="fileSize">-</div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-label">时长</div>
+                        <div class="info-value" id="duration">-</div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-label">当前时间</div>
+                        <div class="info-value" id="currentTime">00:00</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="controls">
+                <button class="control-btn play-btn" id="playBtn" disabled>
+                    <span>▶️</span>
+                    播放
+                </button>
+                <button class="control-btn pause-btn" id="pauseBtn" disabled>
+                    <span>⏸️</span>
+                    暂停
+                </button>
+                <button class="control-btn stop-btn" id="stopBtn" disabled>
+                    <span>⏹️</span>
+                    停止
+                </button>
+            </div>
+
+            <div class="visualizer-settings">
+                <div class="settings-title">🎨 可视化设置</div>
+                
+                <div class="mode-selector">
+                    <button class="mode-btn active" data-mode="bars">频谱柱状图</button>
+                    <button class="mode-btn" data-mode="wave">波形图</button>
+                    <button class="mode-btn" data-mode="circle">圆形频谱</button>
+                </div>
+
+                <div class="settings-grid">
+                    <div class="setting-group">
+                        <label class="setting-label">柱状图数量</label>
+                        <div class="setting-control">
+                            <input type="range" class="setting-slider" id="barCount" min="32" max="256" value="128">
+                            <span class="setting-value" id="barCountValue">128</span>
+                        </div>
+                    </div>
+                    <div class="setting-group">
+                        <label class="setting-label">平滑度</label>
+                        <div class="setting-control">
+                            <input type="range" class="setting-slider" id="smoothing" min="0" max="1" step="0.1" value="0.8">
+                            <span class="setting-value" id="smoothingValue">0.8</span>
+                        </div>
+                    </div>
+                    <div class="setting-group">
+                        <label class="setting-label">颜色强度</label>
+                        <div class="setting-control">
+                            <input type="range" class="setting-slider" id="colorIntensity" min="0.5" max="2" step="0.1" value="1">
+                            <span class="setting-value" id="colorIntensityValue">1.0</span>
+                        </div>
+                    </div>
+                    <div class="setting-group">
+                        <label class="setting-label">缩放倍数</label>
+                        <div class="setting-control">
+                            <input type="range" class="setting-slider" id="scale" min="0.5" max="3" step="0.1" value="1">
+                            <span class="setting-value" id="scaleValue">1.0</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="visualizer-container">
+                <div class="canvas-container">
+                    <canvas class="visualizer-canvas" id="visualizerCanvas"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <div class="footer">
+            <p>© 小苏趣研AI | 音频可视化器</p>
+            <p style="margin-top: 10px; opacity: 0.8;">
+                <a href="#" target="_blank" style="color: #666; text-decoration: none;">小苏趣研AI</a> - 
+                基于Web Audio API的音频可视化工具，支持多种可视化模式，实时展示音频频谱和波形，让音乐变得可见。
+            </p>
+        </div>
+    </div>
+
+    
+                </div>
+            </div>
+                    <!-- 结果显示区域 -->
+                    <div class="result-display" id="result">
+                        <pre id="resultContent">处理结果将在这里显示...</pre>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <!-- 工具页脚 -->
+        <footer class="tool-footer">
+            <p>由 <a href="../../index.html">AI工具集</a> 提供 | 原创工具</p>
+        </footer>
+    </div>
+
+    <!-- JavaScript -->
+    <script src="../../shared/js/utils.js"></script>
+    <script>
+        // 工具特定的JavaScript代码
+        class ToolApp {
+            constructor() {
+                this.init();
+            }
+
+            init() {
+                this.setupEventListeners();
+            }
+
+            setupEventListeners() {
+                document.getElementById('processBtn').addEventListener('click', () => this.process());
+                document.getElementById('clearBtn').addEventListener('click', () => this.clear());
+                document.getElementById('copyBtn').addEventListener('click', () => this.copyResult());
+                
+                // 实时处理（可选）
+                document.getElementById('input').addEventListener('input', 
+                    ToolUtils.debounce(() => this.process(), 300)
+                );
+            }
+
+            process() {
+                const input = document.getElementById('input').value;
+                const result = this.processInput(input);
+                this.displayResult(result);
+            }
+
+            processInput(input) {
+                
+        class AudioVisualizer {
+            constructor() {
+                this.audioContext = null;
+                this.analyser = null;
+                this.source = null;
+                this.audio = new Audio();
+                this.dataArray = null;
+                this.animationId = null;
+                this.isPlaying = false;
+                this.currentMode = 'bars';
+                
+                this.canvas = document.getElementById('visualizerCanvas');
+                this.ctx = this.canvas.getContext('2d');
+                this.uploadSection = document.getElementById('uploadSection');
+                this.audioInput = document.getElementById('audioInput');
+                this.audioInfo = document.getElementById('audioInfo');
+                
+                this.playBtn = document.getElementById('playBtn');
+                this.pauseBtn = document.getElementById('pauseBtn');
+                this.stopBtn = document.getElementById('stopBtn');
+                
+                this.init();
+            }
+
+            init() {
+                this.setupCanvas();
+                this.setupEventListeners();
+                this.setupSliders();
+            }
+
+            setupCanvas() {
+                const container = this.canvas.parentElement;
+                this.canvas.width = container.clientWidth;
+                this.canvas.height = container.clientHeight;
+            }
+
+            setupEventListeners() {
+                // 文件上传
+                this.uploadSection.addEventListener('click', () => {
+                    this.audioInput.click();
+                });
+
+                this.audioInput.addEventListener('change', (e) => {
+                    this.loadAudioFile(e.target.files[0]);
+                });
+
+                // 拖拽上传
+                this.uploadSection.addEventListener('dragover', (e) => {
+                    e.preventDefault();
+                    this.uploadSection.classList.add('dragover');
+                });
+
+                this.uploadSection.addEventListener('dragleave', () => {
+                    this.uploadSection.classList.remove('dragover');
+                });
+
+                this.uploadSection.addEventListener('drop', (e) => {
+                    e.preventDefault();
+                    this.uploadSection.classList.remove('dragover');
+                    this.loadAudioFile(e.dataTransfer.files[0]);
+                });
+
+                // 控制按钮
+                this.playBtn.addEventListener('click', () => this.play());
+                this.pauseBtn.addEventListener('click', () => this.pause());
+                this.stopBtn.addEventListener('click', () => this.stop());
+
+                // 模式切换
+                document.querySelectorAll('.mode-btn').forEach(btn => {
+                    btn.addEventListener('click', (e) => {
+                        document.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('active'));
+                        e.target.classList.add('active');
+                        this.currentMode = e.target.dataset.mode;
+                    });
+                });
+
+                // 音频事件
+                this.audio.addEventListener('loadedmetadata', () => {
+                    this.updateAudioInfo();
+                });
+
+                this.audio.addEventListener('timeupdate', () => {
+                    this.updateCurrentTime();
+                });
+
+                this.audio.addEventListener('ended', () => {
+                    this.stop();
+                });
+
+                // 窗口大小变化
+                window.addEventListener('resize', () => {
+                    this.setupCanvas();
+                });
+            }
+
+            setupSliders() {
+                const sliders = ['barCount', 'smoothing', 'colorIntensity', 'scale'];
+                
+                sliders.forEach(sliderId => {
+                    const slider = document.getElementById(sliderId);
+                    const valueDisplay = document.getElementById(sliderId + 'Value');
+                    
+                    slider.addEventListener('input', (e) => {
+                        valueDisplay.textContent = e.target.value;
+                    });
+                });
+            }
+
+            async loadAudioFile(file) {
+                if (!file) return;
+
+                try {
+                    const url = URL.createObjectURL(file);
+                    this.audio.src = url;
+                    
+                    // 显示文件信息
+                    document.getElementById('fileName').textContent = file.name;
+                    document.getElementById('fileSize').textContent = this.formatFileSize(file.size);
+                    this.audioInfo.classList.add('show');
+                    
+                    // 启用控制按钮
+                    this.playBtn.disabled = false;
+                    
+                    // 初始化音频上下文
+                    await this.initAudioContext();
+                    
+                } catch (error) {
+                    console.error('加载音频文件时出错:', error);
+                    alert('无法加载音频文件，请确保文件格式正确');
+                }
+            }
+
+            async initAudioContext() {
+                if (this.audioContext) {
+                    this.audioContext.close();
+                }
+
+                this.audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                this.analyser = this.audioContext.createAnalyser();
+                this.source = this.audioContext.createMediaElementSource(this.audio);
+                
+                this.source.connect(this.analyser);
+                this.analyser.connect(this.audioContext.destination);
+                
+                this.analyser.fftSize = 2048;
+                this.dataArray = new Uint8Array(this.analyser.frequencyBinCount);
+            }
+
+            formatFileSize(bytes) {
+                if (bytes === 0) return '0 Bytes';
+                const k = 1024;
+                const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+                const i = Math.floor(Math.log(bytes) / Math.log(k));
+                return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+            }
+
+            updateAudioInfo() {
+                const duration = this.audio.duration;
+                const minutes = Math.floor(duration / 60);
+                const seconds = Math.floor(duration % 60);
+                document.getElementById('duration').textContent = 
+                    `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+            }
+
+            updateCurrentTime() {
+                const currentTime = this.audio.currentTime;
+                const minutes = Math.floor(currentTime / 60);
+                const seconds = Math.floor(currentTime % 60);
+                document.getElementById('currentTime').textContent = 
+                    `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+            }
+
+            async play() {
+                if (this.audioContext.state === 'suspended') {
+                    await this.audioContext.resume();
+                }
+                
+                this.audio.play();
+                this.isPlaying = true;
+                this.startVisualization();
+                
+                this.playBtn.disabled = true;
+                this.pauseBtn.disabled = false;
+                this.stopBtn.disabled = false;
+            }
+
+            pause() {
+                this.audio.pause();
+                this.isPlaying = false;
+                this.stopVisualization();
+                
+                this.playBtn.disabled = false;
+                this.pauseBtn.disabled = true;
+            }
+
+            stop() {
+                this.audio.pause();
+                this.audio.currentTime = 0;
+                this.isPlaying = false;
+                this.stopVisualization();
+                
+                this.playBtn.disabled = false;
+                this.pauseBtn.disabled = true;
+                this.stopBtn.disabled = true;
+            }
+
+            startVisualization() {
+                const animate = () => {
+                    if (!this.isPlaying) return;
+                    
+                    this.analyser.getByteFrequencyData(this.dataArray);
+                    this.draw();
+                    
+                    this.animationId = requestAnimationFrame(animate);
+                };
+                animate();
+            }
+
+            stopVisualization() {
+                if (this.animationId) {
+                    cancelAnimationFrame(this.animationId);
+                    this.animationId = null;
+                }
+            }
+
+            draw() {
+                const width = this.canvas.width;
+                const height = this.canvas.height;
+                
+                this.ctx.fillStyle = 'rgb(0, 0, 0)';
+                this.ctx.fillRect(0, 0, width, height);
+                
+                switch (this.currentMode) {
+                    case 'bars':
+                        this.drawBars();
+                        break;
+                    case 'wave':
+                        this.drawWave();
+                        break;
+                    case 'circle':
+                        this.drawCircle();
+                        break;
+                }
+            }
+
+            drawBars() {
+                const barCount = parseInt(document.getElementById('barCount').value);
+                const colorIntensity = parseFloat(document.getElementById('colorIntensity').value);
+                const scale = parseFloat(document.getElementById('scale').value);
+                
+                const width = this.canvas.width;
+                const height = this.canvas.height;
+                const barWidth = width / barCount;
+                
+                for (let i = 0; i < barCount; i++) {
+                    const barHeight = (this.dataArray[i] / 255) * height * scale;
+                    
+                    const hue = (i / barCount) * 360;
+                    const saturation = 70;
+                    const lightness = 50 + (this.dataArray[i] / 255) * 30 * colorIntensity;
+                    
+                    this.ctx.fillStyle = `hsl(${hue}, ${saturation}%, ${lightness}%)`;
+                    this.ctx.fillRect(i * barWidth, height - barHeight, barWidth - 1, barHeight);
+                }
+            }
+
+            drawWave() {
+                const colorIntensity = parseFloat(document.getElementById('colorIntensity').value);
+                const scale = parseFloat(document.getElementById('scale').value);
+                
+                const width = this.canvas.width;
+                const height = this.canvas.height;
+                
+                this.ctx.lineWidth = 2;
+                this.ctx.strokeStyle = `hsl(${Date.now() * 0.1 % 360}, 70%, ${50 + Math.sin(Date.now() * 0.01) * 20 * colorIntensity}%)`;
+                this.ctx.beginPath();
+                
+                const sliceWidth = width / this.dataArray.length;
+                let x = 0;
+                
+                for (let i = 0; i < this.dataArray.length; i++) {
+                    const v = (this.dataArray[i] / 255) * scale;
+                    const y = height / 2 + (v - 0.5) * height;
+                    
+                    if (i === 0) {
+                        this.ctx.moveTo(x, y);
+                    } else {
+                        this.ctx.lineTo(x, y);
+                    }
+                    
+                    x += sliceWidth;
+                }
+                
+                this.ctx.stroke();
+            }
+
+            drawCircle() {
+                const barCount = parseInt(document.getElementById('barCount').value);
+                const colorIntensity = parseFloat(document.getElementById('colorIntensity').value);
+                const scale = parseFloat(document.getElementById('scale').value);
+                
+                const width = this.canvas.width;
+                const height = this.canvas.height;
+                const centerX = width / 2;
+                const centerY = height / 2;
+                const radius = Math.min(width, height) / 4;
+                
+                for (let i = 0; i < barCount; i++) {
+                    const angle = (i / barCount) * Math.PI * 2;
+                    const barHeight = (this.dataArray[i] / 255) * radius * scale;
+                    
+                    const x1 = centerX + Math.cos(angle) * radius;
+                    const y1 = centerY + Math.sin(angle) * radius;
+                    const x2 = centerX + Math.cos(angle) * (radius + barHeight);
+                    const y2 = centerY + Math.sin(angle) * (radius + barHeight);
+                    
+                    const hue = (i / barCount) * 360;
+                    const saturation = 70;
+                    const lightness = 50 + (this.dataArray[i] / 255) * 30 * colorIntensity;
+                    
+                    this.ctx.strokeStyle = `hsl(${hue}, ${saturation}%, ${lightness}%)`;
+                    this.ctx.lineWidth = 3;
+                    this.ctx.beginPath();
+                    this.ctx.moveTo(x1, y1);
+                    this.ctx.lineTo(x2, y2);
+                    this.ctx.stroke();
+                }
+            }
+        }
+
+        // 初始化
+        document.addEventListener('DOMContentLoaded', () => {
+            new AudioVisualizer();
+        });
+    
+                return input;
+            }
+
+            displayResult(result) {
+                document.getElementById('resultContent').textContent = result;
+            }
+
+            clear() {
+                document.getElementById('input').value = '';
+                document.getElementById('resultContent').textContent = '处理结果将在这里显示...';
+            }
+
+            copyResult() {
+                const result = document.getElementById('resultContent').textContent;
+                if (result && result !== '处理结果将在这里显示...') {
+                    ToolUtils.copyToClipboard(result);
+                } else {
+                    ToolUtils.showToast('没有可复制的内容', 'warning');
+                }
+            }
+        }
+
+        // 初始化应用
+        document.addEventListener('DOMContentLoaded', () => {
+            new ToolApp();
+        });
+    </script>
+</body>
+</html>

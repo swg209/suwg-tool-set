@@ -1,0 +1,808 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>文本摘要工具 - 小苏趣研AI - AI工具集</title>
+    <meta name="description" content="文本摘要工具 - 小苏趣研AI">
+    
+    <!-- 样式文件 -->
+    <link rel="stylesheet" href="../../shared/css/common.css">
+    
+    <!-- 工具特定样式 -->
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: var(--spacing-lg);
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            font-weight: 700;
+        }
+
+        .header p {
+            font-size: 1.1rem;
+            opacity: 0.9;
+            margin-bottom: 20px;
+        }
+
+        .content {
+            padding: 30px;
+        }
+
+        .input-section {
+            margin-bottom: 30px;
+        }
+
+        .section-title {
+            font-size: 1.3rem;
+            color: var(--text-primary);
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .input-group {
+            margin-bottom: 20px;
+        }
+
+        .input-label {
+            display: block;
+            font-weight: 600;
+            color: #555;
+            margin-bottom: 8px;
+        }
+
+        .text-input {
+            width: 100%;
+            min-height: 200px;
+            padding: 15px;
+            border: 2px solid #e1e5e9;
+            border-radius: var(--radius-md);
+            font-size: 14px;
+            line-height: 1.6;
+            resize: vertical;
+            transition: border-color 0.3s;
+        }
+
+        .text-input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .controls {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        .control-group {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: var(--radius-md);
+        }
+
+        .control-label {
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 8px;
+            display: block;
+        }
+
+        .control-input {
+            width: 100%;
+            padding: 8px 12px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-size: 14px;
+        }
+
+        .radio-group {
+            display: flex;
+            gap: 15px;
+            margin-top: 8px;
+        }
+
+        .radio-item {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .buttons {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .btn-primary:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-secondary {
+            background: #6c757d;
+            color: white;
+        }
+
+        .btn-secondary:hover:not(:disabled) {
+            background: #5a6268;
+        }
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .output-section {
+            margin-top: 30px;
+        }
+
+        .output-text {
+            width: 100%;
+            min-height: 150px;
+            padding: 15px;
+            border: 2px solid #e1e5e9;
+            border-radius: var(--radius-md);
+            font-size: 14px;
+            line-height: 1.6;
+            background: #f8f9fa;
+            resize: vertical;
+        }
+
+        .stats-section {
+            display: none;
+            background: #e3f2fd;
+            padding: var(--spacing-lg);
+            border-radius: var(--radius-md);
+            margin-top: 20px;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+        }
+
+        .stats-item {
+            text-align: center;
+            padding: var(--spacing-md);
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .stats-value {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #667eea;
+        }
+
+        .stats-label {
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+            margin-top: 5px;
+        }
+
+        .examples {
+            margin-top: 30px;
+            padding: var(--spacing-lg);
+            background: #f8f9fa;
+            border-radius: var(--radius-md);
+        }
+
+        .examples h3 {
+            color: var(--text-primary);
+            margin-bottom: 15px;
+        }
+
+        .example-buttons {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .example-btn {
+            padding: 8px 16px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 13px;
+            transition: background 0.3s;
+        }
+
+        .example-btn:hover {
+            background: #5a67d8;
+        }
+
+        .footer {
+            background: #f8f9fa;
+            padding: var(--spacing-lg);
+            text-align: center;
+            color: var(--text-secondary);
+            border-top: 1px solid #e1e5e9;
+        }
+
+        .footer a {
+            color: #667eea;
+            text-decoration: none;
+        }
+
+        .footer a:hover {
+            text-decoration: underline;
+        }
+
+        @media (max-width: 768px) {
+            .header h1 {
+                font-size: 2rem;
+            }
+            
+            .controls {
+                grid-template-columns: 1fr;
+            }
+            
+            .buttons {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="tool-container">
+        <!-- 工具头部 -->
+        <header class="tool-header">
+            <div class="tool-header-content">
+                <a href="../../index.html" class="back-btn">
+                    <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                        <path d="M10 4l-4 4 4 4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                    返回工具集
+                </a>
+                
+                <div class="tool-title">
+                    <h1>文本摘要工具 - 小苏趣研AI</h1>
+                    <p class="tool-subtitle">文本摘要工具 - 小苏趣研AI</p>
+                </div>
+                
+                <button class="theme-toggle" id="themeToggle" aria-label="切换主题">
+                    <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                        <circle cx="10" cy="10" r="4" stroke="currentColor" stroke-width="2"/>
+                        <path d="M10 2v2M10 16v2M18 10h-2M4 10H2M15.66 4.34l-1.41 1.41M5.75 14.25l-1.41 1.41M15.66 15.66l-1.41-1.41M5.75 5.75L4.34 4.34" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                    </svg>
+                </button>
+            </div>
+        </header>
+
+        <!-- 工具主内容 -->
+        <main class="tool-main">
+            <div class="tool-card">
+                <div class="tool-section">
+                    <h2>
+                        <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                            <rect x="3" y="3" width="14" height="14" rx="2" stroke="currentColor" stroke-width="2"/>
+                        </svg>
+                        工具功能
+                    </h2>
+                    
+                    
+            <div class="tool-card">
+                <div class="tool-section">
+                    <h2>
+                        <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                            <rect x="3" y="3" width="14" height="14" rx="2" stroke="currentColor" stroke-width="2"/>
+                        </svg>
+                        文本摘要工具 - 小苏趣研AI
+                    </h2>
+                    <div class="container">
+        <div class="header">
+            <h1>📝 文本摘要工具</h1>
+            <p>基于规则的智能文本摘要生成器，支持按句子数量或词数提取摘要</p>
+        </div>
+
+        <div class="content">
+            <div class="input-section">
+                <h2 class="section-title">📄 输入文本</h2>
+                
+                <div class="input-group">
+                    <label class="input-label">请输入要生成摘要的文本内容</label>
+                    <textarea 
+                        id="inputText" 
+                        class="text-input" 
+                        placeholder="请粘贴或输入要生成摘要的文本内容...
+
+支持中文、英文及混合文本
+自动识别句子和段落结构
+提供多种摘要模式选择"></textarea>
+                </div>
+
+                <div class="controls">
+                    <div class="control-group">
+                        <label class="control-label">摘要模式</label>
+                        <div class="radio-group">
+                            <div class="radio-item">
+                                <input type="radio" id="modeSentence" name="mode" value="sentence" checked>
+                                <label for="modeSentence">按句子数</label>
+                            </div>
+                            <div class="radio-item">
+                                <input type="radio" id="modeWord" name="mode" value="word">
+                                <label for="modeWord">按词数</label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="control-group">
+                        <label class="control-label" id="countLabel">句子数量</label>
+                        <input type="number" id="countInput" class="control-input" value="3" min="1" max="20">
+                    </div>
+
+                    <div class="control-group">
+                        <label class="control-label">提取策略</label>
+                        <select id="strategy" class="control-input">
+                            <option value="beginning">开头优先</option>
+                            <option value="smart">智能选择</option>
+                            <option value="distributed">分布式</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="buttons">
+                    <button id="summarizeBtn" class="btn btn-primary" disabled>
+                        ✨ 生成摘要
+                    </button>
+                    <button id="copyBtn" class="btn btn-secondary" disabled>
+                        📋 复制结果
+                    </button>
+                    <button id="clearBtn" class="btn btn-secondary">
+                        🗑️ 清空内容
+                    </button>
+                </div>
+            </div>
+
+            <div class="output-section">
+                <h2 class="section-title">📋 摘要结果</h2>
+                <textarea id="outputText" class="output-text" readonly placeholder="摘要结果将在这里显示..."></textarea>
+            </div>
+
+            <div id="statsSection" class="stats-section">
+                <h3 style="margin-bottom: 15px; color: #333;">📊 摘要统计</h3>
+                <div class="stats-grid">
+                    <div class="stats-item">
+                        <div class="stats-value" id="originalLength">0</div>
+                        <div class="stats-label">原文字数</div>
+                    </div>
+                    <div class="stats-item">
+                        <div class="stats-value" id="summaryLength">0</div>
+                        <div class="stats-label">摘要字数</div>
+                    </div>
+                    <div class="stats-item">
+                        <div class="stats-value" id="compressionRatio">0%</div>
+                        <div class="stats-label">压缩率</div>
+                    </div>
+                    <div class="stats-item">
+                        <div class="stats-value" id="sentenceCount">0</div>
+                        <div class="stats-label">句子数量</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="examples">
+                <h3>💡 快速示例</h3>
+                <div class="example-buttons">
+                    <button class="example-btn" onclick="loadExample('tech')">科技文章</button>
+                    <button class="example-btn" onclick="loadExample('news')">新闻报道</button>
+                    <button class="example-btn" onclick="loadExample('story')">故事文本</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="footer">
+            <p>© <a href="#" target="_blank">小苏趣研AI</a> | 文本摘要工具</p>
+            <p style="margin-top: 10px; opacity: 0.8;">
+                基于规则的智能文本摘要生成器，支持多种提取策略和摘要模式，适用于文档整理、内容概括等场景。
+            </p>
+        </div>
+    </div>
+
+    
+                </div>
+            </div>
+                    <!-- 结果显示区域 -->
+                    <div class="result-display" id="result">
+                        <pre id="resultContent">处理结果将在这里显示...</pre>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <!-- 工具页脚 -->
+        <footer class="tool-footer">
+            <p>由 <a href="../../index.html">AI工具集</a> 提供 | 原创工具</p>
+        </footer>
+    </div>
+
+    <!-- JavaScript -->
+    <script src="../../shared/js/utils.js"></script>
+    <script>
+        // 工具特定的JavaScript代码
+        class ToolApp {
+            constructor() {
+                this.init();
+            }
+
+            init() {
+                this.setupEventListeners();
+            }
+
+            setupEventListeners() {
+                document.getElementById('processBtn').addEventListener('click', () => this.process());
+                document.getElementById('clearBtn').addEventListener('click', () => this.clear());
+                document.getElementById('copyBtn').addEventListener('click', () => this.copyResult());
+                
+                // 实时处理（可选）
+                document.getElementById('input').addEventListener('input', 
+                    ToolUtils.debounce(() => this.process(), 300)
+                );
+            }
+
+            process() {
+                const input = document.getElementById('input').value;
+                const result = this.processInput(input);
+                this.displayResult(result);
+            }
+
+            processInput(input) {
+                
+        class TextSummarizer {
+            constructor() {
+                this.inputText = document.getElementById('inputText');
+                this.outputText = document.getElementById('outputText');
+                this.summarizeBtn = document.getElementById('summarizeBtn');
+                this.copyBtn = document.getElementById('copyBtn');
+                this.clearBtn = document.getElementById('clearBtn');
+                this.statsSection = document.getElementById('statsSection');
+                this.countInput = document.getElementById('countInput');
+                this.countLabel = document.getElementById('countLabel');
+                
+                this.bindEvents();
+            }
+            
+            bindEvents() {
+                this.inputText.addEventListener('input', () => this.updateButtonState());
+                this.summarizeBtn.addEventListener('click', () => this.generateSummary());
+                this.copyBtn.addEventListener('click', () => this.copyResult());
+                this.clearBtn.addEventListener('click', () => this.clearText());
+                
+                // 模式切换
+                document.querySelectorAll('input[name="mode"]').forEach(radio => {
+                    radio.addEventListener('change', () => this.updateModeUI());
+                });
+            }
+            
+            updateButtonState() {
+                const hasText = this.inputText.value.trim().length > 0;
+                this.summarizeBtn.disabled = !hasText;
+            }
+            
+            updateModeUI() {
+                const mode = document.querySelector('input[name="mode"]:checked').value;
+                if (mode === 'sentence') {
+                    this.countLabel.textContent = '句子数量';
+                    this.countInput.value = '3';
+                    this.countInput.max = '20';
+                } else {
+                    this.countLabel.textContent = '词数限制';
+                    this.countInput.value = '100';
+                    this.countInput.max = '1000';
+                }
+            }
+            
+            generateSummary() {
+                const text = this.inputText.value.trim();
+                if (!text) {
+                    this.showMessage('请输入要摘要的文本', 'error');
+                    return;
+                }
+                
+                const mode = document.querySelector('input[name="mode"]:checked').value;
+                const count = parseInt(this.countInput.value);
+                const strategy = document.getElementById('strategy').value;
+                
+                let summary;
+                if (mode === 'sentence') {
+                    summary = this.summarizeBySentence(text, count, strategy);
+                } else {
+                    summary = this.summarizeByWords(text, count, strategy);
+                }
+                
+                this.outputText.value = summary;
+                this.copyBtn.disabled = false;
+                this.updateStats(text, summary);
+                this.showMessage('摘要生成完成');
+            }
+            
+            summarizeBySentence(text, sentenceCount, strategy) {
+                // 分割句子
+                const sentences = text.split(/[。！？.!?]+/)
+                    .map(s => s.trim())
+                    .filter(s => s.length > 5);
+                
+                if (sentences.length <= sentenceCount) {
+                    return sentences.join('。') + '。';
+                }
+                
+                let selectedSentences = [];
+                
+                switch (strategy) {
+                    case 'beginning':
+                        selectedSentences = sentences.slice(0, sentenceCount);
+                        break;
+                        
+                    case 'distributed':
+                        const step = Math.floor(sentences.length / sentenceCount);
+                        for (let i = 0; i < sentenceCount; i++) {
+                            const index = Math.min(i * step, sentences.length - 1);
+                            selectedSentences.push(sentences[index]);
+                        }
+                        break;
+                        
+                    case 'smart':
+                    default:
+                        // 智能选择：结合位置权重和长度权重
+                        const scoredSentences = sentences.map((sentence, index) => {
+                            let score = 0;
+                            
+                            // 位置权重：开头和结尾句子权重高
+                            if (index === 0) score += 50;
+                            if (index === sentences.length - 1) score += 30;
+                            if (index < sentences.length * 0.3) score += 20;
+                            
+                            // 长度权重：适中长度的句子权重高
+                            const length = sentence.length;
+                            if (length > 20 && length < 100) score += 30;
+                            else if (length >= 100) score += 20;
+                            
+                            // 关键词权重
+                            const keywords = ['重要', '关键', '主要', '核心', '首先', '其次', '最后', '总之', '因此'];
+                            keywords.forEach(keyword => {
+                                if (sentence.includes(keyword)) score += 15;
+                            });
+                            
+                            return { sentence, score, index };
+                        });
+                        
+                        selectedSentences = scoredSentences
+                            .sort((a, b) => b.score - a.score)
+                            .slice(0, sentenceCount)
+                            .sort((a, b) => a.index - b.index)
+                            .map(item => item.sentence);
+                        break;
+                }
+                
+                return selectedSentences.join('。') + '。';
+            }
+            
+            summarizeByWords(text, wordLimit, strategy) {
+                // 分割句子
+                const sentences = text.split(/[。！？.!?]+/)
+                    .map(s => s.trim())
+                    .filter(s => s.length > 5);
+                
+                let summary = '';
+                let wordCount = 0;
+                
+                if (strategy === 'beginning') {
+                    // 从开头开始提取
+                    for (const sentence of sentences) {
+                        const sentenceWords = this.countWords(sentence);
+                        if (wordCount + sentenceWords <= wordLimit) {
+                            summary += sentence + '。';
+                            wordCount += sentenceWords;
+                        } else {
+                            break;
+                        }
+                    }
+                } else {
+                    // 智能选择或分布式：先按句子选择，再截断
+                    const selectedSentences = this.summarizeBySentence(text, Math.ceil(sentences.length * 0.5), strategy);
+                    const words = selectedSentences.split('');
+                    summary = words.slice(0, wordLimit).join('');
+                    
+                    // 确保在句子边界结束
+                    const lastPunctuation = summary.lastIndexOf('。');
+                    if (lastPunctuation > wordLimit * 0.8) {
+                        summary = summary.substring(0, lastPunctuation + 1);
+                    } else {
+                        summary += '...';
+                    }
+                }
+                
+                return summary || text.substring(0, wordLimit) + '...';
+            }
+            
+            countWords(text) {
+                // 中文按字符计算，英文按单词计算
+                const chineseChars = (text.match(/[\u4e00-\u9fa5]/g) || []).length;
+                const englishWords = (text.match(/[a-zA-Z]+/g) || []).length;
+                return chineseChars + englishWords;
+            }
+            
+            updateStats(originalText, summary) {
+                const originalLength = this.countWords(originalText);
+                const summaryLength = this.countWords(summary);
+                const compressionRatio = originalLength > 0 ? 
+                    ((1 - summaryLength / originalLength) * 100).toFixed(1) : 0;
+                const sentenceCount = (summary.match(/[。！？.!?]+/g) || []).length;
+                
+                document.getElementById('originalLength').textContent = originalLength;
+                document.getElementById('summaryLength').textContent = summaryLength;
+                document.getElementById('compressionRatio').textContent = compressionRatio + '%';
+                document.getElementById('sentenceCount').textContent = sentenceCount;
+                
+                this.statsSection.style.display = 'block';
+            }
+            
+            clearText() {
+                this.inputText.value = '';
+                this.outputText.value = '';
+                this.copyBtn.disabled = true;
+                this.summarizeBtn.disabled = true;
+                this.statsSection.style.display = 'none';
+                this.showMessage('内容已清空');
+            }
+
+            copyResult() {
+                const result = this.outputText.value;
+                if (!result) {
+                    alert('没有可复制的内容');
+                    return;
+                }
+
+                navigator.clipboard.writeText(result).then(() => {
+                    this.showMessage('摘要已复制到剪贴板');
+                }).catch(() => {
+                    this.outputText.select();
+                    document.execCommand('copy');
+                    this.showMessage('摘要已复制到剪贴板');
+                });
+            }
+
+            loadExample(type) {
+                const examples = {
+                    'tech': `人工智能技术在过去十年中取得了突破性进展，深度学习算法的发展使得机器在图像识别、自然语言处理等领域达到了前所未有的水平。随着计算能力的提升和大数据的普及，AI技术正在各个行业中得到广泛应用。从自动驾驶汽车到智能医疗诊断，从智能客服到个性化推荐系统，人工智能正在改变我们的生活方式。然而，AI技术的发展也带来了一些挑战，包括就业结构的变化、隐私保护问题以及算法偏见等。未来，我们需要在推动技术创新的同时，也要关注其社会影响，确保AI技术能够造福全人类。专家预测，未来十年将是人工智能技术发展的关键时期，量子计算、脑机接口等新兴技术将进一步推动AI的发展。`,
+                    
+                    'news': `据最新报道，全球气候变化问题日益严重，各国政府正在加强合作应对这一挑战。联合国气候变化大会上，多个国家承诺在2030年前大幅减少碳排放。中国宣布将在2060年前实现碳中和目标，并大力发展可再生能源。欧盟也提出了雄心勃勃的绿色新政计划，计划投资数万亿欧元用于清洁能源转型。美国重新加入《巴黎协定》，并承诺在2050年前实现净零排放。科学家警告说，如果不采取紧急行动，全球气温上升将超过1.5摄氏度的临界点，这将导致更加严重的气候灾难。各国需要在能源转型、技术创新和国际合作方面加大力度，共同应对气候变化这一全球性挑战。`,
+                    
+                    'story': `小明是一个热爱阅读的孩子，每天放学后都会到图书馆看书。有一天，他发现了一本神奇的书，书中的故事会随着读者的想象而改变。小明被这本书深深吸引，开始在书中创造属于自己的冒险故事。在书中的世界里，他遇到了各种有趣的角色，包括会说话的动物、善良的巫师和勇敢的骑士。通过这些冒险，小明学会了勇气、友谊和坚持的重要性。他发现，真正的魔法不在于书本身，而在于想象力和创造力。当小明把这本书分享给其他同学时，每个人都在书中找到了属于自己的故事。从那以后，图书馆成了孩子们最喜欢的地方，他们在那里分享故事，交流想法，共同成长。这本神奇的书教会了所有人，阅读不仅能带来知识，更能激发无限的想象力。`
+                };
+
+                this.inputText.value = examples[type] || '';
+                this.updateButtonState();
+                this.showMessage('示例文本已加载');
+            }
+
+            showMessage(message, type = 'success') {
+                const messageDiv = document.createElement('div');
+                messageDiv.textContent = message;
+                messageDiv.style.cssText = `
+                    position: fixed;
+                    top: 20px;
+                    right: 20px;
+                    background: ${type === 'error' ? '#dc3545' : '#28a745'};
+                    color: white;
+                    padding: 15px 20px;
+                    border-radius: 8px;
+                    z-index: 1000;
+                    font-weight: bold;
+                    box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+                `;
+                
+                document.body.appendChild(messageDiv);
+                
+                setTimeout(() => {
+                    messageDiv.remove();
+                }, 3000);
+            }
+        }
+
+        // 全局函数
+        let textSummarizer;
+
+        function generateSummary() {
+            textSummarizer.generateSummary();
+        }
+
+        function clearText() {
+            textSummarizer.clearText();
+        }
+
+        function copyResult() {
+            textSummarizer.copyResult();
+        }
+
+        function loadExample(type) {
+            textSummarizer.loadExample(type);
+        }
+
+        // 初始化
+        document.addEventListener('DOMContentLoaded', () => {
+            textSummarizer = new TextSummarizer();
+        });
+    
+                return input;
+            }
+
+            displayResult(result) {
+                document.getElementById('resultContent').textContent = result;
+            }
+
+            clear() {
+                document.getElementById('input').value = '';
+                document.getElementById('resultContent').textContent = '处理结果将在这里显示...';
+            }
+
+            copyResult() {
+                const result = document.getElementById('resultContent').textContent;
+                if (result && result !== '处理结果将在这里显示...') {
+                    ToolUtils.copyToClipboard(result);
+                } else {
+                    ToolUtils.showToast('没有可复制的内容', 'warning');
+                }
+            }
+        }
+
+        // 初始化应用
+        document.addEventListener('DOMContentLoaded', () => {
+            new ToolApp();
+        });
+    </script>
+</body>
+</html>

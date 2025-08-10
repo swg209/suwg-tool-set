@@ -1,0 +1,1085 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>滑稽证件生成器 - AI工具集</title>
+    <meta name="description" content="滑稽证件生成器">
+    
+    <!-- 样式文件 -->
+    <link rel="stylesheet" href="../../shared/css/common.css">
+    
+    <!-- 工具特定样式 -->
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: var(--text-primary);
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 40px 20px;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            padding: 30px;
+            border-radius: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .header h1 {
+            color: white;
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 15px;
+        }
+
+        .certificate-icon {
+            background: #FFD700;
+            padding: var(--spacing-md);
+            border-radius: var(--radius-md);
+            font-size: 0.8em;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+
+        .header p {
+            color: rgba(255, 255, 255, 0.9);
+            font-size: 1.1em;
+            margin-top: 10px;
+        }
+
+        .main-content {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+        }
+
+        .settings-panel, .preview-panel {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: var(--radius-lg);
+            padding: 25px;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+        }
+
+        .panel-title {
+            font-size: 1.3em;
+            font-weight: 600;
+            margin-bottom: 20px;
+            color: var(--text-primary);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+            color: #555;
+        }
+
+        .text-input, .select-input {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 1em;
+            transition: border-color 0.3s ease;
+        }
+
+        .text-input:focus, .select-input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .certificate-types {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        .certificate-option {
+            padding: 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            background: white;
+            text-align: left;
+        }
+
+        .certificate-option:hover {
+            border-color: #667eea;
+            background: #f8f9ff;
+        }
+
+        .certificate-option.active {
+            border-color: #667eea;
+            background: #667eea;
+            color: white;
+        }
+
+        .certificate-title {
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        .certificate-desc {
+            font-size: 0.9em;
+            opacity: 0.8;
+        }
+
+        .generate-btn {
+            width: 100%;
+            padding: 15px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: var(--radius-md);
+            font-size: 1.1em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-top: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        .generate-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .preview-area {
+            min-height: 500px;
+            border: 2px dashed #ddd;
+            border-radius: var(--radius-md);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #f8f9fa;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .preview-placeholder {
+            text-align: center;
+            color: #6c757d;
+        }
+
+        .certificate-canvas {
+            max-width: 100%;
+            max-height: 100%;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .download-btn {
+            width: 100%;
+            padding: 12px;
+            background: #28a745;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 1em;
+            font-weight: 600;
+            cursor: pointer;
+            margin-top: 15px;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            transition: background 0.3s ease;
+        }
+
+        .download-btn:hover {
+            background: #218838;
+        }
+
+        .download-btn.visible {
+            display: flex;
+        }
+
+        .random-btn {
+            width: 100%;
+            padding: 12px;
+            background: #FFA500;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 1em;
+            font-weight: 600;
+            cursor: pointer;
+            margin-top: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            transition: background 0.3s ease;
+        }
+
+        .random-btn:hover {
+            background: #FF8C00;
+        }
+
+        .footer {
+            text-align: center;
+            margin-top: 40px;
+            color: rgba(255, 255, 255, 0.8);
+            font-size: 0.9em;
+        }
+
+        @media (max-width: 768px) {
+            .main-content {
+                grid-template-columns: 1fr;
+                gap: 20px;
+            }
+            
+            .header h1 {
+                font-size: 2em;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="tool-container">
+        <!-- 工具头部 -->
+        <header class="tool-header">
+            <div class="tool-header-content">
+                <a href="../../index.html" class="back-btn">
+                    <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                        <path d="M10 4l-4 4 4 4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                    返回工具集
+                </a>
+                
+                <div class="tool-title">
+                    <h1>滑稽证件生成器</h1>
+                    <p class="tool-subtitle">滑稽证件生成器</p>
+                </div>
+                
+                <button class="theme-toggle" id="themeToggle" aria-label="切换主题">
+                    <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                        <circle cx="10" cy="10" r="4" stroke="currentColor" stroke-width="2"/>
+                        <path d="M10 2v2M10 16v2M18 10h-2M4 10H2M15.66 4.34l-1.41 1.41M5.75 14.25l-1.41 1.41M15.66 15.66l-1.41-1.41M5.75 5.75L4.34 4.34" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                    </svg>
+                </button>
+            </div>
+        </header>
+
+        <!-- 工具主内容 -->
+        <main class="tool-main">
+            <div class="tool-card">
+                <div class="tool-section">
+                    <h2>
+                        <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                            <rect x="3" y="3" width="14" height="14" rx="2" stroke="currentColor" stroke-width="2"/>
+                        </svg>
+                        工具功能
+                    </h2>
+                    
+                    
+            <div class="tool-card">
+                <div class="tool-section">
+                    <h2>
+                        <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                            <rect x="3" y="3" width="14" height="14" rx="2" stroke="currentColor" stroke-width="2"/>
+                        </svg>
+                        滑稽证件生成器
+                    </h2>
+                    <div class="container">
+        <div class="header">
+            <h1>
+                <span class="certificate-icon">📜</span>
+                滑稽证件生成器
+                <span class="certificate-icon">🏆</span>
+            </h1>
+            <p>生成各种搞笑证件，让生活充满乐趣！</p>
+        </div>
+
+        <div class="main-content">
+            <div class="settings-panel">
+                <h2 class="panel-title">
+                    ⚙️ 证件设置
+                </h2>
+                
+                <div class="form-group">
+                    <label for="userName">姓名</label>
+                    <input type="text" id="userName" class="text-input" placeholder="请输入您的姓名" value="张三">
+                </div>
+
+                <div class="form-group">
+                    <label for="userTitle">称号/职位（可选）</label>
+                    <input type="text" id="userTitle" class="text-input" placeholder="如：资深、高级、首席等">
+                </div>
+
+                <div class="form-group">
+                    <label>证件类型</label>
+                    <div class="certificate-types" id="certificateTypes">
+                        <!-- 证件类型将由JavaScript生成 -->
+                    </div>
+                </div>
+
+                <button class="random-btn" id="randomBtn">
+                    🎲 随机生成
+                </button>
+
+                <button class="generate-btn" id="generateBtn">
+                    🎨 生成证件
+                </button>
+            </div>
+
+            <div class="preview-panel">
+                <h2 class="panel-title">
+                    👀 证件预览
+                </h2>
+                
+                <div class="preview-area" id="previewArea">
+                    <div class="preview-placeholder">
+                        <div style="font-size: 3em; margin-bottom: 15px;">📜</div>
+                        <p>点击"生成证件"查看效果</p>
+                    </div>
+                </div>
+
+                <button class="download-btn" id="downloadBtn">
+                    💾 下载证件
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div class="footer">
+        <p>© 小苏趣研AI 滑稽证件生成器 | 仅供娱乐，请勿用于正式场合</p>
+    </div>
+
+    
+                </div>
+            </div>
+                    <!-- 结果显示区域 -->
+                    <div class="result-display" id="result">
+                        <pre id="resultContent">处理结果将在这里显示...</pre>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <!-- 工具页脚 -->
+        <footer class="tool-footer">
+            <p>由 <a href="../../index.html">AI工具集</a> 提供 | 原创工具</p>
+        </footer>
+    </div>
+
+    <!-- JavaScript -->
+    <script src="../../shared/js/utils.js"></script>
+    <script>
+        // 工具特定的JavaScript代码
+        class ToolApp {
+            constructor() {
+                this.init();
+            }
+
+            init() {
+                this.setupEventListeners();
+            }
+
+            setupEventListeners() {
+                document.getElementById('processBtn').addEventListener('click', () => this.process());
+                document.getElementById('clearBtn').addEventListener('click', () => this.clear());
+                document.getElementById('copyBtn').addEventListener('click', () => this.copyResult());
+                
+                // 实时处理（可选）
+                document.getElementById('input').addEventListener('input', 
+                    ToolUtils.debounce(() => this.process(), 300)
+                );
+            }
+
+            process() {
+                const input = document.getElementById('input').value;
+                const result = this.processInput(input);
+                this.displayResult(result);
+            }
+
+            processInput(input) {
+                
+        class FunnyCertificateGenerator {
+            constructor() {
+                this.userNameInput = document.getElementById('userName');
+                this.userTitleInput = document.getElementById('userTitle');
+                this.certificateTypesContainer = document.getElementById('certificateTypes');
+                this.generateBtn = document.getElementById('generateBtn');
+                this.randomBtn = document.getElementById('randomBtn');
+                this.downloadBtn = document.getElementById('downloadBtn');
+                this.previewArea = document.getElementById('previewArea');
+                
+                this.selectedType = null;
+                this.currentCanvas = null;
+                
+                this.certificateTypes = [
+                    {
+                        id: 'moyu',
+                        title: '全球最佳摸鱼许可证',
+                        desc: '授权持证人在工作时间进行合理摸鱼',
+                        emoji: '🐟',
+                        color: '#4ECDC4',
+                        template: 'professional'
+                    },
+                    {
+                        id: 'ganfan',
+                        title: '干饭王荣誉证书',
+                        desc: '表彰在干饭领域的杰出贡献',
+                        emoji: '🍚',
+                        color: '#FFD93D',
+                        template: 'award'
+                    },
+                    {
+                        id: 'shuijiao',
+                        title: '睡觉冠军认证',
+                        desc: '认证持证人具备超强睡眠能力',
+                        emoji: '😴',
+                        color: '#A8E6CF',
+                        template: 'certificate'
+                    },
+                    {
+                        id: 'danshen',
+                        title: '单身贵族身份证',
+                        desc: '证明持证人享受单身生活',
+                        emoji: '💎',
+                        color: '#FF8B94',
+                        template: 'id'
+                    },
+                    {
+                        id: 'chihuo',
+                        title: '吃货等级认证',
+                        desc: '评定持证人的吃货专业水平',
+                        emoji: '🍕',
+                        color: '#FFAAA5',
+                        template: 'professional'
+                    },
+                    {
+                        id: 'youxi',
+                        title: '游戏大神证明',
+                        desc: '证明持证人在游戏领域的实力',
+                        emoji: '🎮',
+                        color: '#B4A7D6',
+                        template: 'award'
+                    },
+                    {
+                        id: 'tufa',
+                        title: '秃头预警证书',
+                        desc: '提醒持证人注意头发保护',
+                        emoji: '👨‍🦲',
+                        color: '#D4A574',
+                        template: 'warning'
+                    },
+                    {
+                        id: 'jiaban',
+                        title: '加班达人勋章',
+                        desc: '表彰在加班方面的突出表现',
+                        emoji: '💼',
+                        color: '#87CEEB',
+                        template: 'medal'
+                    },
+                    {
+                        id: 'taobao',
+                        title: '淘宝购物专家',
+                        desc: '认证持证人的网购专业技能',
+                        emoji: '🛒',
+                        color: '#FF6B6B',
+                        template: 'professional'
+                    },
+                    {
+                        id: 'zhuifan',
+                        title: '追番狂魔证明',
+                        desc: '证明持证人的追番专业水平',
+                        emoji: '📺',
+                        color: '#4ECDC4',
+                        template: 'certificate'
+                    }
+                ];
+                
+                this.funnyNames = [
+                    '王大锤', '李狗蛋', '张铁柱', '赵钢蛋', '刘大壮',
+                    '陈小明', '周大福', '吴彦祖', '郑爽爽', '孙悟空',
+                    '马云飞', '朱小猪', '徐大虾', '林黛玉', '贾宝玉'
+                ];
+                
+                this.funnyTitles = [
+                    '资深', '高级', '首席', '终极', '传说级',
+                    '钻石级', '王者级', '大师级', '专业', '顶级'
+                ];
+                
+                this.initializeCertificateTypes();
+                this.bindEvents();
+            }
+
+            initializeCertificateTypes() {
+                this.certificateTypes.forEach((type, index) => {
+                    const option = document.createElement('div');
+                    option.className = 'certificate-option';
+                    option.dataset.typeId = type.id;
+                    
+                    if (index === 0) {
+                        option.classList.add('active');
+                        this.selectedType = type;
+                    }
+                    
+                    option.innerHTML = `
+                        <div class="certificate-title">${type.emoji} ${type.title}</div>
+                        <div class="certificate-desc">${type.desc}</div>
+                    `;
+                    
+                    option.addEventListener('click', () => {
+                        document.querySelectorAll('.certificate-option').forEach(opt => {
+                            opt.classList.remove('active');
+                        });
+                        option.classList.add('active');
+                        this.selectedType = type;
+                    });
+                    
+                    this.certificateTypesContainer.appendChild(option);
+                });
+            }
+
+            bindEvents() {
+                this.generateBtn.addEventListener('click', () => {
+                    this.generateCertificate();
+                });
+                
+                this.randomBtn.addEventListener('click', () => {
+                    this.generateRandom();
+                });
+                
+                this.downloadBtn.addEventListener('click', () => {
+                    this.downloadCertificate();
+                });
+            }
+
+            generateRandom() {
+                // 随机选择姓名
+                const randomName = this.funnyNames[Math.floor(Math.random() * this.funnyNames.length)];
+                this.userNameInput.value = randomName;
+                
+                // 随机选择称号
+                const randomTitle = Math.random() > 0.5 ? 
+                    this.funnyTitles[Math.floor(Math.random() * this.funnyTitles.length)] : '';
+                this.userTitleInput.value = randomTitle;
+                
+                // 随机选择证件类型
+                const randomType = this.certificateTypes[Math.floor(Math.random() * this.certificateTypes.length)];
+                document.querySelectorAll('.certificate-option').forEach(opt => {
+                    opt.classList.remove('active');
+                });
+                document.querySelector(`[data-type-id="${randomType.id}"]`).classList.add('active');
+                this.selectedType = randomType;
+                
+                // 自动生成
+                this.generateCertificate();
+            }
+
+            generateCertificate() {
+                const userName = this.userNameInput.value.trim();
+                const userTitle = this.userTitleInput.value.trim();
+                
+                if (!userName) {
+                    alert('请输入姓名');
+                    return;
+                }
+                
+                if (!this.selectedType) {
+                    alert('请选择证件类型');
+                    return;
+                }
+                
+                // 创建证件画布
+                const canvas = document.createElement('canvas');
+                const ctx = canvas.getContext('2d');
+                
+                // 设置画布尺寸
+                canvas.width = 800;
+                canvas.height = 600;
+                
+                // 根据模板绘制证件
+                this.drawCertificate(ctx, userName, userTitle, this.selectedType);
+                
+                // 显示预览
+                this.showPreview(canvas);
+            }
+
+            drawCertificate(ctx, userName, userTitle, type) {
+                const now = new Date();
+                const dateStr = now.toLocaleDateString('zh-CN');
+                const certificateNumber = 'FC' + now.getFullYear() + String(now.getMonth() + 1).padStart(2, '0') + 
+                                        String(now.getDate()).padStart(2, '0') + String(Math.floor(Math.random() * 10000)).padStart(4, '0');
+                
+                switch (type.template) {
+                    case 'professional':
+                        this.drawProfessionalTemplate(ctx, userName, userTitle, type, dateStr, certificateNumber);
+                        break;
+                    case 'award':
+                        this.drawAwardTemplate(ctx, userName, userTitle, type, dateStr, certificateNumber);
+                        break;
+                    case 'certificate':
+                        this.drawCertificateTemplate(ctx, userName, userTitle, type, dateStr, certificateNumber);
+                        break;
+                    case 'id':
+                        this.drawIdTemplate(ctx, userName, userTitle, type, dateStr, certificateNumber);
+                        break;
+                    case 'warning':
+                        this.drawWarningTemplate(ctx, userName, userTitle, type, dateStr, certificateNumber);
+                        break;
+                    case 'medal':
+                        this.drawMedalTemplate(ctx, userName, userTitle, type, dateStr, certificateNumber);
+                        break;
+                    default:
+                        this.drawProfessionalTemplate(ctx, userName, userTitle, type, dateStr, certificateNumber);
+                }
+            }
+
+            drawProfessionalTemplate(ctx, userName, userTitle, type, dateStr, certificateNumber) {
+                // 背景
+                ctx.fillStyle = '#ffffff';
+                ctx.fillRect(0, 0, 800, 600);
+                
+                // 边框
+                ctx.strokeStyle = type.color;
+                ctx.lineWidth = 8;
+                ctx.strokeRect(20, 20, 760, 560);
+                
+                // 内边框
+                ctx.strokeStyle = type.color;
+                ctx.lineWidth = 2;
+                ctx.strokeRect(40, 40, 720, 520);
+                
+                // 顶部装饰
+                ctx.fillStyle = type.color;
+                ctx.fillRect(60, 60, 680, 80);
+                
+                // 标题
+                ctx.fillStyle = '#ffffff';
+                ctx.font = 'bold 32px Arial';
+                ctx.textAlign = 'center';
+                ctx.fillText(type.title, 400, 115);
+                
+                // 大表情
+                ctx.font = '80px Arial';
+                ctx.fillText(type.emoji, 400, 220);
+                
+                // 兹证明
+                ctx.fillStyle = '#333333';
+                ctx.font = '24px Arial';
+                ctx.fillText('兹证明', 400, 280);
+                
+                // 姓名
+                ctx.font = 'bold 36px Arial';
+                ctx.fillStyle = type.color;
+                const fullName = userTitle ? `${userTitle} ${userName}` : userName;
+                ctx.fillText(fullName, 400, 330);
+                
+                // 证件内容
+                ctx.fillStyle = '#333333';
+                ctx.font = '20px Arial';
+                ctx.fillText('符合本证件所述条件，特此证明', 400, 380);
+                
+                // 日期和编号
+                ctx.fillStyle = '#666666';
+                ctx.font = '16px Arial';
+                ctx.textAlign = 'left';
+                ctx.fillText('发证日期：' + dateStr, 80, 480);
+                ctx.textAlign = 'right';
+                ctx.fillText('证件编号：' + certificateNumber, 720, 480);
+                
+                // 印章
+                this.drawSeal(ctx, 600, 420, type.color);
+            }
+
+            drawAwardTemplate(ctx, userName, userTitle, type, dateStr, certificateNumber) {
+                // 渐变背景
+                const gradient = ctx.createLinearGradient(0, 0, 800, 600);
+                gradient.addColorStop(0, '#fff9e6');
+                gradient.addColorStop(1, '#fff3d3');
+                ctx.fillStyle = gradient;
+                ctx.fillRect(0, 0, 800, 600);
+                
+                // 装饰边框
+                ctx.strokeStyle = '#FFD700';
+                ctx.lineWidth = 6;
+                ctx.strokeRect(30, 30, 740, 540);
+                
+                // 顶部装饰带
+                ctx.fillStyle = '#FFD700';
+                ctx.fillRect(50, 50, 700, 60);
+                
+                // 奖杯图案
+                ctx.font = '60px Arial';
+                ctx.textAlign = 'center';
+                ctx.fillText('🏆', 400, 140);
+                
+                // 标题
+                ctx.fillStyle = '#8B4513';
+                ctx.font = 'bold 28px Arial';
+                ctx.fillText('荣誉证书', 400, 180);
+                ctx.font = 'bold 24px Arial';
+                ctx.fillText('CERTIFICATE OF HONOR', 400, 210);
+                
+                // 表情
+                ctx.font = '50px Arial';
+                ctx.fillText(type.emoji, 400, 270);
+                
+                // 获奖内容
+                ctx.fillStyle = '#333333';
+                ctx.font = '20px Arial';
+                ctx.fillText('特此授予', 400, 320);
+                
+                ctx.font = 'bold 32px Arial';
+                ctx.fillStyle = type.color;
+                const fullName = userTitle ? `${userTitle} ${userName}` : userName;
+                ctx.fillText(fullName, 400, 360);
+                
+                ctx.fillStyle = '#333333';
+                ctx.font = 'bold 22px Arial';
+                ctx.fillText(type.title, 400, 400);
+                
+                ctx.font = '18px Arial';
+                ctx.fillText('以表彰其在相关领域的杰出表现', 400, 430);
+                
+                // 底部信息
+                ctx.fillStyle = '#666666';
+                ctx.font = '14px Arial';
+                ctx.textAlign = 'left';
+                ctx.fillText('颁发日期：' + dateStr, 80, 520);
+                ctx.textAlign = 'right';
+                ctx.fillText('证书编号：' + certificateNumber, 720, 520);
+            }
+
+            drawCertificateTemplate(ctx, userName, userTitle, type, dateStr, certificateNumber) {
+                // 背景
+                ctx.fillStyle = '#f8f9fa';
+                ctx.fillRect(0, 0, 800, 600);
+                
+                // 主体背景
+                ctx.fillStyle = '#ffffff';
+                ctx.fillRect(60, 60, 680, 480);
+                ctx.strokeStyle = type.color;
+                ctx.lineWidth = 3;
+                ctx.strokeRect(60, 60, 680, 480);
+                
+                // 顶部标题栏
+                ctx.fillStyle = type.color;
+                ctx.fillRect(80, 80, 640, 60);
+                
+                ctx.fillStyle = '#ffffff';
+                ctx.font = 'bold 24px Arial';
+                ctx.textAlign = 'center';
+                ctx.fillText('认证证书', 400, 115);
+                
+                // 表情
+                ctx.font = '60px Arial';
+                ctx.fillText(type.emoji, 400, 200);
+                
+                // 证书内容
+                ctx.fillStyle = '#333333';
+                ctx.font = '18px Arial';
+                ctx.fillText('本证书证明', 400, 240);
+                
+                ctx.font = 'bold 28px Arial';
+                ctx.fillStyle = type.color;
+                const fullName = userTitle ? `${userTitle} ${userName}` : userName;
+                ctx.fillText(fullName, 400, 280);
+                
+                ctx.fillStyle = '#333333';
+                ctx.font = '20px Arial';
+                ctx.fillText('已通过', 400, 320);
+                
+                ctx.font = 'bold 22px Arial';
+                ctx.fillText(type.title.replace('认证', '').replace('证明', '').replace('证书', ''), 400, 350);
+                
+                ctx.font = '18px Arial';
+                ctx.fillText('相关认证考核', 400, 380);
+                
+                // 底部信息
+                ctx.fillStyle = '#999999';
+                ctx.font = '14px Arial';
+                ctx.textAlign = 'left';
+                ctx.fillText('认证日期：' + dateStr, 100, 460);
+                ctx.textAlign = 'right';
+                ctx.fillText('认证编号：' + certificateNumber, 700, 460);
+                
+                // 认证印章
+                this.drawSeal(ctx, 600, 400, type.color);
+            }
+
+            drawIdTemplate(ctx, userName, userTitle, type, dateStr, certificateNumber) {
+                // 背景
+                ctx.fillStyle = '#e3f2fd';
+                ctx.fillRect(0, 0, 800, 600);
+                
+                // 卡片背景
+                ctx.fillStyle = '#ffffff';
+                ctx.fillRect(100, 150, 600, 300);
+                ctx.strokeStyle = type.color;
+                ctx.lineWidth = 2;
+                ctx.strokeRect(100, 150, 600, 300);
+                
+                // 顶部条
+                ctx.fillStyle = type.color;
+                ctx.fillRect(100, 150, 600, 50);
+                
+                // 标题
+                ctx.fillStyle = '#ffffff';
+                ctx.font = 'bold 20px Arial';
+                ctx.textAlign = 'center';
+                ctx.fillText(type.title, 400, 180);
+                
+                // 头像区域
+                ctx.fillStyle = '#f0f0f0';
+                ctx.fillRect(130, 220, 100, 120);
+                ctx.strokeStyle = '#ddd';
+                ctx.lineWidth = 1;
+                ctx.strokeRect(130, 220, 100, 120);
+                
+                // 头像表情
+                ctx.font = '60px Arial';
+                ctx.textAlign = 'center';
+                ctx.fillText(type.emoji, 180, 290);
+                
+                // 个人信息
+                ctx.fillStyle = '#333333';
+                ctx.font = 'bold 18px Arial';
+                ctx.textAlign = 'left';
+                ctx.fillText('姓名：', 260, 240);
+                ctx.fillText('等级：', 260, 270);
+                ctx.fillText('编号：', 260, 300);
+                ctx.fillText('有效期：', 260, 330);
+                
+                ctx.font = '18px Arial';
+                ctx.fillStyle = type.color;
+                const fullName = userTitle ? `${userTitle} ${userName}` : userName;
+                ctx.fillText(fullName, 320, 240);
+                ctx.fillText('至尊VIP', 320, 270);
+                ctx.fillText(certificateNumber, 320, 300);
+                ctx.fillText('永久有效', 320, 330);
+                
+                // 发证日期
+                ctx.fillStyle = '#666666';
+                ctx.font = '14px Arial';
+                ctx.textAlign = 'center';
+                ctx.fillText('发证日期：' + dateStr, 400, 420);
+            }
+
+            drawWarningTemplate(ctx, userName, userTitle, type, dateStr, certificateNumber) {
+                // 背景
+                ctx.fillStyle = '#fff3cd';
+                ctx.fillRect(0, 0, 800, 600);
+                
+                // 警告边框
+                ctx.strokeStyle = '#856404';
+                ctx.lineWidth = 6;
+                ctx.strokeRect(30, 30, 740, 540);
+                
+                // 警告条纹
+                ctx.fillStyle = '#ffc107';
+                for (let i = 0; i < 800; i += 40) {
+                    ctx.fillRect(i, 50, 20, 20);
+                    ctx.fillRect(i + 20, 70, 20, 20);
+                }
+                
+                // 警告标志
+                ctx.fillStyle = '#dc3545';
+                ctx.font = '80px Arial';
+                ctx.textAlign = 'center';
+                ctx.fillText('⚠️', 400, 150);
+                
+                // 标题
+                ctx.fillStyle = '#856404';
+                ctx.font = 'bold 32px Arial';
+                ctx.fillText('警告证书', 400, 200);
+                
+                // 表情
+                ctx.font = '50px Arial';
+                ctx.fillText(type.emoji, 400, 260);
+                
+                // 警告内容
+                ctx.fillStyle = '#333333';
+                ctx.font = '20px Arial';
+                ctx.fillText('特此警告', 400, 300);
+                
+                ctx.font = 'bold 28px Arial';
+                ctx.fillStyle = '#dc3545';
+                const fullName = userTitle ? `${userTitle} ${userName}` : userName;
+                ctx.fillText(fullName, 400, 340);
+                
+                ctx.fillStyle = '#333333';
+                ctx.font = '18px Arial';
+                ctx.fillText('存在以下风险：', 400, 370);
+                
+                ctx.font = 'bold 20px Arial';
+                ctx.fillText(type.desc, 400, 400);
+                
+                // 底部信息
+                ctx.fillStyle = '#856404';
+                ctx.font = '14px Arial';
+                ctx.textAlign = 'left';
+                ctx.fillText('警告日期：' + dateStr, 80, 500);
+                ctx.textAlign = 'right';
+                ctx.fillText('警告编号：' + certificateNumber, 720, 500);
+            }
+
+            drawMedalTemplate(ctx, userName, userTitle, type, dateStr, certificateNumber) {
+                // 背景
+                const gradient = ctx.createRadialGradient(400, 300, 0, 400, 300, 400);
+                gradient.addColorStop(0, '#fff');
+                gradient.addColorStop(1, '#f0f8ff');
+                ctx.fillStyle = gradient;
+                ctx.fillRect(0, 0, 800, 600);
+                
+                // 奖牌背景
+                ctx.fillStyle = '#FFD700';
+                ctx.beginPath();
+                ctx.arc(400, 250, 120, 0, 2 * Math.PI);
+                ctx.fill();
+                
+                ctx.strokeStyle = '#FFA500';
+                ctx.lineWidth = 8;
+                ctx.stroke();
+                
+                // 奖牌内圈
+                ctx.fillStyle = '#FFF8DC';
+                ctx.beginPath();
+                ctx.arc(400, 250, 100, 0, 2 * Math.PI);
+                ctx.fill();
+                
+                // 表情
+                ctx.font = '60px Arial';
+                ctx.textAlign = 'center';
+                ctx.fillText(type.emoji, 400, 270);
+                
+                // 绶带
+                ctx.fillStyle = type.color;
+                ctx.fillRect(350, 130, 100, 40);
+                ctx.fillRect(370, 170, 60, 40);
+                
+                // 标题
+                ctx.fillStyle = '#333333';
+                ctx.font = 'bold 24px Arial';
+                ctx.fillText('勋章证书', 400, 120);
+                
+                // 获得者
+                ctx.font = '18px Arial';
+                ctx.fillText('授予', 400, 400);
+                
+                ctx.font = 'bold 28px Arial';
+                ctx.fillStyle = type.color;
+                const fullName = userTitle ? `${userTitle} ${userName}` : userName;
+                ctx.fillText(fullName, 400, 440);
+                
+                ctx.fillStyle = '#333333';
+                ctx.font = 'bold 20px Arial';
+                ctx.fillText(type.title, 400, 470);
+                
+                // 底部信息
+                ctx.fillStyle = '#666666';
+                ctx.font = '14px Arial';
+                ctx.textAlign = 'left';
+                ctx.fillText('颁发日期：' + dateStr, 80, 540);
+                ctx.textAlign = 'right';
+                ctx.fillText('勋章编号：' + certificateNumber, 720, 540);
+            }
+
+            drawSeal(ctx, x, y, color) {
+                // 印章外圈
+                ctx.strokeStyle = color;
+                ctx.lineWidth = 3;
+                ctx.beginPath();
+                ctx.arc(x, y, 40, 0, 2 * Math.PI);
+                ctx.stroke();
+                
+                // 印章内容
+                ctx.fillStyle = color;
+                ctx.font = 'bold 14px Arial';
+                ctx.textAlign = 'center';
+                ctx.fillText('官方', x, y - 5);
+                ctx.fillText('认证', x, y + 15);
+            }
+
+            showPreview(canvas) {
+                this.previewArea.innerHTML = '';
+                this.previewArea.appendChild(canvas);
+                canvas.className = 'certificate-canvas';
+                this.currentCanvas = canvas;
+                this.downloadBtn.classList.add('visible');
+            }
+
+            downloadCertificate() {
+                if (!this.currentCanvas) {
+                    alert('没有可下载的证件');
+                    return;
+                }
+                
+                const link = document.createElement('a');
+                const timestamp = new Date().toISOString().slice(0, 19).replace(/:/g, '-');
+                const fileName = `${this.selectedType.title}_${this.userNameInput.value}_${timestamp}.png`;
+                link.download = fileName;
+                link.href = this.currentCanvas.toDataURL('image/png');
+                link.click();
+            }
+        }
+
+        // 初始化生成器
+        document.addEventListener('DOMContentLoaded', () => {
+            new FunnyCertificateGenerator();
+        });
+    
+                return input;
+            }
+
+            displayResult(result) {
+                document.getElementById('resultContent').textContent = result;
+            }
+
+            clear() {
+                document.getElementById('input').value = '';
+                document.getElementById('resultContent').textContent = '处理结果将在这里显示...';
+            }
+
+            copyResult() {
+                const result = document.getElementById('resultContent').textContent;
+                if (result && result !== '处理结果将在这里显示...') {
+                    ToolUtils.copyToClipboard(result);
+                } else {
+                    ToolUtils.showToast('没有可复制的内容', 'warning');
+                }
+            }
+        }
+
+        // 初始化应用
+        document.addEventListener('DOMContentLoaded', () => {
+            new ToolApp();
+        });
+    </script>
+</body>
+</html>

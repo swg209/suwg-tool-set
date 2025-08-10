@@ -1,0 +1,709 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>文本格式转换器 - AI工具集</title>
+    <meta name="description" content="文本格式转换器">
+    
+    <!-- 样式文件 -->
+    <link rel="stylesheet" href="../../shared/css/common.css">
+    
+    <!-- 工具特定样式 -->
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: var(--spacing-lg);
+        }
+
+        .container {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            padding: 40px;
+            width: 100%;
+            max-width: 800px;
+            margin-bottom: 20px;
+        }
+
+        h1 {
+            text-align: center;
+            color: var(--text-primary);
+            margin-bottom: 30px;
+            font-size: 2.5em;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .input-section {
+            margin-bottom: 30px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #555;
+            font-size: 1.1em;
+        }
+
+        textarea {
+            width: 100%;
+            height: 120px;
+            border: 2px solid #e0e0e0;
+            border-radius: var(--radius-md);
+            padding: 15px;
+            font-size: 14px;
+            resize: vertical;
+            transition: border-color 0.3s ease;
+            font-family: 'Courier New', monospace;
+        }
+
+        textarea:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .buttons-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+
+        button {
+            padding: 12px 20px;
+            border: none;
+            border-radius: var(--radius-md);
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(102, 126, 234, 0.3);
+        }
+
+        button:active {
+            transform: translateY(0);
+        }
+
+        button::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+            transition: left 0.5s;
+        }
+
+        button:hover::before {
+            left: 100%;
+        }
+
+        .clear-btn {
+            background: linear-gradient(135deg, #ff6b6b, #ee5a24);
+            grid-column: 1 / -1;
+            max-width: 200px;
+            margin: 0 auto;
+        }
+
+        .clear-btn:hover {
+            box-shadow: 0 8px 20px rgba(255, 107, 107, 0.3);
+        }
+
+        .result-section {
+            margin-top: 20px;
+        }
+
+        .result-item {
+            background: #f8f9fa;
+            border-left: 4px solid #667eea;
+            margin-bottom: 15px;
+            padding: 15px;
+            border-radius: 8px;
+            transition: all 0.3s ease;
+        }
+
+        .result-item:hover {
+            background: #e8f2ff;
+            transform: translateX(5px);
+        }
+
+        .result-label {
+            font-weight: 600;
+            color: #667eea;
+            margin-bottom: 5px;
+            font-size: 0.9em;
+        }
+
+        .result-text {
+            font-family: 'Courier New', monospace;
+            background: white;
+            padding: var(--spacing-md);
+            border-radius: var(--radius-sm);
+            border: 1px solid #e0e0e0;
+            word-break: break-all;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .result-text:hover {
+            background: #f0f8ff;
+            border-color: #667eea;
+        }
+
+        .copy-success {
+            background: #d4edda !important;
+            border-color: #28a745 !important;
+            color: #155724;
+        }
+
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+            padding: var(--spacing-lg);
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            border-radius: var(--radius-lg);
+            color: white;
+        }
+
+        .stat-item {
+            text-align: center;
+            padding: var(--spacing-md);
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: var(--radius-md);
+            backdrop-filter: blur(5px);
+        }
+
+        .stat-label {
+            font-size: 0.9em;
+            margin-bottom: 5px;
+            opacity: 0.9;
+        }
+
+        .stat-value {
+            font-size: 1.5em;
+            font-weight: bold;
+        }
+
+        .footer {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: var(--radius-lg);
+            padding: var(--spacing-lg);
+            text-align: center;
+            color: var(--text-secondary);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            margin-top: auto;
+        }
+
+        .footer p {
+            margin: 0;
+            font-size: 0.9em;
+        }
+
+        @media (max-width: 600px) {
+            .container {
+                padding: var(--spacing-lg);
+            }
+            
+            h1 {
+                font-size: 2em;
+            }
+            
+            .buttons-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .stats {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        .tooltip {
+            position: relative;
+            display: inline-block;
+        }
+
+        .tooltip .tooltiptext {
+            visibility: hidden;
+            width: 200px;
+            background-color: var(--text-primary);
+            color: var(--bg-card);
+            text-align: center;
+            border-radius: 6px;
+            padding: 8px;
+            position: absolute;
+            z-index: 1;
+            bottom: 125%;
+            left: 50%;
+            margin-left: -100px;
+            opacity: 0;
+            transition: opacity 0.3s;
+            font-size: 12px;
+        }
+
+        .tooltip:hover .tooltiptext {
+            visibility: visible;
+            opacity: 1;
+        }
+    </style>
+</head>
+<body>
+    <div class="tool-container">
+        <!-- 工具头部 -->
+        <header class="tool-header">
+            <div class="tool-header-content">
+                <a href="../../index.html" class="back-btn">
+                    <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                        <path d="M10 4l-4 4 4 4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                    返回工具集
+                </a>
+                
+                <div class="tool-title">
+                    <h1>文本格式转换器</h1>
+                    <p class="tool-subtitle">文本格式转换器</p>
+                </div>
+                
+                <button class="theme-toggle" id="themeToggle" aria-label="切换主题">
+                    <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                        <circle cx="10" cy="10" r="4" stroke="currentColor" stroke-width="2"/>
+                        <path d="M10 2v2M10 16v2M18 10h-2M4 10H2M15.66 4.34l-1.41 1.41M5.75 14.25l-1.41 1.41M15.66 15.66l-1.41-1.41M5.75 5.75L4.34 4.34" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                    </svg>
+                </button>
+            </div>
+        </header>
+
+        <!-- 工具主内容 -->
+        <main class="tool-main">
+            <div class="tool-card">
+                <div class="tool-section">
+                    <h2>
+                        <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                            <rect x="3" y="3" width="14" height="14" rx="2" stroke="currentColor" stroke-width="2"/>
+                        </svg>
+                        工具功能
+                    </h2>
+                    
+                    
+            <div class="tool-card">
+                <div class="tool-section">
+                    <h2>
+                        <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                            <rect x="3" y="3" width="14" height="14" rx="2" stroke="currentColor" stroke-width="2"/>
+                        </svg>
+                        文本格式转换器
+                    </h2>
+                    <div class="container">
+        <h1>🔄 文本格式转换器</h1>
+        
+        <div class="input-section">
+            <label for="inputText">输入文本：</label>
+            <textarea id="inputText" placeholder="请输入要转换的文本，支持中英文、数字、符号等..." oninput="updateStats()"></textarea>
+        </div>
+
+        <div class="stats" id="stats">
+            <div class="stat-item">
+                <div class="stat-label">字符数</div>
+                <div class="stat-value" id="charCount">0</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-label">单词数</div>
+                <div class="stat-value" id="wordCount">0</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-label">行数</div>
+                <div class="stat-value" id="lineCount">0</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-label">段落数</div>
+                <div class="stat-value" id="paragraphCount">0</div>
+            </div>
+        </div>
+
+        <div class="buttons-grid">
+            <div class="tooltip">
+                <button onclick="convertCase('upper')">转换为大写</button>
+                <span class="tooltiptext">将所有字母转换为大写</span>
+            </div>
+            <div class="tooltip">
+                <button onclick="convertCase('lower')">转换为小写</button>
+                <span class="tooltiptext">将所有字母转换为小写</span>
+            </div>
+            <div class="tooltip">
+                <button onclick="convertCase('title')">转换为标题格式</button>
+                <span class="tooltiptext">每个单词首字母大写</span>
+            </div>
+            <div class="tooltip">
+                <button onclick="convertCase('sentence')">转换为句子格式</button>
+                <span class="tooltiptext">每句话首字母大写</span>
+            </div>
+            <div class="tooltip">
+                <button onclick="convertCase('camel')">驼峰命名</button>
+                <span class="tooltiptext">camelCase格式</span>
+            </div>
+            <div class="tooltip">
+                <button onclick="convertCase('pascal')">帕斯卡命名</button>
+                <span class="tooltiptext">PascalCase格式</span>
+            </div>
+            <div class="tooltip">
+                <button onclick="convertCase('snake')">下划线命名</button>
+                <span class="tooltiptext">snake_case格式</span>
+            </div>
+            <div class="tooltip">
+                <button onclick="convertCase('kebab')">连字符命名</button>
+                <span class="tooltiptext">kebab-case格式</span>
+            </div>
+            <div class="tooltip">
+                <button onclick="convertCase('constant')">常量命名</button>
+                <span class="tooltiptext">CONSTANT_CASE格式</span>
+            </div>
+            <div class="tooltip">
+                <button onclick="convertCase('dot')">点分隔命名</button>
+                <span class="tooltiptext">dot.case格式</span>
+            </div>
+            <div class="tooltip">
+                <button onclick="convertCase('reverse')">字符反转</button>
+                <span class="tooltiptext">反转字符顺序</span>
+            </div>
+            <div class="tooltip">
+                <button onclick="convertCase('removeSpaces')">移除空格</button>
+                <span class="tooltiptext">删除所有空格</span>
+            </div>
+            <button class="clear-btn" onclick="clearAll()">🗑️ 清空所有</button>
+        </div>
+
+        <div class="result-section" id="results"></div>
+    </div>
+
+    <div class="footer">
+        <p>© 小苏趣研AI 文本格式转换器 | 在浏览器中安全地进行文本格式转换</p>
+    </div>
+
+    
+                </div>
+            </div>
+                    <!-- 结果显示区域 -->
+                    <div class="result-display" id="result">
+                        <pre id="resultContent">处理结果将在这里显示...</pre>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <!-- 工具页脚 -->
+        <footer class="tool-footer">
+            <p>由 <a href="../../index.html">AI工具集</a> 提供 | 原创工具</p>
+        </footer>
+    </div>
+
+    <!-- JavaScript -->
+    <script src="../../shared/js/utils.js"></script>
+    <script>
+        // 工具特定的JavaScript代码
+        class ToolApp {
+            constructor() {
+                this.init();
+            }
+
+            init() {
+                this.setupEventListeners();
+            }
+
+            setupEventListeners() {
+                document.getElementById('processBtn').addEventListener('click', () => this.process());
+                document.getElementById('clearBtn').addEventListener('click', () => this.clear());
+                document.getElementById('copyBtn').addEventListener('click', () => this.copyResult());
+                
+                // 实时处理（可选）
+                document.getElementById('input').addEventListener('input', 
+                    ToolUtils.debounce(() => this.process(), 300)
+                );
+            }
+
+            process() {
+                const input = document.getElementById('input').value;
+                const result = this.processInput(input);
+                this.displayResult(result);
+            }
+
+            processInput(input) {
+                
+        let results = [];
+
+        function updateStats() {
+            const text = document.getElementById('inputText').value;
+            const charCount = text.length;
+            const wordCount = text.trim() === '' ? 0 : text.trim().split(/\s+/).filter(word => word.length > 0).length;
+            const lineCount = text === '' ? 0 : text.split('\n').length;
+            const paragraphCount = text.trim() === '' ? 0 : text.trim().split(/\n\s*\n/).filter(p => p.trim().length > 0).length;
+
+            document.getElementById('charCount').textContent = charCount;
+            document.getElementById('wordCount').textContent = wordCount;
+            document.getElementById('lineCount').textContent = lineCount;
+            document.getElementById('paragraphCount').textContent = paragraphCount;
+        }
+
+        function convertCase(type) {
+            const inputText = document.getElementById('inputText').value;
+            if (!inputText.trim()) {
+                alert('请输入要转换的文本！');
+                return;
+            }
+
+            let result = '';
+            let label = '';
+
+            switch (type) {
+                case 'upper':
+                    result = inputText.toUpperCase();
+                    label = '大写格式';
+                    break;
+                case 'lower':
+                    result = inputText.toLowerCase();
+                    label = '小写格式';
+                    break;
+                case 'title':
+                    result = inputText.replace(/\w\S*/g, (txt) => 
+                        txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase()
+                    );
+                    label = '标题格式';
+                    break;
+                case 'sentence':
+                    result = inputText.toLowerCase().replace(/(^|\. *)([a-z])/g, (match, p1, p2) => 
+                        p1 + p2.toUpperCase()
+                    );
+                    label = '句子格式';
+                    break;
+                case 'camel':
+                    result = inputText.replace(/(?:^\w|[A-Z]|\b\w)/g, (word, index) => {
+                        return index === 0 ? word.toLowerCase() : word.toUpperCase();
+                    }).replace(/\s+/g, '');
+                    label = '驼峰命名 (camelCase)';
+                    break;
+                case 'pascal':
+                    result = inputText.replace(/(?:^\w|[A-Z]|\b\w)/g, (word) => {
+                        return word.toUpperCase();
+                    }).replace(/\s+/g, '');
+                    label = '帕斯卡命名 (PascalCase)';
+                    break;
+                case 'snake':
+                    result = inputText.replace(/\W+/g, ' ')
+                        .split(/ |\B(?=[A-Z])/)
+                        .map(word => word.toLowerCase())
+                        .join('_');
+                    label = '下划线命名 (snake_case)';
+                    break;
+                case 'kebab':
+                    result = inputText.replace(/\W+/g, ' ')
+                        .split(/ |\B(?=[A-Z])/)
+                        .map(word => word.toLowerCase())
+                        .join('-');
+                    label = '连字符命名 (kebab-case)';
+                    break;
+                case 'constant':
+                    result = inputText.replace(/\W+/g, ' ')
+                        .split(/ |\B(?=[A-Z])/)
+                        .map(word => word.toUpperCase())
+                        .join('_');
+                    label = '常量命名 (CONSTANT_CASE)';
+                    break;
+                case 'dot':
+                    result = inputText.replace(/\W+/g, ' ')
+                        .split(/ |\B(?=[A-Z])/)
+                        .map(word => word.toLowerCase())
+                        .join('.');
+                    label = '点分隔命名 (dot.case)';
+                    break;
+                case 'reverse':
+                    result = inputText.split('').reverse().join('');
+                    label = '字符反转';
+                    break;
+                case 'removeSpaces':
+                    result = inputText.replace(/\s+/g, '');
+                    label = '移除空格';
+                    break;
+                default:
+                    result = inputText;
+                    label = '原文本';
+            }
+
+            addResult(label, result);
+        }
+
+        function addResult(label, text) {
+            const resultItem = {
+                label: label,
+                text: text,
+                id: Date.now()
+            };
+            
+            results.unshift(resultItem);
+            updateResults();
+        }
+
+        function updateResults() {
+            const resultsContainer = document.getElementById('results');
+            resultsContainer.innerHTML = '';
+
+            results.forEach(item => {
+                const resultDiv = document.createElement('div');
+                resultDiv.className = 'result-item';
+                
+                const labelDiv = document.createElement('div');
+                labelDiv.className = 'result-label';
+                labelDiv.textContent = item.label;
+                
+                const textDiv = document.createElement('div');
+                textDiv.className = 'result-text';
+                textDiv.title = '点击复制';
+                textDiv.textContent = item.text;
+                textDiv.onclick = function() {
+                    copyToClipboard(item.id, this);
+                };
+                
+                resultDiv.appendChild(labelDiv);
+                resultDiv.appendChild(textDiv);
+                resultsContainer.appendChild(resultDiv);
+            });
+        }
+
+        function copyToClipboard(id, element) {
+            const result = results.find(r => r.id == id);
+            if (result) {
+                navigator.clipboard.writeText(result.text).then(() => {
+                    element.classList.add('copy-success');
+                    element.innerHTML = '✅ 已复制到剪贴板';
+                    setTimeout(() => {
+                        element.classList.remove('copy-success');
+                        element.innerHTML = result.text;
+                    }, 2000);
+                }).catch(() => {
+                    // 备用复制方法
+                    const textArea = document.createElement('textarea');
+                    textArea.value = result.text;
+                    document.body.appendChild(textArea);
+                    textArea.select();
+                    document.execCommand('copy');
+                    document.body.removeChild(textArea);
+                    
+                    element.classList.add('copy-success');
+                    element.innerHTML = '✅ 已复制到剪贴板';
+                    setTimeout(() => {
+                        element.classList.remove('copy-success');
+                        element.innerHTML = result.text;
+                    }, 2000);
+                });
+            }
+        }
+
+        function clearAll() {
+            console.log('clearAll function called'); // 调试信息
+            const confirmed = confirm('确定要清空所有内容吗？');
+            console.log('Confirm result:', confirmed); // 调试信息
+            
+            if (confirmed) {
+                console.log('User confirmed clear'); // 调试信息
+                
+                // 清空输入框
+                const inputElement = document.getElementById('inputText');
+                inputElement.value = '';
+                console.log('Input cleared, value:', inputElement.value); // 调试信息
+                
+                // 清空结果数组
+                results = [];
+                console.log('Results array cleared, length:', results.length); // 调试信息
+                
+                // 更新结果显示
+                updateResults();
+                console.log('Results updated'); // 调试信息
+                
+                // 更新统计
+                updateStats();
+                console.log('Stats updated'); // 调试信息
+                
+                // 确保输入框获得焦点
+                inputElement.focus();
+                console.log('Clear completed'); // 调试信息
+            } else {
+                console.log('User cancelled clear'); // 调试信息
+            }
+        }
+
+        // 初始化统计
+        updateStats();
+
+        // 键盘快捷键
+        document.addEventListener('keydown', function(e) {
+            if (e.ctrlKey || e.metaKey) {
+                switch(e.key) {
+                    case 'u':
+                        e.preventDefault();
+                        convertCase('upper');
+                        break;
+                    case 'l':
+                        e.preventDefault();
+                        convertCase('lower');
+                        break;
+                    case 'Delete':
+                        e.preventDefault();
+                        clearAll();
+                        break;
+                }
+            }
+        });
+    
+                return input;
+            }
+
+            displayResult(result) {
+                document.getElementById('resultContent').textContent = result;
+            }
+
+            clear() {
+                document.getElementById('input').value = '';
+                document.getElementById('resultContent').textContent = '处理结果将在这里显示...';
+            }
+
+            copyResult() {
+                const result = document.getElementById('resultContent').textContent;
+                if (result && result !== '处理结果将在这里显示...') {
+                    ToolUtils.copyToClipboard(result);
+                } else {
+                    ToolUtils.showToast('没有可复制的内容', 'warning');
+                }
+            }
+        }
+
+        // 初始化应用
+        document.addEventListener('DOMContentLoaded', () => {
+            new ToolApp();
+        });
+    </script>
+</body>
+</html>

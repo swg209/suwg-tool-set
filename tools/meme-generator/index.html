@@ -1,0 +1,703 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DIY表情包制作器 - Meme Generator - AI工具集</title>
+    <meta name="description" content="DIY表情包制作器 - Meme Generator">
+    
+    <!-- 样式文件 -->
+    <link rel="stylesheet" href="../../shared/css/common.css">
+    
+    <!-- 工具特定样式 -->
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: var(--spacing-lg);
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            background: white;
+            border-radius: var(--radius-lg);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(45deg, #ff6b6b, #4ecdc4);
+            color: white;
+            text-align: center;
+            padding: 30px;
+            position: relative;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .header p {
+            font-size: 1.1em;
+            opacity: 0.9;
+        }
+
+        .content {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 30px;
+            padding: 30px;
+        }
+
+        .upload-section {
+            flex: 1;
+            min-width: 300px;
+        }
+
+        .preview-section {
+            flex: 1;
+            min-width: 300px;
+        }
+
+        .section-title {
+            font-size: 1.5em;
+            color: var(--text-primary);
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 3px solid #ff6b6b;
+        }
+
+        .upload-area {
+            border: 3px dashed #ddd;
+            border-radius: var(--radius-md);
+            padding: 40px;
+            text-align: center;
+            background: #f9f9f9;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            margin-bottom: 20px;
+        }
+
+        .upload-area:hover {
+            border-color: #ff6b6b;
+            background: var(--bg-card)5f5;
+        }
+
+        .upload-area.dragover {
+            border-color: #4ecdc4;
+            background: #f0ffff;
+        }
+
+        .upload-icon {
+            font-size: 3em;
+            color: #ccc;
+            margin-bottom: 15px;
+        }
+
+        .upload-text {
+            color: var(--text-secondary);
+            font-size: 1.1em;
+        }
+
+        .file-input {
+            display: none;
+        }
+
+        .text-controls {
+            display: grid;
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .text-group {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+            border-left: 4px solid #ff6b6b;
+        }
+
+        .text-group label {
+            display: block;
+            font-weight: bold;
+            color: var(--text-primary);
+            margin-bottom: 8px;
+        }
+
+        .text-input {
+            width: 100%;
+            padding: var(--spacing-md);
+            border: 2px solid #ddd;
+            border-radius: var(--radius-sm);
+            font-size: 16px;
+            transition: border-color 0.3s;
+        }
+
+        .text-input:focus {
+            outline: none;
+            border-color: #ff6b6b;
+        }
+
+        .style-controls {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        .style-input {
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+
+        .preview-container {
+            position: relative;
+            background: #f0f0f0;
+            border-radius: var(--radius-md);
+            overflow: hidden;
+            min-height: 400px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .meme-canvas {
+            max-width: 100%;
+            max-height: 500px;
+            border-radius: var(--radius-md);
+        }
+
+        .placeholder {
+            color: var(--text-muted);
+            font-size: 1.2em;
+            text-align: center;
+        }
+
+        .buttons {
+            display: flex;
+            gap: 15px;
+            margin-top: 20px;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            flex: 1;
+            min-width: 120px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(45deg, #ff6b6b, #ee5a52);
+            color: white;
+        }
+
+        .btn-secondary {
+            background: linear-gradient(45deg, #4ecdc4, #44a08d);
+            color: white;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+
+        .presets {
+            margin-top: 20px;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 8px;
+        }
+
+        .preset-title {
+            font-weight: bold;
+            margin-bottom: 10px;
+            color: var(--text-primary);
+        }
+
+        .preset-buttons {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .preset-btn {
+            padding: 8px 12px;
+            background: white;
+            border: 1px solid #ddd;
+            border-radius: var(--radius-sm);
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.3s;
+        }
+
+        .preset-btn:hover {
+            background: #ff6b6b;
+            color: white;
+        }
+
+        @media (max-width: 768px) {
+            .content {
+                flex-direction: column;
+            }
+            
+            .header h1 {
+                font-size: 2em;
+            }
+            
+            .style-controls {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="tool-container">
+        <!-- 工具头部 -->
+        <header class="tool-header">
+            <div class="tool-header-content">
+                <a href="../../index.html" class="back-btn">
+                    <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                        <path d="M10 4l-4 4 4 4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                    返回工具集
+                </a>
+                
+                <div class="tool-title">
+                    <h1>DIY表情包制作器 - Meme Generator</h1>
+                    <p class="tool-subtitle">DIY表情包制作器 - Meme Generator</p>
+                </div>
+                
+                <button class="theme-toggle" id="themeToggle" aria-label="切换主题">
+                    <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                        <circle cx="10" cy="10" r="4" stroke="currentColor" stroke-width="2"/>
+                        <path d="M10 2v2M10 16v2M18 10h-2M4 10H2M15.66 4.34l-1.41 1.41M5.75 14.25l-1.41 1.41M15.66 15.66l-1.41-1.41M5.75 5.75L4.34 4.34" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                    </svg>
+                </button>
+            </div>
+        </header>
+
+        <!-- 工具主内容 -->
+        <main class="tool-main">
+            <div class="tool-card">
+                <div class="tool-section">
+                    <h2>
+                        <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                            <rect x="3" y="3" width="14" height="14" rx="2" stroke="currentColor" stroke-width="2"/>
+                        </svg>
+                        工具功能
+                    </h2>
+                    
+                    
+            <div class="tool-card">
+                <div class="tool-section">
+                    <h2>
+                        <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                            <rect x="3" y="3" width="14" height="14" rx="2" stroke="currentColor" stroke-width="2"/>
+                        </svg>
+                        DIY表情包制作器 - Meme Generator
+                    </h2>
+                    <div class="container">
+        <div class="header">
+            <h1>🎭 DIY表情包制作器</h1>
+            <p>上传图片，添加文字，制作属于你的沙雕表情包！</p>
+        </div>
+
+        <div class="content">
+            <div class="upload-section">
+                <h2 class="section-title">📤 上传图片</h2>
+                
+                <div class="upload-area" id="uploadArea">
+                    <div class="upload-icon">📷</div>
+                    <div class="upload-text">
+                        点击或拖拽图片到这里<br>
+                        <small>支持 JPG, PNG, GIF 格式</small>
+                    </div>
+                </div>
+                <input type="file" id="fileInput" class="file-input" accept="image/*">
+
+                <div class="text-controls">
+                    <div class="text-group">
+                        <label for="topText">顶部文字：</label>
+                        <input type="text" id="topText" class="text-input" placeholder="输入顶部文字...">
+                        <div class="style-controls">
+                            <input type="number" id="topSize" class="style-input" placeholder="字体大小" value="40" min="10" max="100">
+                            <input type="color" id="topColor" class="style-input" value="#ffffff">
+                            <input type="color" id="topStroke" class="style-input" value="#000000" title="描边颜色">
+                            <input type="number" id="topStrokeWidth" class="style-input" placeholder="描边宽度" value="3" min="0" max="10">
+                        </div>
+                    </div>
+
+                    <div class="text-group">
+                        <label for="bottomText">底部文字：</label>
+                        <input type="text" id="bottomText" class="text-input" placeholder="输入底部文字...">
+                        <div class="style-controls">
+                            <input type="number" id="bottomSize" class="style-input" placeholder="字体大小" value="40" min="10" max="100">
+                            <input type="color" id="bottomColor" class="style-input" value="#ffffff">
+                            <input type="color" id="bottomStroke" class="style-input" value="#000000" title="描边颜色">
+                            <input type="number" id="bottomStrokeWidth" class="style-input" placeholder="描边宽度" value="3" min="0" max="10">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="presets">
+                    <div class="preset-title">快速模板：</div>
+                    <div class="preset-buttons">
+                        <button class="preset-btn" onclick="applyPreset('classic')">经典白字黑边</button>
+                        <button class="preset-btn" onclick="applyPreset('colorful')">彩色风格</button>
+                        <button class="preset-btn" onclick="applyPreset('minimalist')">简约风格</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="preview-section">
+                <h2 class="section-title">👀 预览效果</h2>
+                
+                <div class="preview-container">
+                    <canvas id="memeCanvas" class="meme-canvas" style="display: none;"></canvas>
+                    <div id="placeholder" class="placeholder">
+                        请先上传一张图片开始制作表情包
+                    </div>
+                </div>
+
+                <div class="buttons">
+                    <button class="btn btn-primary" id="downloadBtn" disabled>💾 下载表情包</button>
+                    <button class="btn btn-secondary" id="clearBtn">🗑️ 清空重制</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    
+                </div>
+            </div>
+                    <!-- 结果显示区域 -->
+                    <div class="result-display" id="result">
+                        <pre id="resultContent">处理结果将在这里显示...</pre>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <!-- 工具页脚 -->
+        <footer class="tool-footer">
+            <p>由 <a href="../../index.html">AI工具集</a> 提供 | 原创工具</p>
+        </footer>
+    </div>
+
+    <!-- JavaScript -->
+    <script src="../../shared/js/utils.js"></script>
+    <script>
+        // 工具特定的JavaScript代码
+        class ToolApp {
+            constructor() {
+                this.init();
+            }
+
+            init() {
+                this.setupEventListeners();
+            }
+
+            setupEventListeners() {
+                document.getElementById('processBtn').addEventListener('click', () => this.process());
+                document.getElementById('clearBtn').addEventListener('click', () => this.clear());
+                document.getElementById('copyBtn').addEventListener('click', () => this.copyResult());
+                
+                // 实时处理（可选）
+                document.getElementById('input').addEventListener('input', 
+                    ToolUtils.debounce(() => this.process(), 300)
+                );
+            }
+
+            process() {
+                const input = document.getElementById('input').value;
+                const result = this.processInput(input);
+                this.displayResult(result);
+            }
+
+            processInput(input) {
+                
+        const fileInput = document.getElementById('fileInput');
+        const uploadArea = document.getElementById('uploadArea');
+        const canvas = document.getElementById('memeCanvas');
+        const ctx = canvas.getContext('2d');
+        const placeholder = document.getElementById('placeholder');
+        const downloadBtn = document.getElementById('downloadBtn');
+        const clearBtn = document.getElementById('clearBtn');
+
+        let currentImage = null;
+
+        // 文字输入元素
+        const topText = document.getElementById('topText');
+        const bottomText = document.getElementById('bottomText');
+        const topSize = document.getElementById('topSize');
+        const bottomSize = document.getElementById('bottomSize');
+        const topColor = document.getElementById('topColor');
+        const bottomColor = document.getElementById('bottomColor');
+        const topStroke = document.getElementById('topStroke');
+        const bottomStroke = document.getElementById('bottomStroke');
+        const topStrokeWidth = document.getElementById('topStrokeWidth');
+        const bottomStrokeWidth = document.getElementById('bottomStrokeWidth');
+
+        // 上传区域点击事件
+        uploadArea.addEventListener('click', () => fileInput.click());
+
+        // 文件选择事件
+        fileInput.addEventListener('change', handleFileSelect);
+
+        // 拖拽事件
+        uploadArea.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            uploadArea.classList.add('dragover');
+        });
+
+        uploadArea.addEventListener('dragleave', () => {
+            uploadArea.classList.remove('dragover');
+        });
+
+        uploadArea.addEventListener('drop', (e) => {
+            e.preventDefault();
+            uploadArea.classList.remove('dragover');
+            const files = e.dataTransfer.files;
+            if (files.length > 0) {
+                handleFile(files[0]);
+            }
+        });
+
+        // 文字输入事件
+        [topText, bottomText, topSize, bottomSize, topColor, bottomColor, 
+         topStroke, bottomStroke, topStrokeWidth, bottomStrokeWidth].forEach(element => {
+            element.addEventListener('input', updateMeme);
+        });
+
+        // 清空按钮
+        clearBtn.addEventListener('click', () => {
+            currentImage = null;
+            canvas.style.display = 'none';
+            placeholder.style.display = 'block';
+            downloadBtn.disabled = true;
+            topText.value = '';
+            bottomText.value = '';
+            fileInput.value = '';
+        });
+
+        // 下载按钮
+        downloadBtn.addEventListener('click', downloadMeme);
+
+        function handleFileSelect(e) {
+            const file = e.target.files[0];
+            if (file) {
+                handleFile(file);
+            }
+        }
+
+        function handleFile(file) {
+            if (!file.type.startsWith('image/')) {
+                alert('请选择有效的图片文件！');
+                return;
+            }
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const img = new Image();
+                img.onload = function() {
+                    currentImage = img;
+                    setupCanvas();
+                    updateMeme();
+                    placeholder.style.display = 'none';
+                    canvas.style.display = 'block';
+                    downloadBtn.disabled = false;
+                };
+                img.src = e.target.result;
+            };
+            reader.readAsDataURL(file);
+        }
+
+        function setupCanvas() {
+            if (!currentImage) return;
+
+            // 设置画布尺寸，保持图片比例
+            const maxWidth = 500;
+            const maxHeight = 500;
+            let { width, height } = currentImage;
+
+            if (width > maxWidth || height > maxHeight) {
+                const ratio = Math.min(maxWidth / width, maxHeight / height);
+                width *= ratio;
+                height *= ratio;
+            }
+
+            canvas.width = width;
+            canvas.height = height;
+        }
+
+        function updateMeme() {
+            if (!currentImage) return;
+
+            // 清空画布
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            // 绘制图片
+            ctx.drawImage(currentImage, 0, 0, canvas.width, canvas.height);
+
+            // 绘制顶部文字
+            if (topText.value.trim()) {
+                drawText(topText.value, 'top');
+            }
+
+            // 绘制底部文字
+            if (bottomText.value.trim()) {
+                drawText(bottomText.value, 'bottom');
+            }
+        }
+
+        function drawText(text, position) {
+            const isTop = position === 'top';
+            const fontSize = isTop ? parseInt(topSize.value) : parseInt(bottomSize.value);
+            const color = isTop ? topColor.value : bottomColor.value;
+            const strokeColor = isTop ? topStroke.value : bottomStroke.value;
+            const strokeWidth = isTop ? parseInt(topStrokeWidth.value) : parseInt(bottomStrokeWidth.value);
+
+            ctx.font = `bold ${fontSize}px Arial, sans-serif`;
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+
+            // 计算文字位置
+            const x = canvas.width / 2;
+            const y = isTop ? fontSize / 2 + 20 : canvas.height - fontSize / 2 - 20;
+
+            // 自动换行
+            const lines = wrapText(text, canvas.width - 40);
+            const lineHeight = fontSize * 1.2;
+            const totalHeight = lines.length * lineHeight;
+            
+            lines.forEach((line, index) => {
+                const lineY = isTop ? 
+                    y + (index * lineHeight) : 
+                    y - (totalHeight - fontSize) / 2 + (index * lineHeight);
+
+                // 绘制描边
+                if (strokeWidth > 0) {
+                    ctx.strokeStyle = strokeColor;
+                    ctx.lineWidth = strokeWidth;
+                    ctx.strokeText(line, x, lineY);
+                }
+
+                // 绘制文字
+                ctx.fillStyle = color;
+                ctx.fillText(line, x, lineY);
+            });
+        }
+
+        function wrapText(text, maxWidth) {
+            const words = text.split(' ');
+            const lines = [];
+            let currentLine = '';
+
+            words.forEach(word => {
+                const testLine = currentLine + (currentLine ? ' ' : '') + word;
+                const metrics = ctx.measureText(testLine);
+                
+                if (metrics.width > maxWidth && currentLine) {
+                    lines.push(currentLine);
+                    currentLine = word;
+                } else {
+                    currentLine = testLine;
+                }
+            });
+
+            if (currentLine) {
+                lines.push(currentLine);
+            }
+
+            return lines.length > 0 ? lines : [text];
+        }
+
+        function downloadMeme() {
+            if (!currentImage) return;
+
+            const link = document.createElement('a');
+            link.download = `meme_${Date.now()}.png`;
+            link.href = canvas.toDataURL();
+            link.click();
+        }
+
+        function applyPreset(preset) {
+            switch (preset) {
+                case 'classic':
+                    topColor.value = '#ffffff';
+                    bottomColor.value = '#ffffff';
+                    topStroke.value = '#000000';
+                    bottomStroke.value = '#000000';
+                    topStrokeWidth.value = '3';
+                    bottomStrokeWidth.value = '3';
+                    topSize.value = '40';
+                    bottomSize.value = '40';
+                    break;
+                case 'colorful':
+                    topColor.value = '#ff6b6b';
+                    bottomColor.value = '#4ecdc4';
+                    topStroke.value = '#ffffff';
+                    bottomStroke.value = '#ffffff';
+                    topStrokeWidth.value = '2';
+                    bottomStrokeWidth.value = '2';
+                    topSize.value = '45';
+                    bottomSize.value = '45';
+                    break;
+                case 'minimalist':
+                    topColor.value = '#333333';
+                    bottomColor.value = '#333333';
+                    topStroke.value = '#ffffff';
+                    bottomStroke.value = '#ffffff';
+                    topStrokeWidth.value = '1';
+                    bottomStrokeWidth.value = '1';
+                    topSize.value = '35';
+                    bottomSize.value = '35';
+                    break;
+            }
+            updateMeme();
+        }
+    
+                return input;
+            }
+
+            displayResult(result) {
+                document.getElementById('resultContent').textContent = result;
+            }
+
+            clear() {
+                document.getElementById('input').value = '';
+                document.getElementById('resultContent').textContent = '处理结果将在这里显示...';
+            }
+
+            copyResult() {
+                const result = document.getElementById('resultContent').textContent;
+                if (result && result !== '处理结果将在这里显示...') {
+                    ToolUtils.copyToClipboard(result);
+                } else {
+                    ToolUtils.showToast('没有可复制的内容', 'warning');
+                }
+            }
+        }
+
+        // 初始化应用
+        document.addEventListener('DOMContentLoaded', () => {
+            new ToolApp();
+        });
+    </script>
+</body>
+</html>

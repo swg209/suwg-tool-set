@@ -1,0 +1,603 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>打字特效游乐场 - AI工具集</title>
+    <meta name="description" content="打字特效游乐场">
+    
+    <!-- 样式文件 -->
+    <link rel="stylesheet" href="../../shared/css/common.css">
+    
+    <!-- 工具特定样式 -->
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Courier New', monospace;
+            background: #000;
+            color: var(--bg-card);
+            overflow: hidden;
+            height: 100vh;
+        }
+
+        .container {
+            position: relative;
+            width: 100%;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .header {
+            position: absolute;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 1000;
+            text-align: center;
+            background: rgba(0,0,0,0.8);
+            padding: 15px 30px;
+            border-radius: var(--radius-md);
+            border: 1px solid var(--text-primary);
+        }
+
+        .header h1 {
+            font-size: 1.5rem;
+            margin-bottom: 10px;
+            background: linear-gradient(45deg, #ff6b6b, #4ecdc4, #45b7d1, #96ceb4);
+            background-size: 400% 400%;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            animation: gradientShift 3s ease infinite;
+        }
+
+        @keyframes gradientShift {
+            0%, 100% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+        }
+
+        .controls {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            z-index: 1000;
+            background: rgba(0,0,0,0.8);
+            padding: 15px;
+            border-radius: var(--radius-md);
+            border: 1px solid var(--text-primary);
+        }
+
+        .effect-btn {
+            display: block;
+            width: 100%;
+            margin-bottom: 10px;
+            padding: 8px 15px;
+            background: var(--text-primary);
+            color: var(--bg-card);
+            border: 1px solid #555;
+            border-radius: var(--radius-sm);
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: 12px;
+        }
+
+        .effect-btn:hover {
+            background: #555;
+            transform: translateY(-2px);
+        }
+
+        .effect-btn.active {
+            background: #4ecdc4;
+            border-color: #4ecdc4;
+        }
+
+        .typing-area {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 80%;
+            max-width: 800px;
+            z-index: 100;
+        }
+
+        .input-field {
+            width: 100%;
+            background: rgba(0,0,0,0.8);
+            border: 2px solid var(--text-primary);
+            border-radius: var(--radius-md);
+            padding: var(--spacing-lg);
+            font-size: 18px;
+            color: var(--bg-card);
+            font-family: 'Courier New', monospace;
+            outline: none;
+            resize: none;
+            min-height: 150px;
+            transition: border-color 0.3s;
+        }
+
+        .input-field:focus {
+            border-color: #4ecdc4;
+            box-shadow: 0 0 20px rgba(78, 205, 196, 0.3);
+        }
+
+        .canvas-container {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+        }
+
+        #effectCanvas {
+            width: 100%;
+            height: 100%;
+        }
+
+        .stats {
+            position: absolute;
+            bottom: 20px;
+            left: 20px;
+            background: rgba(0,0,0,0.8);
+            padding: 15px;
+            border-radius: var(--radius-md);
+            border: 1px solid var(--text-primary);
+            font-size: 14px;
+        }
+
+        .footer {
+            position: absolute;
+            bottom: 20px;
+            right: 20px;
+            background: rgba(0,0,0,0.8);
+            padding: var(--spacing-md) 15px;
+            border-radius: var(--radius-sm);
+            font-size: 12px;
+            color: #888;
+        }
+
+        @media (max-width: 768px) {
+            .controls {
+                position: fixed;
+                bottom: 20px;
+                right: 20px;
+                top: auto;
+            }
+            
+            .typing-area {
+                width: 90%;
+            }
+            
+            .input-field {
+                font-size: 16px;
+                min-height: 120px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="tool-container">
+        <!-- 工具头部 -->
+        <header class="tool-header">
+            <div class="tool-header-content">
+                <a href="../../index.html" class="back-btn">
+                    <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                        <path d="M10 4l-4 4 4 4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                    返回工具集
+                </a>
+                
+                <div class="tool-title">
+                    <h1>打字特效游乐场</h1>
+                    <p class="tool-subtitle">打字特效游乐场</p>
+                </div>
+                
+                <button class="theme-toggle" id="themeToggle" aria-label="切换主题">
+                    <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                        <circle cx="10" cy="10" r="4" stroke="currentColor" stroke-width="2"/>
+                        <path d="M10 2v2M10 16v2M18 10h-2M4 10H2M15.66 4.34l-1.41 1.41M5.75 14.25l-1.41 1.41M15.66 15.66l-1.41-1.41M5.75 5.75L4.34 4.34" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                    </svg>
+                </button>
+            </div>
+        </header>
+
+        <!-- 工具主内容 -->
+        <main class="tool-main">
+            <div class="tool-card">
+                <div class="tool-section">
+                    <h2>
+                        <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                            <rect x="3" y="3" width="14" height="14" rx="2" stroke="currentColor" stroke-width="2"/>
+                        </svg>
+                        工具功能
+                    </h2>
+                    
+                    
+            <div class="tool-card">
+                <div class="tool-section">
+                    <h2>
+                        <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                            <rect x="3" y="3" width="14" height="14" rx="2" stroke="currentColor" stroke-width="2"/>
+                        </svg>
+                        打字特效游乐场
+                    </h2>
+                    <div class="container">
+        <div class="header">
+            <h1>⚡ 打字特效游乐场</h1>
+            <p>选择特效，开始打字，享受视觉盛宴！</p>
+        </div>
+
+        <div class="controls">
+            <button class="effect-btn active" data-effect="fireworks">🎆 烟花特效</button>
+            <button class="effect-btn" data-effect="fire">🔥 火焰特效</button>
+            <button class="effect-btn" data-effect="matrix">💚 代码雨</button>
+            <button class="effect-btn" data-effect="particles">✨ 粒子特效</button>
+            <button class="effect-btn" data-effect="lightning">⚡ 闪电特效</button>
+            <button class="effect-btn" data-effect="snow">❄️ 雪花特效</button>
+            <button class="effect-btn" data-effect="stars">⭐ 星空特效</button>
+        </div>
+
+        <div class="typing-area">
+            <textarea class="input-field" id="typingInput" placeholder="在这里开始打字，感受神奇的特效...
+
+试试输入一些文字，每次按键都会触发特效！
+你可以写诗、写代码、写故事，或者随便什么...
+
+让创意在指尖绽放！✨"></textarea>
+        </div>
+
+        <div class="canvas-container">
+            <canvas id="effectCanvas"></canvas>
+        </div>
+
+        <div class="stats">
+            <div>⌨️ 按键次数: <span id="keyCount">0</span></div>
+            <div>📝 字符数: <span id="charCount">0</span></div>
+            <div>🎨 当前特效: <span id="currentEffect">烟花特效</span></div>
+        </div>
+
+        <div class="footer">
+            © 小苏趣研AI 打字特效游乐场
+        </div>
+    </div>
+
+    
+                </div>
+            </div>
+                    <!-- 结果显示区域 -->
+                    <div class="result-display" id="result">
+                        <pre id="resultContent">处理结果将在这里显示...</pre>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <!-- 工具页脚 -->
+        <footer class="tool-footer">
+            <p>由 <a href="../../index.html">AI工具集</a> 提供 | 原创工具</p>
+        </footer>
+    </div>
+
+    <!-- JavaScript -->
+    <script src="../../shared/js/utils.js"></script>
+    <script>
+        // 工具特定的JavaScript代码
+        class ToolApp {
+            constructor() {
+                this.init();
+            }
+
+            init() {
+                this.setupEventListeners();
+            }
+
+            setupEventListeners() {
+                document.getElementById('processBtn').addEventListener('click', () => this.process());
+                document.getElementById('clearBtn').addEventListener('click', () => this.clear());
+                document.getElementById('copyBtn').addEventListener('click', () => this.copyResult());
+                
+                // 实时处理（可选）
+                document.getElementById('input').addEventListener('input', 
+                    ToolUtils.debounce(() => this.process(), 300)
+                );
+            }
+
+            process() {
+                const input = document.getElementById('input').value;
+                const result = this.processInput(input);
+                this.displayResult(result);
+            }
+
+            processInput(input) {
+                
+        class TypingEffectPlayground {
+            constructor() {
+                this.canvas = document.getElementById('effectCanvas');
+                this.ctx = this.canvas.getContext('2d');
+                this.input = document.getElementById('typingInput');
+                
+                this.currentEffect = 'fireworks';
+                this.particles = [];
+                this.keyCount = 0;
+                this.charCount = 0;
+                
+                this.setupCanvas();
+                this.initEventListeners();
+                this.startAnimation();
+            }
+
+            setupCanvas() {
+                this.canvas.width = window.innerWidth;
+                this.canvas.height = window.innerHeight;
+                
+                window.addEventListener('resize', () => {
+                    this.canvas.width = window.innerWidth;
+                    this.canvas.height = window.innerHeight;
+                });
+            }
+
+            initEventListeners() {
+                document.querySelectorAll('.effect-btn').forEach(btn => {
+                    btn.addEventListener('click', () => {
+                        document.querySelectorAll('.effect-btn').forEach(b => b.classList.remove('active'));
+                        btn.classList.add('active');
+                        this.currentEffect = btn.dataset.effect;
+                        document.getElementById('currentEffect').textContent = btn.textContent.slice(2);
+                    });
+                });
+
+                this.input.addEventListener('keydown', (e) => {
+                    this.keyCount++;
+                    document.getElementById('keyCount').textContent = this.keyCount;
+                    
+                    const rect = this.input.getBoundingClientRect();
+                    const x = rect.left + Math.random() * rect.width;
+                    const y = rect.top + Math.random() * rect.height;
+                    
+                    this.triggerEffect(x, y, e.key);
+                });
+
+                this.input.addEventListener('input', () => {
+                    this.charCount = this.input.value.length;
+                    document.getElementById('charCount').textContent = this.charCount;
+                });
+            }
+
+            triggerEffect(x, y, key) {
+                switch(this.currentEffect) {
+                    case 'fireworks': this.createFireworks(x, y); break;
+                    case 'fire': this.createFire(x, y); break;
+                    case 'matrix': this.createMatrix(x, y, key); break;
+                    case 'particles': this.createParticles(x, y); break;
+                    case 'lightning': this.createLightning(x, y); break;
+                    case 'snow': this.createSnow(x, y); break;
+                    case 'stars': this.createStars(x, y); break;
+                }
+            }
+
+            createFireworks(x, y) {
+                const colors = ['#ff6b6b', '#4ecdc4', '#45b7d1', '#96ceb4', '#feca57', '#ff9ff3'];
+                for(let i = 0; i < 15; i++) {
+                    this.particles.push({
+                        type: 'firework',
+                        x: x, y: y,
+                        vx: (Math.random() - 0.5) * 10,
+                        vy: (Math.random() - 0.5) * 10,
+                        color: colors[Math.floor(Math.random() * colors.length)],
+                        life: 60, maxLife: 60,
+                        size: Math.random() * 3 + 1
+                    });
+                }
+            }
+
+            createFire(x, y) {
+                for(let i = 0; i < 8; i++) {
+                    this.particles.push({
+                        type: 'fire',
+                        x: x + (Math.random() - 0.5) * 20, y: y,
+                        vx: (Math.random() - 0.5) * 2,
+                        vy: -Math.random() * 3 - 1,
+                        color: `hsl(${Math.random() * 60}, 100%, ${50 + Math.random() * 50}%)`,
+                        life: 40, maxLife: 40,
+                        size: Math.random() * 4 + 2
+                    });
+                }
+            }
+
+            createMatrix(x, y, key) {
+                this.particles.push({
+                    type: 'matrix',
+                    x: x, y: y, char: key,
+                    vy: Math.random() * 3 + 1,
+                    color: '#00ff00',
+                    life: 100, maxLife: 100, size: 16
+                });
+            }
+
+            createParticles(x, y) {
+                const colors = ['#ff6b6b', '#4ecdc4', '#45b7d1', '#96ceb4', '#feca57'];
+                for(let i = 0; i < 10; i++) {
+                    this.particles.push({
+                        type: 'particle',
+                        x: x, y: y,
+                        vx: (Math.random() - 0.5) * 6,
+                        vy: (Math.random() - 0.5) * 6,
+                        color: colors[Math.floor(Math.random() * colors.length)],
+                        life: 80, maxLife: 80,
+                        size: Math.random() * 2 + 1
+                    });
+                }
+            }
+
+            createLightning(x, y) {
+                this.particles.push({
+                    type: 'lightning',
+                    x: x, y: y,
+                    endX: x + (Math.random() - 0.5) * 200,
+                    endY: y + (Math.random() - 0.5) * 200,
+                    color: '#ffffff',
+                    life: 10, maxLife: 10
+                });
+            }
+
+            createSnow(x, y) {
+                for(let i = 0; i < 5; i++) {
+                    this.particles.push({
+                        type: 'snow',
+                        x: x + (Math.random() - 0.5) * 50, y: y,
+                        vx: (Math.random() - 0.5) * 1,
+                        vy: Math.random() * 2 + 0.5,
+                        color: '#ffffff',
+                        life: 120, maxLife: 120,
+                        size: Math.random() * 3 + 1
+                    });
+                }
+            }
+
+            createStars(x, y) {
+                for(let i = 0; i < 6; i++) {
+                    this.particles.push({
+                        type: 'star',
+                        x: x + (Math.random() - 0.5) * 30,
+                        y: y + (Math.random() - 0.5) * 30,
+                        vx: (Math.random() - 0.5) * 2,
+                        vy: (Math.random() - 0.5) * 2,
+                        color: '#ffff00',
+                        life: 90, maxLife: 90,
+                        size: Math.random() * 2 + 1,
+                        twinkle: Math.random() * Math.PI * 2
+                    });
+                }
+            }
+
+            updateParticles() {
+                for(let i = this.particles.length - 1; i >= 0; i--) {
+                    const p = this.particles[i];
+                    
+                    if(p.vx !== undefined) p.x += p.vx;
+                    if(p.vy !== undefined) p.y += p.vy;
+                    p.life--;
+                    
+                    if(p.type === 'fire') {
+                        p.vy -= 0.1;
+                        p.size *= 0.98;
+                    } else if(p.type === 'star') {
+                        p.twinkle += 0.2;
+                    }
+                    
+                    if(p.life <= 0) {
+                        this.particles.splice(i, 1);
+                    }
+                }
+            }
+
+            drawParticles() {
+                this.particles.forEach(p => {
+                    const alpha = p.life / p.maxLife;
+                    this.ctx.save();
+                    this.ctx.globalAlpha = alpha;
+                    
+                    switch(p.type) {
+                        case 'firework':
+                        case 'particle':
+                        case 'fire':
+                        case 'snow':
+                            this.ctx.fillStyle = p.color;
+                            this.ctx.beginPath();
+                            this.ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+                            this.ctx.fill();
+                            break;
+                            
+                        case 'matrix':
+                            this.ctx.fillStyle = p.color;
+                            this.ctx.font = `${p.size}px Courier New`;
+                            this.ctx.fillText(p.char, p.x, p.y);
+                            break;
+                            
+                        case 'lightning':
+                            this.ctx.strokeStyle = p.color;
+                            this.ctx.lineWidth = 2;
+                            this.ctx.beginPath();
+                            this.ctx.moveTo(p.x, p.y);
+                            this.ctx.lineTo(p.endX, p.endY);
+                            this.ctx.stroke();
+                            break;
+                            
+                        case 'star':
+                            this.ctx.globalAlpha = alpha * (0.5 + 0.5 * Math.sin(p.twinkle));
+                            this.ctx.fillStyle = p.color;
+                            this.drawStar(p.x, p.y, p.size);
+                            break;
+                    }
+                    this.ctx.restore();
+                });
+            }
+
+            drawStar(x, y, size) {
+                this.ctx.beginPath();
+                for(let i = 0; i < 5; i++) {
+                    const angle = (i * Math.PI * 2) / 5 - Math.PI / 2;
+                    const x1 = x + Math.cos(angle) * size;
+                    const y1 = y + Math.sin(angle) * size;
+                    if(i === 0) this.ctx.moveTo(x1, y1);
+                    else this.ctx.lineTo(x1, y1);
+                    
+                    const angle2 = ((i + 0.5) * Math.PI * 2) / 5 - Math.PI / 2;
+                    const x2 = x + Math.cos(angle2) * size * 0.5;
+                    const y2 = y + Math.sin(angle2) * size * 0.5;
+                    this.ctx.lineTo(x2, y2);
+                }
+                this.ctx.closePath();
+                this.ctx.fill();
+            }
+
+            startAnimation() {
+                const animate = () => {
+                    this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+                    this.updateParticles();
+                    this.drawParticles();
+                    requestAnimationFrame(animate);
+                };
+                animate();
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            new TypingEffectPlayground();
+        });
+    
+                return input;
+            }
+
+            displayResult(result) {
+                document.getElementById('resultContent').textContent = result;
+            }
+
+            clear() {
+                document.getElementById('input').value = '';
+                document.getElementById('resultContent').textContent = '处理结果将在这里显示...';
+            }
+
+            copyResult() {
+                const result = document.getElementById('resultContent').textContent;
+                if (result && result !== '处理结果将在这里显示...') {
+                    ToolUtils.copyToClipboard(result);
+                } else {
+                    ToolUtils.showToast('没有可复制的内容', 'warning');
+                }
+            }
+        }
+
+        // 初始化应用
+        document.addEventListener('DOMContentLoaded', () => {
+            new ToolApp();
+        });
+    </script>
+</body>
+</html>

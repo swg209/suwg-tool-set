@@ -1,0 +1,1022 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CSV/JSON 转换器 - AI工具集</title>
+    <meta name="description" content="CSV/JSON 转换器">
+    
+    <!-- 样式文件 -->
+    <link rel="stylesheet" href="../../shared/css/common.css">
+    
+    <!-- 工具特定样式 -->
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #74b9ff 0%, #0984e3 100%);
+            min-height: 100vh;
+            padding: var(--spacing-lg);
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #74b9ff 0%, #0984e3 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            font-size: 1.1em;
+            opacity: 0.9;
+        }
+
+        .tabs {
+            display: flex;
+            background: #f8f9fa;
+            border-bottom: 2px solid #dee2e6;
+        }
+
+        .tab {
+            flex: 1;
+            padding: 15px 20px;
+            text-align: center;
+            cursor: pointer;
+            background: #f8f9fa;
+            border: none;
+            font-size: 1.1em;
+            font-weight: 600;
+            color: #6c757d;
+            transition: all 0.3s;
+        }
+
+        .tab.active {
+            background: white;
+            color: #0984e3;
+            border-bottom: 3px solid #0984e3;
+        }
+
+        .tab:hover:not(.active) {
+            background: #e9ecef;
+        }
+
+        .tab-content {
+            display: none;
+            padding: 30px;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .converter-section {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin-bottom: 30px;
+        }
+
+        .input-box, .output-box {
+            background: #f8f9fa;
+            border-radius: var(--radius-lg);
+            padding: 25px;
+            border: 2px solid #e9ecef;
+        }
+
+        .box-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .box-header h3 {
+            color: #495057;
+            font-size: 1.3em;
+        }
+
+        .file-upload {
+            position: relative;
+            display: inline-block;
+        }
+
+        .file-upload input[type="file"] {
+            position: absolute;
+            opacity: 0;
+            width: 100%;
+            height: 100%;
+            cursor: pointer;
+        }
+
+        .file-upload-btn {
+            padding: 8px 15px;
+            background: #6c757d;
+            color: white;
+            border-radius: 6px;
+            font-size: 0.9em;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+
+        .file-upload-btn:hover {
+            background: #5a6268;
+        }
+
+        textarea {
+            width: 100%;
+            height: 350px;
+            padding: 15px;
+            border: 2px solid #dee2e6;
+            border-radius: var(--radius-md);
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            resize: vertical;
+            transition: border-color 0.3s;
+        }
+
+        textarea:focus {
+            outline: none;
+            border-color: #0984e3;
+        }
+
+        .controls {
+            margin: var(--spacing-lg) 0;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            align-items: center;
+        }
+
+        .control-group {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .control-group label {
+            font-weight: 600;
+            color: #495057;
+        }
+
+        .control-group input, .control-group select {
+            padding: 6px 10px;
+            border: 1px solid #dee2e6;
+            border-radius: 6px;
+            font-size: 14px;
+        }
+
+        button {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s;
+            font-size: 14px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #74b9ff 0%, #0984e3 100%);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(116, 185, 255, 0.4);
+        }
+
+        .btn-secondary {
+            background: #6c757d;
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            background: #5a6268;
+        }
+
+        .btn-success {
+            background: #28a745;
+            color: white;
+        }
+
+        .btn-success:hover {
+            background: #218838;
+        }
+
+        .btn-warning {
+            background: #ffc107;
+            color: #212529;
+        }
+
+        .btn-warning:hover {
+            background: #e0a800;
+        }
+
+        .btn-group {
+            display: flex;
+            gap: 10px;
+            margin: 15px 0;
+        }
+
+        .status {
+            padding: 12px;
+            border-radius: 8px;
+            margin: 15px 0;
+            font-weight: 600;
+        }
+
+        .status.success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .status.error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        .status.info {
+            background: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
+
+        .preview-table {
+            max-height: 300px;
+            overflow: auto;
+            border: 1px solid #dee2e6;
+            border-radius: 8px;
+            margin-top: 15px;
+        }
+
+        .preview-table table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .preview-table th,
+        .preview-table td {
+            padding: 8px 12px;
+            text-align: left;
+            border-bottom: 1px solid #dee2e6;
+            font-size: 13px;
+        }
+
+        .preview-table th {
+            background: #f8f9fa;
+            font-weight: 600;
+            position: sticky;
+            top: 0;
+        }
+
+        .preview-table tr:hover {
+            background: #f8f9fa;
+        }
+
+        .footer {
+            text-align: center;
+            padding: var(--spacing-lg);
+            background: #f8f9fa;
+            color: #6c757d;
+            font-size: 0.9em;
+        }
+
+        @media (max-width: 768px) {
+            .converter-section {
+                grid-template-columns: 1fr;
+                gap: 20px;
+            }
+            
+            .header h1 {
+                font-size: 2em;
+            }
+            
+            .tab-content {
+                padding: var(--spacing-lg);
+            }
+            
+            .controls {
+                flex-direction: column;
+                align-items: stretch;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="tool-container">
+        <!-- 工具头部 -->
+        <header class="tool-header">
+            <div class="tool-header-content">
+                <a href="../../index.html" class="back-btn">
+                    <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                        <path d="M10 4l-4 4 4 4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                    返回工具集
+                </a>
+                
+                <div class="tool-title">
+                    <h1>CSV/JSON 转换器</h1>
+                    <p class="tool-subtitle">CSV/JSON 转换器</p>
+                </div>
+                
+                <button class="theme-toggle" id="themeToggle" aria-label="切换主题">
+                    <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                        <circle cx="10" cy="10" r="4" stroke="currentColor" stroke-width="2"/>
+                        <path d="M10 2v2M10 16v2M18 10h-2M4 10H2M15.66 4.34l-1.41 1.41M5.75 14.25l-1.41 1.41M15.66 15.66l-1.41-1.41M5.75 5.75L4.34 4.34" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                    </svg>
+                </button>
+            </div>
+        </header>
+
+        <!-- 工具主内容 -->
+        <main class="tool-main">
+            <div class="tool-card">
+                <div class="tool-section">
+                    <h2>
+                        <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                            <rect x="3" y="3" width="14" height="14" rx="2" stroke="currentColor" stroke-width="2"/>
+                        </svg>
+                        工具功能
+                    </h2>
+                    
+                    
+            <div class="tool-card">
+                <div class="tool-section">
+                    <h2>
+                        <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                            <rect x="3" y="3" width="14" height="14" rx="2" stroke="currentColor" stroke-width="2"/>
+                        </svg>
+                        CSV/JSON 转换器
+                    </h2>
+                    <div class="container">
+        <div class="header">
+            <h1>🔄 CSV/JSON 转换器</h1>
+            <p>客户端解析 CSV 文件并转换为 JSON，或反之</p>
+        </div>
+
+        <div class="tabs">
+            <button class="tab active" onclick="switchTab('csv-to-json')">📊 CSV → JSON</button>
+            <button class="tab" onclick="switchTab('json-to-csv')">📋 JSON → CSV</button>
+        </div>
+
+        <!-- CSV to JSON Tab -->
+        <div id="csv-to-json" class="tab-content active">
+            <div class="converter-section">
+                <div class="input-box">
+                    <div class="box-header">
+                        <h3>CSV 输入</h3>
+                        <div class="file-upload">
+                            <input type="file" id="csvFile" accept=".csv" onchange="loadCsvFile(this)">
+                            <div class="file-upload-btn">📁 选择文件</div>
+                        </div>
+                    </div>
+                    <textarea id="csvInput" placeholder="粘贴您的 CSV 数据，或使用上方按钮选择文件：
+
+姓名,年龄,城市,职业
+张三,28,北京,工程师
+李四,32,上海,设计师
+王五,25,广州,产品经理"></textarea>
+                    
+                    <div class="controls">
+                        <div class="control-group">
+                            <label>分隔符:</label>
+                            <select id="csvDelimiter">
+                                <option value=",">逗号 (,)</option>
+                                <option value=";">分号 (;)</option>
+                                <option value="\t">制表符 (\t)</option>
+                                <option value="|">竖线 (|)</option>
+                            </select>
+                        </div>
+                        <div class="control-group">
+                            <input type="checkbox" id="hasHeader" checked>
+                            <label for="hasHeader">包含标题行</label>
+                        </div>
+                        <div class="control-group">
+                            <input type="checkbox" id="trimSpaces" checked>
+                            <label for="trimSpaces">去除空格</label>
+                        </div>
+                    </div>
+
+                    <div class="btn-group">
+                        <button class="btn-primary" onclick="convertCsvToJson()">🔄 转换为 JSON</button>
+                        <button class="btn-secondary" onclick="clearCsvInput()">🗑️ 清空</button>
+                    </div>
+                </div>
+
+                <div class="output-box">
+                    <div class="box-header">
+                        <h3>JSON 输出</h3>
+                        <div class="control-group">
+                            <label>格式:</label>
+                            <select id="jsonFormat">
+                                <option value="array">数组格式</option>
+                                <option value="object">对象格式</option>
+                            </select>
+                        </div>
+                    </div>
+                    <textarea id="jsonOutput" placeholder="转换后的 JSON 数据将显示在这里..." readonly></textarea>
+                    
+                    <div class="btn-group">
+                        <button class="btn-success" onclick="copyJsonOutput()">📋 复制</button>
+                        <button class="btn-warning" onclick="downloadJson()">💾 下载</button>
+                        <button class="btn-secondary" onclick="previewData('json')">👁️ 预览</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- JSON to CSV Tab -->
+        <div id="json-to-csv" class="tab-content">
+            <div class="converter-section">
+                <div class="input-box">
+                    <div class="box-header">
+                        <h3>JSON 输入</h3>
+                        <div class="file-upload">
+                            <input type="file" id="jsonFile" accept=".json" onchange="loadJsonFile(this)">
+                            <div class="file-upload-btn">📁 选择文件</div>
+                        </div>
+                    </div>
+                    <textarea id="jsonInput" placeholder="粘贴您的 JSON 数据，或使用上方按钮选择文件：
+
+[
+  {
+    &quot;姓名&quot;: &quot;张三&quot;,
+    &quot;年龄&quot;: 28,
+    &quot;城市&quot;: &quot;北京&quot;,
+    &quot;职业&quot;: &quot;工程师&quot;
+  },
+  {
+    &quot;姓名&quot;: &quot;李四&quot;,
+    &quot;年龄&quot;: 32,
+    &quot;城市&quot;: &quot;上海&quot;,
+    &quot;职业&quot;: &quot;设计师&quot;
+  }
+]"></textarea>
+                    
+                    <div class="controls">
+                        <div class="control-group">
+                            <label>输出分隔符:</label>
+                            <select id="outputDelimiter">
+                                <option value=",">逗号 (,)</option>
+                                <option value=";">分号 (;)</option>
+                                <option value="\t">制表符 (\t)</option>
+                                <option value="|">竖线 (|)</option>
+                            </select>
+                        </div>
+                        <div class="control-group">
+                            <input type="checkbox" id="includeHeader" checked>
+                            <label for="includeHeader">包含标题行</label>
+                        </div>
+                        <div class="control-group">
+                            <input type="checkbox" id="flattenNested">
+                            <label for="flattenNested">展开嵌套对象</label>
+                        </div>
+                    </div>
+
+                    <div class="btn-group">
+                        <button class="btn-primary" onclick="convertJsonToCsv()">🔄 转换为 CSV</button>
+                        <button class="btn-secondary" onclick="clearJsonInput()">🗑️ 清空</button>
+                    </div>
+                </div>
+
+                <div class="output-box">
+                    <div class="box-header">
+                        <h3>CSV 输出</h3>
+                    </div>
+                    <textarea id="csvOutput" placeholder="转换后的 CSV 数据将显示在这里..." readonly></textarea>
+                    
+                    <div class="btn-group">
+                        <button class="btn-success" onclick="copyCsvOutput()">📋 复制</button>
+                        <button class="btn-warning" onclick="downloadCsv()">💾 下载</button>
+                        <button class="btn-secondary" onclick="previewData('csv')">👁️ 预览</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="status" class="status" style="display: none;"></div>
+        <div id="previewContainer" class="preview-table" style="display: none;"></div>
+
+        <div class="footer">
+            <p>💡 支持多种分隔符、嵌套对象展开、数据预览等功能</p>
+            <p>脚注：小苏趣研AI - 让数据格式转换变得简单高效</p>
+        </div>
+    </div>
+
+    
+                </div>
+            </div>
+                    <!-- 结果显示区域 -->
+                    <div class="result-display" id="result">
+                        <pre id="resultContent">处理结果将在这里显示...</pre>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <!-- 工具页脚 -->
+        <footer class="tool-footer">
+            <p>由 <a href="../../index.html">AI工具集</a> 提供 | 原创工具</p>
+        </footer>
+    </div>
+
+    <!-- JavaScript -->
+    <script src="../../shared/js/utils.js"></script>
+    <script>
+        // 工具特定的JavaScript代码
+        class ToolApp {
+            constructor() {
+                this.init();
+            }
+
+            init() {
+                this.setupEventListeners();
+            }
+
+            setupEventListeners() {
+                document.getElementById('processBtn').addEventListener('click', () => this.process());
+                document.getElementById('clearBtn').addEventListener('click', () => this.clear());
+                document.getElementById('copyBtn').addEventListener('click', () => this.copyResult());
+                
+                // 实时处理（可选）
+                document.getElementById('input').addEventListener('input', 
+                    ToolUtils.debounce(() => this.process(), 300)
+                );
+            }
+
+            process() {
+                const input = document.getElementById('input').value;
+                const result = this.processInput(input);
+                this.displayResult(result);
+            }
+
+            processInput(input) {
+                
+        function showStatus(message, type = 'info') {
+            const statusDiv = document.getElementById('status');
+            statusDiv.textContent = message;
+            statusDiv.className = `status ${type}`;
+            statusDiv.style.display = 'block';
+            
+            setTimeout(() => {
+                statusDiv.style.display = 'none';
+            }, 5000);
+        }
+
+        function switchTab(tabId) {
+            // 隐藏所有标签内容
+            document.querySelectorAll('.tab-content').forEach(content => {
+                content.classList.remove('active');
+            });
+            
+            // 移除所有标签的活动状态
+            document.querySelectorAll('.tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            
+            // 显示选中的标签内容
+            document.getElementById(tabId).classList.add('active');
+            
+            // 激活选中的标签
+            event.target.classList.add('active');
+            
+            // 隐藏预览
+            document.getElementById('previewContainer').style.display = 'none';
+        }
+
+        function loadCsvFile(input) {
+            const file = input.files[0];
+            if (!file) return;
+            
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                document.getElementById('csvInput').value = e.target.result;
+                showStatus(`📁 已加载文件: ${file.name}`, 'success');
+            };
+            reader.readAsText(file);
+        }
+
+        function loadJsonFile(input) {
+            const file = input.files[0];
+            if (!file) return;
+            
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                document.getElementById('jsonInput').value = e.target.result;
+                showStatus(`📁 已加载文件: ${file.name}`, 'success');
+            };
+            reader.readAsText(file);
+        }
+
+        function parseCsv(text, delimiter = ',', hasHeader = true, trimSpaces = true) {
+            const lines = text.trim().split('\n');
+            if (lines.length === 0) return [];
+            
+            const result = [];
+            const headers = hasHeader ? parseCSVLine(lines[0], delimiter, trimSpaces) : null;
+            const startIndex = hasHeader ? 1 : 0;
+            
+            for (let i = startIndex; i < lines.length; i++) {
+                const values = parseCSVLine(lines[i], delimiter, trimSpaces);
+                if (values.length === 0) continue;
+                
+                if (hasHeader && headers) {
+                    const obj = {};
+                    headers.forEach((header, index) => {
+                        obj[header] = values[index] || '';
+                    });
+                    result.push(obj);
+                } else {
+                    result.push(values);
+                }
+            }
+            
+            return result;
+        }
+
+        function parseCSVLine(line, delimiter, trim = true) {
+            const result = [];
+            let current = '';
+            let inQuotes = false;
+            
+            for (let i = 0; i < line.length; i++) {
+                const char = line[i];
+                
+                if (char === '"') {
+                    if (inQuotes && line[i + 1] === '"') {
+                        current += '"';
+                        i++;
+                    } else {
+                        inQuotes = !inQuotes;
+                    }
+                } else if (char === delimiter && !inQuotes) {
+                    result.push(trim ? current.trim() : current);
+                    current = '';
+                } else {
+                    current += char;
+                }
+            }
+            
+            result.push(trim ? current.trim() : current);
+            return result;
+        }
+
+        function convertCsvToJson() {
+            const csvText = document.getElementById('csvInput').value.trim();
+            if (!csvText) {
+                showStatus('请输入 CSV 数据', 'error');
+                return;
+            }
+            
+            try {
+                const delimiter = document.getElementById('csvDelimiter').value;
+                const hasHeader = document.getElementById('hasHeader').checked;
+                const trimSpaces = document.getElementById('trimSpaces').checked;
+                const format = document.getElementById('jsonFormat').value;
+                
+                const data = parseCsv(csvText, delimiter, hasHeader, trimSpaces);
+                
+                let output;
+                if (format === 'object' && hasHeader) {
+                    output = {
+                        data: data,
+                        count: data.length,
+                        headers: Object.keys(data[0] || {})
+                    };
+                } else {
+                    output = data;
+                }
+                
+                document.getElementById('jsonOutput').value = JSON.stringify(output, null, 2);
+                showStatus(`✅ 成功转换 ${data.length} 行数据`, 'success');
+                
+            } catch (error) {
+                showStatus(`❌ 转换失败: ${error.message}`, 'error');
+            }
+        }
+
+        function convertJsonToCsv() {
+            const jsonText = document.getElementById('jsonInput').value.trim();
+            if (!jsonText) {
+                showStatus('请输入 JSON 数据', 'error');
+                return;
+            }
+            
+            try {
+                const data = JSON.parse(jsonText);
+                const delimiter = document.getElementById('outputDelimiter').value;
+                const includeHeader = document.getElementById('includeHeader').checked;
+                const flattenNested = document.getElementById('flattenNested').checked;
+                
+                let csvData;
+                if (Array.isArray(data)) {
+                    csvData = data;
+                } else if (data.data && Array.isArray(data.data)) {
+                    csvData = data.data;
+                } else {
+                    csvData = [data];
+                }
+                
+                if (csvData.length === 0) {
+                    showStatus('JSON 数据为空', 'error');
+                    return;
+                }
+                
+                // 处理嵌套对象
+                if (flattenNested) {
+                    csvData = csvData.map(item => flattenObject(item));
+                }
+                
+                // 获取所有键名
+                const allKeys = new Set();
+                csvData.forEach(item => {
+                    if (typeof item === 'object' && item !== null) {
+                        Object.keys(item).forEach(key => allKeys.add(key));
+                    }
+                });
+                
+                const headers = Array.from(allKeys);
+                let csvOutput = '';
+                
+                // 添加标题行
+                if (includeHeader && headers.length > 0) {
+                    csvOutput += headers.map(header => escapeCSVField(header)).join(delimiter) + '\n';
+                }
+                
+                // 添加数据行
+                csvData.forEach(item => {
+                    if (typeof item === 'object' && item !== null) {
+                        const row = headers.map(header => {
+                            const value = item[header];
+                            return escapeCSVField(value !== undefined ? String(value) : '');
+                        });
+                        csvOutput += row.join(delimiter) + '\n';
+                    } else {
+                        csvOutput += escapeCSVField(String(item)) + '\n';
+                    }
+                });
+                
+                document.getElementById('csvOutput').value = csvOutput;
+                showStatus(`✅ 成功转换 ${csvData.length} 行数据`, 'success');
+                
+            } catch (error) {
+                showStatus(`❌ 转换失败: ${error.message}`, 'error');
+            }
+        }
+
+        function flattenObject(obj, prefix = '') {
+            const flattened = {};
+            
+            for (const key in obj) {
+                if (obj.hasOwnProperty(key)) {
+                    const newKey = prefix ? `${prefix}.${key}` : key;
+                    
+                    if (typeof obj[key] === 'object' && obj[key] !== null && !Array.isArray(obj[key])) {
+                        Object.assign(flattened, flattenObject(obj[key], newKey));
+                    } else {
+                        flattened[newKey] = obj[key];
+                    }
+                }
+            }
+            
+            return flattened;
+        }
+
+        function escapeCSVField(field) {
+            if (field.includes(',') || field.includes('"') || field.includes('\n')) {
+                return '"' + field.replace(/"/g, '""') + '"';
+            }
+            return field;
+        }
+
+        function copyJsonOutput() {
+            const output = document.getElementById('jsonOutput');
+            if (!output.value) {
+                showStatus('没有可复制的内容', 'error');
+                return;
+            }
+            
+            output.select();
+            document.execCommand('copy');
+            showStatus('📋 JSON 数据已复制到剪贴板！', 'success');
+        }
+
+        function copyCsvOutput() {
+            const output = document.getElementById('csvOutput');
+            if (!output.value) {
+                showStatus('没有可复制的内容', 'error');
+                return;
+            }
+            
+            output.select();
+            document.execCommand('copy');
+            showStatus('📋 CSV 数据已复制到剪贴板！', 'success');
+        }
+
+        function downloadJson() {
+            const output = document.getElementById('jsonOutput').value;
+            if (!output) {
+                showStatus('没有可下载的内容', 'error');
+                return;
+            }
+            
+            const blob = new Blob([output], { type: 'application/json' });
+            downloadFile(blob, `converted_${new Date().getTime()}.json`);
+            showStatus('💾 JSON 文件下载成功！', 'success');
+        }
+
+        function downloadCsv() {
+            const output = document.getElementById('csvOutput').value;
+            if (!output) {
+                showStatus('没有可下载的内容', 'error');
+                return;
+            }
+            
+            const blob = new Blob([output], { type: 'text/csv;charset=utf-8;' });
+            downloadFile(blob, `converted_${new Date().getTime()}.csv`);
+            showStatus('💾 CSV 文件下载成功！', 'success');
+        }
+
+        function downloadFile(blob, filename) {
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = filename;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        }
+
+        function previewData(type) {
+            const container = document.getElementById('previewContainer');
+            let data;
+            
+            try {
+                if (type === 'json') {
+                    const jsonText = document.getElementById('jsonOutput').value;
+                    if (!jsonText) {
+                        showStatus('请先转换数据', 'error');
+                        return;
+                    }
+                    data = JSON.parse(jsonText);
+                    if (data.data && Array.isArray(data.data)) {
+                        data = data.data;
+                    }
+                } else {
+                    const csvText = document.getElementById('csvOutput').value;
+                    if (!csvText) {
+                        showStatus('请先转换数据', 'error');
+                        return;
+                    }
+                    const delimiter = document.getElementById('outputDelimiter').value;
+                    data = parseCsv(csvText, delimiter, true, true);
+                }
+                
+                if (!Array.isArray(data) || data.length === 0) {
+                    showStatus('没有可预览的数据', 'error');
+                    return;
+                }
+                
+                const table = createPreviewTable(data);
+                container.innerHTML = table;
+                container.style.display = 'block';
+                showStatus('👁️ 数据预览已生成', 'success');
+                
+            } catch (error) {
+                showStatus(`❌ 预览失败: ${error.message}`, 'error');
+            }
+        }
+
+        function createPreviewTable(data) {
+            if (data.length === 0) return '<p>没有数据</p>';
+            
+            const headers = Object.keys(data[0]);
+            let html = '<table><thead><tr>';
+            
+            headers.forEach(header => {
+                html += `<th>${header}</th>`;
+            });
+            html += '</tr></thead><tbody>';
+            
+            data.slice(0, 100).forEach(row => { // 只显示前100行
+                html += '<tr>';
+                headers.forEach(header => {
+                    const value = row[header] !== undefined ? String(row[header]) : '';
+                    html += `<td>${value.length > 50 ? value.substring(0, 50) + '...' : value}</td>`;
+                });
+                html += '</tr>';
+            });
+            
+            html += '</tbody></table>';
+            
+            if (data.length > 100) {
+                html += `<p style="text-align: center; margin: 10px; color: #6c757d;">显示前 100 行，共 ${data.length} 行数据</p>`;
+            }
+            
+            return html;
+        }
+
+        function clearCsvInput() {
+            document.getElementById('csvInput').value = '';
+            document.getElementById('jsonOutput').value = '';
+            document.getElementById('previewContainer').style.display = 'none';
+            showStatus('🗑️ 已清空 CSV 输入', 'info');
+        }
+
+        function clearJsonInput() {
+            document.getElementById('jsonInput').value = '';
+            document.getElementById('csvOutput').value = '';
+            document.getElementById('previewContainer').style.display = 'none';
+            showStatus('🗑️ 已清空 JSON 输入', 'info');
+        }
+
+        // 示例数据加载
+        window.addEventListener('load', function() {
+            // CSV 示例
+            const csvExample = `姓名,年龄,城市,职业,薪资
+张三,28,北京,软件工程师,15000
+李四,32,上海,UI设计师,12000
+王五,25,广州,产品经理,18000
+赵六,29,深圳,数据分析师,14000`;
+            
+            document.getElementById('csvInput').value = csvExample;
+            
+            // JSON 示例
+            const jsonExample = [
+                {
+                    "姓名": "张三",
+                    "年龄": 28,
+                    "城市": "北京",
+                    "职业": "软件工程师",
+                    "技能": ["JavaScript", "Python", "Java"]
+                },
+                {
+                    "姓名": "李四",
+                    "年龄": 32,
+                    "城市": "上海",
+                    "职业": "UI设计师",
+                    "技能": ["Photoshop", "Sketch", "Figma"]
+                },
+                {
+                    "姓名": "王五",
+                    "年龄": 25,
+                    "城市": "广州",
+                    "职业": "产品经理",
+                    "技能": ["Axure", "Visio", "需求分析"]
+                }
+            ];
+            
+            document.getElementById('jsonInput').value = JSON.stringify(jsonExample, null, 2);
+        });
+    
+                return input;
+            }
+
+            displayResult(result) {
+                document.getElementById('resultContent').textContent = result;
+            }
+
+            clear() {
+                document.getElementById('input').value = '';
+                document.getElementById('resultContent').textContent = '处理结果将在这里显示...';
+            }
+
+            copyResult() {
+                const result = document.getElementById('resultContent').textContent;
+                if (result && result !== '处理结果将在这里显示...') {
+                    ToolUtils.copyToClipboard(result);
+                } else {
+                    ToolUtils.showToast('没有可复制的内容', 'warning');
+                }
+            }
+        }
+
+        // 初始化应用
+        document.addEventListener('DOMContentLoaded', () => {
+            new ToolApp();
+        });
+    </script>
+</body>
+</html>

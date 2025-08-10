@@ -1,0 +1,859 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>会议发言计时器 - Meeting Speech Timer - AI工具集</title>
+    <meta name="description" content="会议发言计时器 - Meeting Speech Timer">
+    
+    <!-- 样式文件 -->
+    <link rel="stylesheet" href="../../shared/css/common.css">
+    
+    <!-- 工具特定样式 -->
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: var(--spacing-lg);
+            color: var(--text-primary);
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(45deg, #ff6b6b, #feca57);
+            color: white;
+            text-align: center;
+            padding: 40px 20px;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .header p {
+            font-size: 1.1em;
+            opacity: 0.9;
+        }
+
+        .content {
+            padding: 40px;
+        }
+
+        .settings-section {
+            background: #f8f9fa;
+            padding: 30px;
+            border-radius: var(--radius-lg);
+            margin-bottom: 30px;
+        }
+
+        .settings-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        .setting-group {
+            text-align: center;
+        }
+
+        .setting-group label {
+            display: block;
+            font-weight: bold;
+            margin-bottom: 10px;
+            color: var(--text-primary);
+        }
+
+        .setting-group input {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #ddd;
+            border-radius: var(--radius-md);
+            font-size: 18px;
+            text-align: center;
+            transition: border-color 0.3s;
+        }
+
+        .setting-group input:focus {
+            outline: none;
+            border-color: #ff6b6b;
+        }
+
+        .timer-display {
+            text-align: center;
+            margin: 40px 0;
+            padding: 40px;
+            border-radius: 20px;
+            transition: all 0.3s ease;
+        }
+
+        .timer-display.normal {
+            background: linear-gradient(135deg, #4ecdc4, #44a08d);
+            color: white;
+        }
+
+        .timer-display.warning {
+            background: linear-gradient(135deg, #feca57, #ff9ff3);
+            color: white;
+            animation: pulse 1s infinite;
+        }
+
+        .timer-display.danger {
+            background: linear-gradient(135deg, #ff6b6b, #ee5a52);
+            color: white;
+            animation: shake 0.5s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-5px); }
+            75% { transform: translateX(5px); }
+        }
+
+        .time-display {
+            font-size: 4em;
+            font-weight: bold;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .status-text {
+            font-size: 1.5em;
+            margin-bottom: 20px;
+        }
+
+        .speaker-info {
+            font-size: 1.2em;
+            opacity: 0.9;
+        }
+
+        .controls {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin: 30px 0;
+            flex-wrap: wrap;
+        }
+
+        .control-btn {
+            padding: 15px 30px;
+            border: none;
+            border-radius: 50px;
+            font-size: 18px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+
+        .start-btn {
+            background: linear-gradient(45deg, #4ecdc4, #44a08d);
+            color: white;
+        }
+
+        .pause-btn {
+            background: linear-gradient(45deg, #feca57, #ff9ff3);
+            color: white;
+        }
+
+        .stop-btn {
+            background: linear-gradient(45deg, #ff6b6b, #ee5a52);
+            color: white;
+        }
+
+        .next-btn {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white;
+        }
+
+        .control-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.3);
+        }
+
+        .control-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .speakers-section {
+            background: #f8f9fa;
+            padding: 25px;
+            border-radius: var(--radius-lg);
+            margin-bottom: 20px;
+        }
+
+        .speakers-title {
+            font-size: 1.4em;
+            font-weight: bold;
+            margin-bottom: 15px;
+            text-align: center;
+            color: var(--text-primary);
+        }
+
+        .speaker-input {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .speaker-input input {
+            flex: 1;
+            padding: var(--spacing-md);
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 16px;
+        }
+
+        .add-speaker-btn {
+            background: #4ecdc4;
+            color: white;
+            border: none;
+            padding: var(--spacing-md) 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+
+        .speakers-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 10px;
+        }
+
+        .speaker-item {
+            background: white;
+            padding: 15px;
+            border-radius: var(--radius-md);
+            text-align: center;
+            border: 2px solid transparent;
+            transition: all 0.3s ease;
+        }
+
+        .speaker-item.current {
+            border-color: #ff6b6b;
+            background: var(--bg-card)5f5;
+        }
+
+        .speaker-item.completed {
+            background: #f0fff4;
+            border-color: #4ecdc4;
+            opacity: 0.7;
+        }
+
+        .speaker-name {
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        .speaker-time {
+            color: var(--text-secondary);
+            font-size: 0.9em;
+        }
+
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .stat-item {
+            background: white;
+            padding: var(--spacing-lg);
+            border-radius: var(--radius-md);
+            text-align: center;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .stat-value {
+            font-size: 2em;
+            font-weight: bold;
+            color: #4ecdc4;
+            display: block;
+        }
+
+        .stat-label {
+            color: var(--text-secondary);
+            font-size: 0.9em;
+            margin-top: 5px;
+        }
+
+        .footer {
+            text-align: center;
+            padding: var(--spacing-lg);
+            color: var(--text-secondary);
+            font-size: 0.9em;
+            border-top: 1px solid #eee;
+        }
+
+        .sound-toggle {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: rgba(255, 255, 255, 0.9);
+            border: none;
+            padding: var(--spacing-md);
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .notification {
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #4ecdc4;
+            color: white;
+            padding: 15px 25px;
+            border-radius: var(--radius-md);
+            font-weight: bold;
+            z-index: 1000;
+            display: none;
+        }
+
+        @media (max-width: 768px) {
+            .content {
+                padding: var(--spacing-lg);
+            }
+            
+            .time-display {
+                font-size: 3em;
+            }
+            
+            .controls {
+                flex-direction: column;
+                align-items: center;
+            }
+            
+            .control-btn {
+                width: 200px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="tool-container">
+        <!-- 工具头部 -->
+        <header class="tool-header">
+            <div class="tool-header-content">
+                <a href="../../index.html" class="back-btn">
+                    <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                        <path d="M10 4l-4 4 4 4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                    返回工具集
+                </a>
+                
+                <div class="tool-title">
+                    <h1>会议发言计时器 - Meeting Speech Timer</h1>
+                    <p class="tool-subtitle">会议发言计时器 - Meeting Speech Timer</p>
+                </div>
+                
+                <button class="theme-toggle" id="themeToggle" aria-label="切换主题">
+                    <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                        <circle cx="10" cy="10" r="4" stroke="currentColor" stroke-width="2"/>
+                        <path d="M10 2v2M10 16v2M18 10h-2M4 10H2M15.66 4.34l-1.41 1.41M5.75 14.25l-1.41 1.41M15.66 15.66l-1.41-1.41M5.75 5.75L4.34 4.34" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                    </svg>
+                </button>
+            </div>
+        </header>
+
+        <!-- 工具主内容 -->
+        <main class="tool-main">
+            <div class="tool-card">
+                <div class="tool-section">
+                    <h2>
+                        <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                            <rect x="3" y="3" width="14" height="14" rx="2" stroke="currentColor" stroke-width="2"/>
+                        </svg>
+                        工具功能
+                    </h2>
+                    
+                    
+            <div class="tool-card">
+                <div class="tool-section">
+                    <h2>
+                        <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                            <rect x="3" y="3" width="14" height="14" rx="2" stroke="currentColor" stroke-width="2"/>
+                        </svg>
+                        会议发言计时器 - Meeting Speech Timer
+                    </h2>
+                    <div class="notification" id="notification"></div>
+    
+    <button class="sound-toggle" id="soundToggle">🔊</button>
+
+    <div class="container">
+        <div class="header">
+            <h1>⏱️ 会议发言计时器</h1>
+            <p>高效管理会议节奏，让每个发言都恰到好处</p>
+        </div>
+
+        <div class="content">
+            <div class="settings-section">
+                <div class="settings-grid">
+                    <div class="setting-group">
+                        <label for="speakTime">发言时长 (分钟)</label>
+                        <input type="number" id="speakTime" value="3" min="1" max="60">
+                    </div>
+                    <div class="setting-group">
+                        <label for="warningTime">黄牌警告 (秒)</label>
+                        <input type="number" id="warningTime" value="30" min="10" max="300">
+                    </div>
+                    <div class="setting-group">
+                        <label for="dangerTime">红牌警告 (秒)</label>
+                        <input type="number" id="dangerTime" value="10" min="5" max="60">
+                    </div>
+                </div>
+            </div>
+
+            <div class="speakers-section">
+                <div class="speakers-title">发言人员</div>
+                <div class="speaker-input">
+                    <input type="text" id="speakerName" placeholder="输入发言人姓名">
+                    <button class="add-speaker-btn" onclick="addSpeaker()">添加</button>
+                </div>
+                <div class="speakers-list" id="speakersList">
+                    <div class="speaker-item">
+                        <div class="speaker-name">点击上方添加发言人</div>
+                        <div class="speaker-time">开始你的会议管理</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="timer-display normal" id="timerDisplay">
+                <div class="time-display" id="timeDisplay">00:00</div>
+                <div class="status-text" id="statusText">准备开始</div>
+                <div class="speaker-info" id="speakerInfo">请添加发言人并开始计时</div>
+            </div>
+
+            <div class="controls">
+                <button class="control-btn start-btn" id="startBtn" onclick="startTimer()">开始计时</button>
+                <button class="control-btn pause-btn" id="pauseBtn" onclick="pauseTimer()" disabled>暂停</button>
+                <button class="control-btn stop-btn" id="stopBtn" onclick="stopTimer()" disabled>停止</button>
+                <button class="control-btn next-btn" id="nextBtn" onclick="nextSpeaker()" disabled>下一位</button>
+            </div>
+
+            <div class="stats">
+                <div class="stat-item">
+                    <span class="stat-value" id="totalSpeakers">0</span>
+                    <div class="stat-label">总发言人数</div>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-value" id="completedSpeakers">0</span>
+                    <div class="stat-label">已完成</div>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-value" id="totalTime">00:00</span>
+                    <div class="stat-label">总用时</div>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-value" id="averageTime">00:00</span>
+                    <div class="stat-label">平均用时</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="footer">
+            由 <strong>小苏趣研AI</strong> 制作 | 让会议更高效，让发言更精准
+        </div>
+    </div>
+
+    
+                </div>
+            </div>
+                    <!-- 结果显示区域 -->
+                    <div class="result-display" id="result">
+                        <pre id="resultContent">处理结果将在这里显示...</pre>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <!-- 工具页脚 -->
+        <footer class="tool-footer">
+            <p>由 <a href="../../index.html">AI工具集</a> 提供 | 原创工具</p>
+        </footer>
+    </div>
+
+    <!-- JavaScript -->
+    <script src="../../shared/js/utils.js"></script>
+    <script>
+        // 工具特定的JavaScript代码
+        class ToolApp {
+            constructor() {
+                this.init();
+            }
+
+            init() {
+                this.setupEventListeners();
+            }
+
+            setupEventListeners() {
+                document.getElementById('processBtn').addEventListener('click', () => this.process());
+                document.getElementById('clearBtn').addEventListener('click', () => this.clear());
+                document.getElementById('copyBtn').addEventListener('click', () => this.copyResult());
+                
+                // 实时处理（可选）
+                document.getElementById('input').addEventListener('input', 
+                    ToolUtils.debounce(() => this.process(), 300)
+                );
+            }
+
+            process() {
+                const input = document.getElementById('input').value;
+                const result = this.processInput(input);
+                this.displayResult(result);
+            }
+
+            processInput(input) {
+                
+        let timer = null;
+        let currentTime = 0;
+        let speakers = [];
+        let currentSpeakerIndex = -1;
+        let isRunning = false;
+        let isPaused = false;
+        let soundEnabled = true;
+        let totalMeetingTime = 0;
+
+        function addSpeaker() {
+            const nameInput = document.getElementById('speakerName');
+            const name = nameInput.value.trim();
+            
+            if (!name) {
+                alert('请输入发言人姓名');
+                return;
+            }
+
+            speakers.push({
+                name: name,
+                startTime: null,
+                endTime: null,
+                duration: 0,
+                status: 'waiting'
+            });
+
+            nameInput.value = '';
+            updateSpeakersList();
+            updateStats();
+        }
+
+        function updateSpeakersList() {
+            const container = document.getElementById('speakersList');
+            
+            if (speakers.length === 0) {
+                container.innerHTML = `
+                    <div class="speaker-item">
+                        <div class="speaker-name">点击上方添加发言人</div>
+                        <div class="speaker-time">开始你的会议管理</div>
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = speakers.map((speaker, index) => {
+                let className = 'speaker-item';
+                if (index === currentSpeakerIndex) className += ' current';
+                if (speaker.status === 'completed') className += ' completed';
+
+                const timeText = speaker.status === 'completed' 
+                    ? formatTime(speaker.duration)
+                    : speaker.status === 'speaking' 
+                        ? '发言中...'
+                        : '等待中';
+
+                return `
+                    <div class="${className}">
+                        <div class="speaker-name">${speaker.name}</div>
+                        <div class="speaker-time">${timeText}</div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function startTimer() {
+            if (speakers.length === 0) {
+                alert('请先添加发言人');
+                return;
+            }
+
+            if (currentSpeakerIndex === -1) {
+                currentSpeakerIndex = 0;
+            }
+
+            const speakTime = parseInt(document.getElementById('speakTime').value) * 60;
+            
+            if (!isPaused) {
+                currentTime = speakTime;
+                speakers[currentSpeakerIndex].startTime = new Date();
+                speakers[currentSpeakerIndex].status = 'speaking';
+            }
+
+            isRunning = true;
+            isPaused = false;
+
+            timer = setInterval(() => {
+                currentTime--;
+                updateDisplay();
+
+                if (currentTime <= 0) {
+                    handleTimeUp();
+                }
+            }, 1000);
+
+            updateButtons();
+            updateSpeakersList();
+        }
+
+        function pauseTimer() {
+            if (timer) {
+                clearInterval(timer);
+                timer = null;
+            }
+            isRunning = false;
+            isPaused = true;
+            updateButtons();
+        }
+
+        function stopTimer() {
+            if (timer) {
+                clearInterval(timer);
+                timer = null;
+            }
+
+            if (currentSpeakerIndex >= 0 && speakers[currentSpeakerIndex]) {
+                const speaker = speakers[currentSpeakerIndex];
+                if (speaker.startTime) {
+                    speaker.endTime = new Date();
+                    speaker.duration = Math.floor((speaker.endTime - speaker.startTime) / 1000);
+                    speaker.status = 'completed';
+                    totalMeetingTime += speaker.duration;
+                }
+            }
+
+            isRunning = false;
+            isPaused = false;
+            currentTime = 0;
+            
+            updateDisplay();
+            updateButtons();
+            updateSpeakersList();
+            updateStats();
+            
+            document.getElementById('statusText').textContent = '已停止';
+            document.getElementById('speakerInfo').textContent = '发言已结束';
+        }
+
+        function nextSpeaker() {
+            stopTimer();
+            
+            if (currentSpeakerIndex < speakers.length - 1) {
+                currentSpeakerIndex++;
+                document.getElementById('statusText').textContent = '准备开始';
+                document.getElementById('speakerInfo').textContent = `下一位：${speakers[currentSpeakerIndex].name}`;
+            } else {
+                showNotification('所有发言人都已完成！');
+                currentSpeakerIndex = -1;
+                document.getElementById('statusText').textContent = '会议结束';
+                document.getElementById('speakerInfo').textContent = '感谢所有发言人的参与';
+            }
+            
+            updateSpeakersList();
+        }
+
+        function handleTimeUp() {
+            stopTimer();
+            playSound('end');
+            showNotification('⏰ 时间到！');
+            
+            document.getElementById('timerDisplay').className = 'timer-display danger';
+            document.getElementById('statusText').textContent = '时间到！';
+        }
+
+        function updateDisplay() {
+            const timeDisplay = document.getElementById('timeDisplay');
+            const statusText = document.getElementById('statusText');
+            const speakerInfo = document.getElementById('speakerInfo');
+            const timerDisplay = document.getElementById('timerDisplay');
+
+            timeDisplay.textContent = formatTime(currentTime);
+
+            if (currentSpeakerIndex >= 0 && speakers[currentSpeakerIndex]) {
+                speakerInfo.textContent = `当前发言人：${speakers[currentSpeakerIndex].name}`;
+            }
+
+            const warningTime = parseInt(document.getElementById('warningTime').value);
+            const dangerTime = parseInt(document.getElementById('dangerTime').value);
+
+            if (currentTime <= dangerTime) {
+                timerDisplay.className = 'timer-display danger';
+                statusText.textContent = '🔴 红牌警告 - 请尽快结束';
+                if (currentTime === dangerTime) {
+                    playSound('danger');
+                    showNotification('🔴 红牌警告！请尽快结束发言');
+                }
+            } else if (currentTime <= warningTime) {
+                timerDisplay.className = 'timer-display warning';
+                statusText.textContent = '🟡 黄牌警告 - 注意时间';
+                if (currentTime === warningTime) {
+                    playSound('warning');
+                    showNotification('🟡 黄牌警告！注意控制时间');
+                }
+            } else {
+                timerDisplay.className = 'timer-display normal';
+                statusText.textContent = '🟢 正常发言中';
+            }
+        }
+
+        function updateButtons() {
+            const startBtn = document.getElementById('startBtn');
+            const pauseBtn = document.getElementById('pauseBtn');
+            const stopBtn = document.getElementById('stopBtn');
+            const nextBtn = document.getElementById('nextBtn');
+
+            startBtn.disabled = isRunning;
+            pauseBtn.disabled = !isRunning;
+            stopBtn.disabled = !isRunning && !isPaused;
+            nextBtn.disabled = !isRunning && !isPaused && currentSpeakerIndex === -1;
+        }
+
+        function updateStats() {
+            const totalSpeakers = speakers.length;
+            const completedSpeakers = speakers.filter(s => s.status === 'completed').length;
+            const averageTime = completedSpeakers > 0 
+                ? Math.floor(totalMeetingTime / completedSpeakers)
+                : 0;
+
+            document.getElementById('totalSpeakers').textContent = totalSpeakers;
+            document.getElementById('completedSpeakers').textContent = completedSpeakers;
+            document.getElementById('totalTime').textContent = formatTime(totalMeetingTime);
+            document.getElementById('averageTime').textContent = formatTime(averageTime);
+        }
+
+        function formatTime(seconds) {
+            const mins = Math.floor(Math.abs(seconds) / 60);
+            const secs = Math.abs(seconds) % 60;
+            const sign = seconds < 0 ? '-' : '';
+            return `${sign}${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+        }
+
+        function playSound(type) {
+            if (!soundEnabled) return;
+
+            const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            const oscillator = audioContext.createOscillator();
+            const gainNode = audioContext.createGain();
+
+            oscillator.connect(gainNode);
+            gainNode.connect(audioContext.destination);
+
+            let frequency = 440;
+            if (type === 'warning') frequency = 800;
+            if (type === 'danger') frequency = 1200;
+            if (type === 'end') frequency = 600;
+
+            oscillator.frequency.setValueAtTime(frequency, audioContext.currentTime);
+            oscillator.type = 'sine';
+
+            gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+            gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.5);
+
+            oscillator.start(audioContext.currentTime);
+            oscillator.stop(audioContext.currentTime + 0.5);
+        }
+
+        function showNotification(message) {
+            const notification = document.getElementById('notification');
+            notification.textContent = message;
+            notification.style.display = 'block';
+            
+            setTimeout(() => {
+                notification.style.display = 'none';
+            }, 3000);
+        }
+
+        // 声音切换
+        document.getElementById('soundToggle').addEventListener('click', function() {
+            soundEnabled = !soundEnabled;
+            this.textContent = soundEnabled ? '🔊' : '🔇';
+        });
+
+        // 支持回车键添加发言人
+        document.getElementById('speakerName').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                addSpeaker();
+            }
+        });
+
+        // 键盘快捷键
+        document.addEventListener('keydown', function(e) {
+            if (e.code === 'Space' && !e.target.matches('input')) {
+                e.preventDefault();
+                if (!isRunning && !isPaused) {
+                    startTimer();
+                } else if (isRunning) {
+                    pauseTimer();
+                } else if (isPaused) {
+                    startTimer();
+                }
+            }
+        });
+
+        // 初始化
+        updateButtons();
+        updateStats();
+    
+                return input;
+            }
+
+            displayResult(result) {
+                document.getElementById('resultContent').textContent = result;
+            }
+
+            clear() {
+                document.getElementById('input').value = '';
+                document.getElementById('resultContent').textContent = '处理结果将在这里显示...';
+            }
+
+            copyResult() {
+                const result = document.getElementById('resultContent').textContent;
+                if (result && result !== '处理结果将在这里显示...') {
+                    ToolUtils.copyToClipboard(result);
+                } else {
+                    ToolUtils.showToast('没有可复制的内容', 'warning');
+                }
+            }
+        }
+
+        // 初始化应用
+        document.addEventListener('DOMContentLoaded', () => {
+            new ToolApp();
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,1129 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>打地鼠游戏 - AI工具集</title>
+    <meta name="description" content="打地鼠游戏">
+    
+    <!-- 样式文件 -->
+    <link rel="stylesheet" href="../../shared/css/common.css">
+    
+    <!-- 工具特定样式 -->
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #74b9ff 0%, #0984e3 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: var(--spacing-lg);
+            user-select: none;
+        }
+
+        .game-container {
+            max-width: 800px;
+            width: 100%;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+            animation: slideIn 0.5s ease-out;
+        }
+
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .header {
+            background: linear-gradient(135deg, #74b9ff 0%, #0984e3 100%);
+            color: white;
+            padding: 25px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .header p {
+            font-size: 1.1em;
+            opacity: 0.9;
+        }
+
+        .game-info {
+            display: flex;
+            justify-content: space-around;
+            padding: var(--spacing-lg);
+            background: #f8f9fa;
+            border-bottom: 2px solid #e9ecef;
+        }
+
+        .info-item {
+            text-align: center;
+            padding: 15px;
+            background: white;
+            border-radius: 12px;
+            min-width: 120px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        .info-label {
+            font-size: 0.9em;
+            color: #6c757d;
+            margin-bottom: 5px;
+        }
+
+        .info-value {
+            font-size: 1.8em;
+            font-weight: bold;
+            color: #0984e3;
+        }
+
+        .game-board {
+            padding: 30px;
+            background: #f0f8ff;
+            position: relative;
+        }
+
+        .mole-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 20px;
+            max-width: 500px;
+            margin: 0 auto;
+        }
+
+        .mole-hole {
+            position: relative;
+            width: 120px;
+            height: 120px;
+            background: radial-gradient(ellipse at center, #8b4513 0%, #654321 50%, #4a2c17 100%);
+            border-radius: 50%;
+            border: 8px solid #654321;
+            box-shadow: 
+                inset 0 10px 20px rgba(0,0,0,0.3),
+                0 5px 15px rgba(0,0,0,0.2);
+            cursor: pointer;
+            overflow: hidden;
+            transition: all 0.2s;
+            margin: 0 auto;
+        }
+
+        .mole-hole:hover {
+            transform: scale(1.05);
+        }
+
+        .mole {
+            position: absolute;
+            width: 80px;
+            height: 60px;
+            background: #8b4513;
+            border-radius: 50% 50% 20% 20%;
+            bottom: -60px;
+            left: 50%;
+            transform: translateX(-50%);
+            transition: bottom 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+            cursor: pointer;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+        }
+
+        .mole::before {
+            content: '';
+            position: absolute;
+            width: 12px;
+            height: 12px;
+            background: #2c3e50;
+            border-radius: 50%;
+            top: 15px;
+            left: 20px;
+            box-shadow: 20px 0 0 #2c3e50;
+        }
+
+        .mole::after {
+            content: '';
+            position: absolute;
+            width: 8px;
+            height: 6px;
+            background: #e74c3c;
+            border-radius: 50%;
+            top: 25px;
+            left: 36px;
+        }
+
+        .mole.up {
+            bottom: 10px;
+            animation: pop-up 0.3s ease-out;
+        }
+
+        .mole.hit {
+            animation: hit 0.3s ease-out;
+            background: #e74c3c;
+        }
+
+        @keyframes pop-up {
+            0% { bottom: -60px; transform: translateX(-50%) scale(1); }
+            50% { transform: translateX(-50%) scale(1.1); }
+            100% { bottom: 10px; transform: translateX(-50%) scale(1); }
+        }
+
+        @keyframes hit {
+            0% { transform: translateX(-50%) scale(1); }
+            50% { transform: translateX(-50%) scale(1.2); }
+            100% { transform: translateX(-50%) scale(0.8); }
+        }
+
+        .controls {
+            padding: 25px;
+            text-align: center;
+            background: #f8f9fa;
+        }
+
+        .game-btn {
+            padding: 15px 30px;
+            background: linear-gradient(135deg, #74b9ff 0%, #0984e3 100%);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-size: 1.1em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin: 0 10px;
+            box-shadow: 0 4px 15px rgba(116, 185, 255, 0.3);
+        }
+
+        .game-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(116, 185, 255, 0.4);
+        }
+
+        .game-btn:disabled {
+            background: #6c757d;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        .difficulty-selector {
+            margin: var(--spacing-lg) 0;
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .difficulty-btn {
+            padding: 8px 16px;
+            border: 2px solid #dee2e6;
+            background: white;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-weight: 600;
+            color: #6c757d;
+        }
+
+        .difficulty-btn.active {
+            border-color: #0984e3;
+            background: #0984e3;
+            color: white;
+        }
+
+        .difficulty-btn:hover:not(.active) {
+            border-color: #adb5bd;
+            background: #f8f9fa;
+        }
+
+        .game-status {
+            padding: 15px;
+            text-align: center;
+            font-size: 1.2em;
+            font-weight: 600;
+            color: #495057;
+            min-height: 50px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .game-status.playing {
+            color: #28a745;
+        }
+
+        .game-status.finished {
+            color: #dc3545;
+        }
+
+        .leaderboard {
+            padding: 25px;
+            background: #f8f9fa;
+            border-top: 2px solid #e9ecef;
+        }
+
+        .leaderboard h3 {
+            text-align: center;
+            color: #495057;
+            margin-bottom: 15px;
+        }
+
+        .score-list {
+            max-height: 200px;
+            overflow-y: auto;
+        }
+
+        .score-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: var(--spacing-md) 15px;
+            background: white;
+            border-radius: 8px;
+            margin-bottom: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .score-rank {
+            font-weight: bold;
+            color: #0984e3;
+            min-width: 30px;
+        }
+
+        .score-details {
+            flex: 1;
+            margin-left: 15px;
+        }
+
+        .score-points {
+            font-weight: bold;
+            color: #28a745;
+        }
+
+        .score-date {
+            font-size: 0.8em;
+            color: #6c757d;
+        }
+
+        .effects {
+            position: fixed;
+            pointer-events: none;
+            z-index: 1000;
+        }
+
+        .hit-effect {
+            position: absolute;
+            font-size: 24px;
+            font-weight: bold;
+            color: #e74c3c;
+            animation: hit-popup 1s ease-out forwards;
+        }
+
+        @keyframes hit-popup {
+            0% { 
+                transform: translate(-50%, -50%) scale(1);
+                opacity: 1;
+            }
+            100% { 
+                transform: translate(-50%, -200%) scale(1.5);
+                opacity: 0;
+            }
+        }
+
+        .miss-effect {
+            position: absolute;
+            font-size: 18px;
+            color: #6c757d;
+            animation: miss-popup 0.8s ease-out forwards;
+        }
+
+        @keyframes miss-popup {
+            0% { 
+                transform: translate(-50%, -50%) scale(1);
+                opacity: 1;
+            }
+            100% { 
+                transform: translate(-50%, -100%) scale(0.8);
+                opacity: 0;
+            }
+        }
+
+        .combo-display {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: linear-gradient(135deg, #ff6b6b 0%, #ee5a24 100%);
+            color: white;
+            padding: var(--spacing-md) 20px;
+            border-radius: 25px;
+            font-weight: bold;
+            transform: scale(0);
+            transition: all 0.3s;
+            box-shadow: 0 4px 15px rgba(255, 107, 107, 0.3);
+        }
+
+        .combo-display.active {
+            transform: scale(1);
+            animation: pulse 0.5s ease-in-out;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+        }
+
+        .footer {
+            text-align: center;
+            padding: var(--spacing-lg);
+            background: #f8f9fa;
+            color: #6c757d;
+            font-size: 0.9em;
+        }
+
+        @media (max-width: 768px) {
+            .game-container {
+                margin: var(--spacing-md);
+                border-radius: var(--radius-lg);
+            }
+            
+            .header {
+                padding: var(--spacing-lg);
+            }
+            
+            .header h1 {
+                font-size: 2em;
+            }
+            
+            .mole-grid {
+                gap: 15px;
+            }
+            
+            .mole-hole {
+                width: 100px;
+                height: 100px;
+            }
+            
+            .mole {
+                width: 65px;
+                height: 50px;
+            }
+            
+            .game-info {
+                padding: 15px;
+            }
+            
+            .info-item {
+                min-width: 80px;
+                padding: var(--spacing-md);
+            }
+            
+            .info-value {
+                font-size: 1.4em;
+            }
+            
+            .combo-display {
+                top: 10px;
+                right: 10px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="tool-container">
+        <!-- 工具头部 -->
+        <header class="tool-header">
+            <div class="tool-header-content">
+                <a href="../../index.html" class="back-btn">
+                    <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                        <path d="M10 4l-4 4 4 4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                    返回工具集
+                </a>
+                
+                <div class="tool-title">
+                    <h1>打地鼠游戏</h1>
+                    <p class="tool-subtitle">打地鼠游戏</p>
+                </div>
+                
+                <button class="theme-toggle" id="themeToggle" aria-label="切换主题">
+                    <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                        <circle cx="10" cy="10" r="4" stroke="currentColor" stroke-width="2"/>
+                        <path d="M10 2v2M10 16v2M18 10h-2M4 10H2M15.66 4.34l-1.41 1.41M5.75 14.25l-1.41 1.41M15.66 15.66l-1.41-1.41M5.75 5.75L4.34 4.34" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                    </svg>
+                </button>
+            </div>
+        </header>
+
+        <!-- 工具主内容 -->
+        <main class="tool-main">
+            <div class="tool-card">
+                <div class="tool-section">
+                    <h2>
+                        <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                            <rect x="3" y="3" width="14" height="14" rx="2" stroke="currentColor" stroke-width="2"/>
+                        </svg>
+                        工具功能
+                    </h2>
+                    
+                    
+            <div class="tool-card">
+                <div class="tool-section">
+                    <h2>
+                        <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                            <rect x="3" y="3" width="14" height="14" rx="2" stroke="currentColor" stroke-width="2"/>
+                        </svg>
+                        打地鼠游戏
+                    </h2>
+                    <div class="container">
+                        <div class="game-container">
+        <div class="header">
+            <h1>🔨 打地鼠游戏</h1>
+            <p>快速点击从洞中冒出的地鼠，看看你的反应速度！</p>
+        </div>
+
+        <div class="game-info">
+            <div class="info-item">
+                <div class="info-label">得分</div>
+                <div class="info-value" id="score">0</div>
+            </div>
+            <div class="info-item">
+                <div class="info-label">时间</div>
+                <div class="info-value" id="time">30</div>
+            </div>
+            <div class="info-item">
+                <div class="info-label">命中率</div>
+                <div class="info-value" id="accuracy">0%</div>
+            </div>
+            <div class="info-item">
+                <div class="info-label">连击</div>
+                <div class="info-value" id="combo">0</div>
+            </div>
+        </div>
+
+        <div class="game-status" id="gameStatus">
+            选择难度后点击开始游戏！
+        </div>
+
+        <div class="game-board">
+            <div class="combo-display" id="comboDisplay">连击 x<span id="comboCount">0</span></div>
+            
+            <div class="mole-grid" id="moleGrid">
+                <!-- 地鼠洞动态生成 -->
+            </div>
+        </div>
+
+        <div class="controls">
+            <div class="difficulty-selector">
+                <button class="difficulty-btn" onclick="setDifficulty('easy')">🐢 简单</button>
+                <button class="difficulty-btn active" onclick="setDifficulty('normal')">🐰 普通</button>
+                <button class="difficulty-btn" onclick="setDifficulty('hard')">🐆 困难</button>
+                <button class="difficulty-btn" onclick="setDifficulty('extreme')">🚀 极限</button>
+            </div>
+
+            <button class="game-btn" id="startBtn" onclick="startGame()">🎮 开始游戏</button>
+            <button class="game-btn" id="pauseBtn" onclick="pauseGame()" style="display: none;">⏸️ 暂停</button>
+            <button class="game-btn" onclick="resetGame()">🔄 重新开始</button>
+        </div>
+
+        <div class="leaderboard">
+            <h3>🏆 最佳成绩</h3>
+            <div class="score-list" id="scoreList">
+                <div style="text-align: center; color: #adb5bd; padding: 20px;">
+                    暂无记录
+                </div>
+            </div>
+        </div>
+
+        <div class="footer">
+            <p>💡 连续击中地鼠可以获得连击奖励，错过地鼠会重置连击数</p>
+            <p>脚注：小苏趣研AI - 让反应训练变得有趣</p>
+        </div>
+    </div>
+
+    <div class="effects" id="effects"></div>
+
+    
+                    </div>
+                </div>
+            </div>
+                    <!-- 结果显示区域 -->
+                    <div class="result-display" id="result">
+                        <pre id="resultContent">处理结果将在这里显示...</pre>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <!-- 工具页脚 -->
+        <footer class="tool-footer">
+            <p>由 <a href="../../index.html">AI工具集</a> 提供 | 原创工具</p>
+        </footer>
+    </div>
+
+    <!-- JavaScript -->
+    <script src="../../shared/js/utils.js"></script>
+    <script>
+        // 工具特定的JavaScript代码
+        class ToolApp {
+            constructor() {
+                this.init();
+            }
+
+            init() {
+                this.setupEventListeners();
+            }
+
+            setupEventListeners() {
+                document.getElementById('processBtn').addEventListener('click', () => this.process());
+                document.getElementById('clearBtn').addEventListener('click', () => this.clear());
+                document.getElementById('copyBtn').addEventListener('click', () => this.copyResult());
+                
+                // 实时处理（可选）
+                document.getElementById('input').addEventListener('input', 
+                    ToolUtils.debounce(() => this.process(), 300)
+                );
+            }
+
+            process() {
+                const input = document.getElementById('input').value;
+                const result = this.processInput(input);
+                this.displayResult(result);
+            }
+
+            processInput(input) {
+                
+        // 游戏状态
+        let gameState = {
+            playing: false,
+            paused: false,
+            score: 0,
+            time: 30,
+            hits: 0,
+            misses: 0,
+            combo: 0,
+            maxCombo: 0,
+            difficulty: 'normal',
+            activeMoles: new Set(),
+            gameTimer: null,
+            moleTimer: null
+        };
+
+        // 难度设置
+        const difficultySettings = {
+            easy: {
+                moleUpTime: 2000,
+                moleDownTime: 1500,
+                spawnRate: 1200,
+                maxMoles: 1,
+                points: 10
+            },
+            normal: {
+                moleUpTime: 1500,
+                moleDownTime: 1200,
+                spawnRate: 1000,
+                maxMoles: 2,
+                points: 15
+            },
+            hard: {
+                moleUpTime: 1200,
+                moleDownTime: 1000,
+                spawnRate: 800,
+                maxMoles: 3,
+                points: 20
+            },
+            extreme: {
+                moleUpTime: 1000,
+                moleDownTime: 800,
+                spawnRate: 600,
+                maxMoles: 4,
+                points: 25
+            }
+        };
+
+        let leaderboard = [];
+
+        // 初始化游戏
+        function init() {
+            createMoleGrid();
+            loadLeaderboard();
+            updateDisplay();
+            updateLeaderboard();
+        }
+
+        // 创建地鼠网格
+        function createMoleGrid() {
+            const grid = document.getElementById('moleGrid');
+            grid.innerHTML = '';
+
+            for (let i = 0; i < 9; i++) {
+                const hole = document.createElement('div');
+                hole.className = 'mole-hole';
+                hole.innerHTML = '<div class="mole" id="mole-' + i + '"></div>';
+                
+                // 添加点击事件
+                const mole = hole.querySelector('.mole');
+                mole.addEventListener('click', () => hitMole(i));
+                
+                // 添加错过点击事件（点击洞但没有地鼠）
+                hole.addEventListener('click', (e) => {
+                    if (e.target === hole && gameState.playing && !gameState.paused) {
+                        missClick(i);
+                    }
+                });
+
+                grid.appendChild(hole);
+            }
+        }
+
+        // 设置难度
+        function setDifficulty(difficulty) {
+            if (gameState.playing) return;
+            
+            gameState.difficulty = difficulty;
+            
+            // 更新按钮状态
+            document.querySelectorAll('.difficulty-btn').forEach(btn => btn.classList.remove('active'));
+            event.target.classList.add('active');
+        }
+
+        // 开始游戏
+        function startGame() {
+            if (gameState.playing && !gameState.paused) return;
+            
+            if (gameState.paused) {
+                // 恢复游戏
+                gameState.paused = false;
+                document.getElementById('startBtn').style.display = 'none';
+                document.getElementById('pauseBtn').style.display = 'inline-block';
+                updateGameStatus('游戏进行中...', 'playing');
+                resumeTimers();
+                return;
+            }
+
+            // 重置游戏状态
+            resetGameState();
+            gameState.playing = true;
+            
+            // 更新UI
+            document.getElementById('startBtn').style.display = 'none';
+            document.getElementById('pauseBtn').style.display = 'inline-block';
+            updateGameStatus('游戏进行中...', 'playing');
+            
+            // 开始计时器
+            startGameTimer();
+            startMoleSpawning();
+        }
+
+        // 暂停游戏
+        function pauseGame() {
+            if (!gameState.playing || gameState.paused) return;
+            
+            gameState.paused = true;
+            
+            // 更新UI
+            document.getElementById('startBtn').style.display = 'inline-block';
+            document.getElementById('startBtn').textContent = '▶️ 继续游戏';
+            document.getElementById('pauseBtn').style.display = 'none';
+            updateGameStatus('游戏已暂停', 'paused');
+            
+            // 清除计时器
+            clearTimers();
+            
+            // 隐藏所有地鼠
+            hideAllMoles();
+        }
+
+        // 重新开始游戏
+        function resetGame() {
+            clearTimers();
+            hideAllMoles();
+            resetGameState();
+            
+            // 更新UI
+            document.getElementById('startBtn').style.display = 'inline-block';
+            document.getElementById('startBtn').textContent = '🎮 开始游戏';
+            document.getElementById('pauseBtn').style.display = 'none';
+            updateGameStatus('选择难度后点击开始游戏！');
+            
+            updateDisplay();
+        }
+
+        // 重置游戏状态
+        function resetGameState() {
+            gameState.playing = false;
+            gameState.paused = false;
+            gameState.score = 0;
+            gameState.time = 30;
+            gameState.hits = 0;
+            gameState.misses = 0;
+            gameState.combo = 0;
+            gameState.maxCombo = 0;
+            gameState.activeMoles.clear();
+        }
+
+        // 开始游戏计时器
+        function startGameTimer() {
+            gameState.gameTimer = setInterval(() => {
+                if (gameState.paused) return;
+                
+                gameState.time--;
+                updateDisplay();
+                
+                if (gameState.time <= 0) {
+                    endGame();
+                }
+            }, 1000);
+        }
+
+        // 开始地鼠生成
+        function startMoleSpawning() {
+            const settings = difficultySettings[gameState.difficulty];
+            
+            gameState.moleTimer = setInterval(() => {
+                if (gameState.paused) return;
+                spawnMole();
+            }, settings.spawnRate);
+        }
+
+        // 生成地鼠
+        function spawnMole() {
+            const settings = difficultySettings[gameState.difficulty];
+            
+            // 检查当前活跃地鼠数量
+            if (gameState.activeMoles.size >= settings.maxMoles) return;
+            
+            // 选择一个空闲的洞
+            const availableHoles = [];
+            for (let i = 0; i < 9; i++) {
+                if (!gameState.activeMoles.has(i)) {
+                    availableHoles.push(i);
+                }
+            }
+            
+            if (availableHoles.length === 0) return;
+            
+            const holeIndex = availableHoles[Math.floor(Math.random() * availableHoles.length)];
+            const mole = document.getElementById('mole-' + holeIndex);
+            
+            // 显示地鼠
+            mole.classList.add('up');
+            gameState.activeMoles.add(holeIndex);
+            
+            // 设置地鼠消失时间
+            setTimeout(() => {
+                if (gameState.activeMoles.has(holeIndex)) {
+                    hideMole(holeIndex, false);
+                }
+            }, settings.moleUpTime);
+        }
+
+        // 击中地鼠
+        function hitMole(holeIndex) {
+            if (!gameState.playing || gameState.paused || !gameState.activeMoles.has(holeIndex)) return;
+            
+            const settings = difficultySettings[gameState.difficulty];
+            const mole = document.getElementById('mole-' + holeIndex);
+            
+            // 添加击中效果
+            mole.classList.add('hit');
+            
+            // 隐藏地鼠
+            hideMole(holeIndex, true);
+            
+            // 更新分数和统计
+            gameState.hits++;
+            gameState.combo++;
+            gameState.maxCombo = Math.max(gameState.maxCombo, gameState.combo);
+            
+            // 计算得分（连击奖励）
+            let points = settings.points;
+            if (gameState.combo >= 3) {
+                points = Math.floor(points * (1 + gameState.combo * 0.1));
+            }
+            gameState.score += points;
+            
+            // 显示击中效果
+            showHitEffect(holeIndex, points);
+            
+            // 更新连击显示
+            updateComboDisplay();
+            
+            updateDisplay();
+        }
+
+        // 错过点击
+        function missClick(holeIndex) {
+            gameState.misses++;
+            gameState.combo = 0;
+            
+            // 显示错过效果
+            showMissEffect(holeIndex);
+            
+            // 隐藏连击显示
+            document.getElementById('comboDisplay').classList.remove('active');
+            
+            updateDisplay();
+        }
+
+        // 隐藏地鼠
+        function hideMole(holeIndex, wasHit) {
+            const mole = document.getElementById('mole-' + holeIndex);
+            mole.classList.remove('up');
+            
+            if (wasHit) {
+                setTimeout(() => mole.classList.remove('hit'), 300);
+            } else {
+                // 地鼠自然消失，算作错过
+                gameState.misses++;
+                gameState.combo = 0;
+                document.getElementById('comboDisplay').classList.remove('active');
+                updateDisplay();
+            }
+            
+            gameState.activeMoles.delete(holeIndex);
+        }
+
+        // 隐藏所有地鼠
+        function hideAllMoles() {
+            gameState.activeMoles.forEach(holeIndex => {
+                const mole = document.getElementById('mole-' + holeIndex);
+                mole.classList.remove('up', 'hit');
+            });
+            gameState.activeMoles.clear();
+        }
+
+        // 恢复计时器
+        function resumeTimers() {
+            startGameTimer();
+            startMoleSpawning();
+        }
+
+        // 清除计时器
+        function clearTimers() {
+            if (gameState.gameTimer) {
+                clearInterval(gameState.gameTimer);
+                gameState.gameTimer = null;
+            }
+            if (gameState.moleTimer) {
+                clearInterval(gameState.moleTimer);
+                gameState.moleTimer = null;
+            }
+        }
+
+        // 结束游戏
+        function endGame() {
+            gameState.playing = false;
+            clearTimers();
+            hideAllMoles();
+            
+            // 更新UI
+            document.getElementById('startBtn').style.display = 'inline-block';
+            document.getElementById('startBtn').textContent = '🎮 开始游戏';
+            document.getElementById('pauseBtn').style.display = 'none';
+            document.getElementById('comboDisplay').classList.remove('active');
+            
+            const finalScore = gameState.score;
+            const accuracy = gameState.hits + gameState.misses > 0 ? 
+                Math.round((gameState.hits / (gameState.hits + gameState.misses)) * 100) : 0;
+            
+            updateGameStatus(`游戏结束！得分: ${finalScore}，命中率: ${accuracy}%，最高连击: ${gameState.maxCombo}`, 'finished');
+            
+            // 保存成绩
+            saveScore(finalScore, accuracy, gameState.maxCombo);
+            updateLeaderboard();
+        }
+
+        // 更新显示
+        function updateDisplay() {
+            document.getElementById('score').textContent = gameState.score;
+            document.getElementById('time').textContent = gameState.time;
+            
+            const accuracy = gameState.hits + gameState.misses > 0 ? 
+                Math.round((gameState.hits / (gameState.hits + gameState.misses)) * 100) : 0;
+            document.getElementById('accuracy').textContent = accuracy + '%';
+            document.getElementById('combo').textContent = gameState.combo;
+        }
+
+        // 更新连击显示
+        function updateComboDisplay() {
+            const comboDisplay = document.getElementById('comboDisplay');
+            const comboCount = document.getElementById('comboCount');
+            
+            if (gameState.combo >= 3) {
+                comboCount.textContent = gameState.combo;
+                comboDisplay.classList.add('active');
+            } else {
+                comboDisplay.classList.remove('active');
+            }
+        }
+
+        // 更新游戏状态显示
+        function updateGameStatus(message, status = '') {
+            const statusEl = document.getElementById('gameStatus');
+            statusEl.textContent = message;
+            statusEl.className = 'game-status ' + status;
+        }
+
+        // 显示击中效果
+        function showHitEffect(holeIndex, points) {
+            const hole = document.querySelector(`#mole-${holeIndex}`).parentElement;
+            const rect = hole.getBoundingClientRect();
+            
+            const effect = document.createElement('div');
+            effect.className = 'hit-effect';
+            effect.textContent = '+' + points;
+            effect.style.left = rect.left + rect.width / 2 + 'px';
+            effect.style.top = rect.top + rect.height / 2 + 'px';
+            
+            document.getElementById('effects').appendChild(effect);
+            
+            setTimeout(() => effect.remove(), 1000);
+        }
+
+        // 显示错过效果
+        function showMissEffect(holeIndex) {
+            const hole = document.querySelector(`#mole-${holeIndex}`).parentElement;
+            const rect = hole.getBoundingClientRect();
+            
+            const effect = document.createElement('div');
+            effect.className = 'miss-effect';
+            effect.textContent = 'Miss!';
+            effect.style.left = rect.left + rect.width / 2 + 'px';
+            effect.style.top = rect.top + rect.height / 2 + 'px';
+            
+            document.getElementById('effects').appendChild(effect);
+            
+            setTimeout(() => effect.remove(), 800);
+        }
+
+        // 保存成绩
+        function saveScore(score, accuracy, maxCombo) {
+            const scoreData = {
+                score: score,
+                accuracy: accuracy,
+                maxCombo: maxCombo,
+                difficulty: gameState.difficulty,
+                date: new Date().toLocaleDateString(),
+                time: new Date().toLocaleTimeString()
+            };
+            
+            leaderboard.push(scoreData);
+            leaderboard.sort((a, b) => b.score - a.score);
+            leaderboard = leaderboard.slice(0, 10); // 只保留前10名
+            
+            // 保存到本地存储
+            try {
+                localStorage.setItem('whack_a_mole_scores', JSON.stringify(leaderboard));
+            } catch (error) {
+                console.error('保存成绩失败:', error);
+            }
+        }
+
+        // 加载排行榜
+        function loadLeaderboard() {
+            try {
+                const saved = localStorage.getItem('whack_a_mole_scores');
+                if (saved) {
+                    leaderboard = JSON.parse(saved);
+                }
+            } catch (error) {
+                console.error('加载成绩失败:', error);
+                leaderboard = [];
+            }
+        }
+
+        // 更新排行榜显示
+        function updateLeaderboard() {
+            const scoreList = document.getElementById('scoreList');
+            
+            if (leaderboard.length === 0) {
+                scoreList.innerHTML = '<div style="text-align: center; color: #adb5bd; padding: 20px;">暂无记录</div>';
+                return;
+            }
+            
+            const difficultyEmojis = {
+                easy: '🐢',
+                normal: '🐰',
+                hard: '🐆',
+                extreme: '🚀'
+            };
+            
+            const scoresHTML = leaderboard.map((score, index) => `
+                <div class="score-item">
+                    <div class="score-rank">#${index + 1}</div>
+                    <div class="score-details">
+                        <div class="score-points">${score.score} 分</div>
+                        <div class="score-date">
+                            ${difficultyEmojis[score.difficulty]} 
+                            命中率 ${score.accuracy}% | 
+                            连击 ${score.maxCombo} | 
+                            ${score.date} ${score.time}
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+            
+            scoreList.innerHTML = scoresHTML;
+        }
+
+        // 初始化游戏
+        window.addEventListener('load', init);
+        
+        // 键盘快捷键
+        document.addEventListener('keydown', (e) => {
+            switch(e.key) {
+                case ' ':
+                    e.preventDefault();
+                    if (!gameState.playing) {
+                        startGame();
+                    } else if (!gameState.paused) {
+                        pauseGame();
+                    } else {
+                        startGame();
+                    }
+                    break;
+                case 'r':
+                case 'R':
+                    resetGame();
+                    break;
+            }
+        });
+    
+                return input;
+            }
+
+            displayResult(result) {
+                document.getElementById('resultContent').textContent = result;
+            }
+
+            clear() {
+                document.getElementById('input').value = '';
+                document.getElementById('resultContent').textContent = '处理结果将在这里显示...';
+            }
+
+            copyResult() {
+                const result = document.getElementById('resultContent').textContent;
+                if (result && result !== '处理结果将在这里显示...') {
+                    ToolUtils.copyToClipboard(result);
+                } else {
+                    ToolUtils.showToast('没有可复制的内容', 'warning');
+                }
+            }
+        }
+
+        // 初始化应用
+        document.addEventListener('DOMContentLoaded', () => {
+            new ToolApp();
+        });
+    </script>
+</body>
+</html>

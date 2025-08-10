@@ -1,0 +1,655 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>颜色记忆游戏 - 小苏趣研AI - AI工具集</title>
+    <meta name="description" content="颜色记忆游戏 - 小苏趣研AI">
+    
+    <!-- 样式文件 -->
+    <link rel="stylesheet" href="../../shared/css/common.css">
+    
+    <!-- 工具特定样式 -->
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: var(--spacing-lg);
+        }
+
+        .header {
+            background: rgba(255, 255, 255, 0.95);
+            padding: var(--spacing-lg) 40px;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            text-align: center;
+            margin-bottom: 30px;
+            backdrop-filter: blur(10px);
+        }
+
+        .header h1 {
+            color: var(--text-primary);
+            margin-bottom: 10px;
+            font-size: 2em;
+        }
+
+        .header p {
+            color: var(--text-secondary);
+            font-size: 1.1em;
+        }
+
+        .game-container {
+            background: rgba(255, 255, 255, 0.95);
+            padding: 30px;
+            border-radius: 20px;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.1);
+            text-align: center;
+            max-width: 600px;
+            width: 100%;
+            backdrop-filter: blur(10px);
+        }
+
+        .game-info {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .info-item {
+            background: #f8f9fa;
+            padding: var(--spacing-md) 15px;
+            border-radius: var(--radius-md);
+            font-weight: bold;
+        }
+
+        .info-label {
+            color: var(--text-secondary);
+            font-size: 0.9em;
+        }
+
+        .info-value {
+            color: var(--text-primary);
+            font-size: 1.2em;
+        }
+
+        .difficulty-selector {
+            margin-bottom: 20px;
+        }
+
+        .difficulty-selector label {
+            color: var(--text-primary);
+            font-weight: bold;
+            margin-right: 10px;
+        }
+
+        .difficulty-selector select {
+            padding: 8px 15px;
+            border: 2px solid #ddd;
+            border-radius: var(--radius-md);
+            font-size: 1em;
+            background: white;
+        }
+
+        .color-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 15px;
+            margin: 30px 0;
+            max-width: 400px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .color-tile {
+            width: 80px;
+            height: 80px;
+            border-radius: var(--radius-lg);
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: 3px solid transparent;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .color-tile:hover {
+            transform: scale(1.05);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+        }
+
+        .color-tile.active {
+            border-color: var(--bg-card);
+            box-shadow: 0 0 20px rgba(255,255,255,0.8);
+            transform: scale(1.1);
+        }
+
+        .color-tile.correct {
+            border-color: #28a745;
+            animation: correctPulse 0.5s ease;
+        }
+
+        .color-tile.wrong {
+            border-color: #dc3545;
+            animation: wrongShake 0.5s ease;
+        }
+
+        @keyframes correctPulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.15); }
+        }
+
+        @keyframes wrongShake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-5px); }
+            75% { transform: translateX(5px); }
+        }
+
+        .game-message {
+            font-size: 1.2em;
+            font-weight: bold;
+            margin: var(--spacing-lg) 0;
+            min-height: 30px;
+            color: var(--text-primary);
+        }
+
+        .controls {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            border-radius: var(--radius-lg);
+            font-size: 1em;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: bold;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .btn-success {
+            background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+        }
+
+        .btn-danger {
+            background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background: #e9ecef;
+            border-radius: 4px;
+            margin: var(--spacing-lg) 0;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #28a745, #20c997);
+            transition: width 0.3s ease;
+            border-radius: 4px;
+        }
+
+        .footer {
+            margin-top: 30px;
+            text-align: center;
+            color: rgba(255, 255, 255, 0.8);
+            font-size: 0.9em;
+        }
+
+        .footer a {
+            color: rgba(255, 255, 255, 0.9);
+            text-decoration: none;
+        }
+
+        @media (max-width: 768px) {
+            .header {
+                padding: 15px 20px;
+            }
+            
+            .header h1 {
+                font-size: 1.5em;
+            }
+            
+            .game-container {
+                padding: var(--spacing-lg);
+            }
+            
+            .color-grid {
+                grid-template-columns: repeat(3, 1fr);
+                gap: 10px;
+            }
+            
+            .color-tile {
+                width: 60px;
+                height: 60px;
+            }
+            
+            .game-info {
+                justify-content: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="tool-container">
+        <!-- 工具头部 -->
+        <header class="tool-header">
+            <div class="tool-header-content">
+                <a href="../../index.html" class="back-btn">
+                    <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                        <path d="M10 4l-4 4 4 4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                    返回工具集
+                </a>
+                
+                <div class="tool-title">
+                    <h1>颜色记忆游戏 - 小苏趣研AI</h1>
+                    <p class="tool-subtitle">颜色记忆游戏 - 小苏趣研AI</p>
+                </div>
+                
+                <button class="theme-toggle" id="themeToggle" aria-label="切换主题">
+                    <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                        <circle cx="10" cy="10" r="4" stroke="currentColor" stroke-width="2"/>
+                        <path d="M10 2v2M10 16v2M18 10h-2M4 10H2M15.66 4.34l-1.41 1.41M5.75 14.25l-1.41 1.41M15.66 15.66l-1.41-1.41M5.75 5.75L4.34 4.34" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                    </svg>
+                </button>
+            </div>
+        </header>
+
+        <!-- 工具主内容 -->
+        <main class="tool-main">
+            <div class="tool-card">
+                <div class="tool-section">
+                    <h2>
+                        <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                            <rect x="3" y="3" width="14" height="14" rx="2" stroke="currentColor" stroke-width="2"/>
+                        </svg>
+                        工具功能
+                    </h2>
+                    
+                    
+            <div class="tool-card">
+                <div class="tool-section">
+                    <h2>
+                        <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                            <rect x="3" y="3" width="14" height="14" rx="2" stroke="currentColor" stroke-width="2"/>
+                        </svg>
+                        颜色记忆游戏 - 小苏趣研AI
+                    </h2>
+                    <div class="container">
+                        <div class="header">
+        <h1>🎨 颜色记忆游戏</h1>
+        <p>观察颜色序列，然后按顺序点击回忆</p>
+    </div>
+
+    <div class="game-container">
+        <div class="game-info">
+            <div class="info-item">
+                <div class="info-label">关卡</div>
+                <div class="info-value" id="level">1</div>
+            </div>
+            <div class="info-item">
+                <div class="info-label">得分</div>
+                <div class="info-value" id="score">0</div>
+            </div>
+            <div class="info-item">
+                <div class="info-label">最高分</div>
+                <div class="info-value" id="bestScore">0</div>
+            </div>
+        </div>
+
+        <div class="difficulty-selector">
+            <label for="difficulty">难度选择：</label>
+            <select id="difficulty">
+                <option value="easy">简单 (3秒显示)</option>
+                <option value="medium" selected>中等 (2秒显示)</option>
+                <option value="hard">困难 (1.5秒显示)</option>
+            </select>
+        </div>
+
+        <div class="progress-bar">
+            <div class="progress-fill" id="progressFill"></div>
+        </div>
+
+        <div class="game-message" id="gameMessage">点击开始游戏，观察颜色序列</div>
+
+        <div class="color-grid" id="colorGrid"></div>
+
+        <div class="controls">
+            <button class="btn" id="startBtn" onclick="startGame()">开始游戏</button>
+            <button class="btn btn-danger" id="resetBtn" onclick="resetGame()">重新开始</button>
+        </div>
+    </div>
+
+    <div class="footer">
+        <p>© <a href="#" target="_blank">小苏趣研AI</a> | 颜色记忆游戏</p>
+        <p style="margin-top: 5px;">训练你的视觉记忆能力，挑战更高关卡</p>
+    </div>
+
+    
+                    </div>
+                </div>
+            </div>
+                    <!-- 结果显示区域 -->
+                    <div class="result-display" id="result">
+                        <pre id="resultContent">处理结果将在这里显示...</pre>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <!-- 工具页脚 -->
+        <footer class="tool-footer">
+            <p>由 <a href="../../index.html">AI工具集</a> 提供 | 原创工具</p>
+        </footer>
+    </div>
+
+    <!-- JavaScript -->
+    <script src="../../shared/js/utils.js"></script>
+    <script>
+        // 工具特定的JavaScript代码
+        class ToolApp {
+            constructor() {
+                this.init();
+            }
+
+            init() {
+                this.setupEventListeners();
+            }
+
+            setupEventListeners() {
+                document.getElementById('processBtn').addEventListener('click', () => this.process());
+                document.getElementById('clearBtn').addEventListener('click', () => this.clear());
+                document.getElementById('copyBtn').addEventListener('click', () => this.copyResult());
+                
+                // 实时处理（可选）
+                document.getElementById('input').addEventListener('input', 
+                    ToolUtils.debounce(() => this.process(), 300)
+                );
+            }
+
+            process() {
+                const input = document.getElementById('input').value;
+                const result = this.processInput(input);
+                this.displayResult(result);
+            }
+
+            processInput(input) {
+                
+        class ColorMemoryGame {
+            constructor() {
+                this.colors = [
+                    '#FF6B6B', '#4ECDC4', '#45B7D1', '#96CEB4', 
+                    '#FFEAA7', '#DDA0DD', '#98D8C8', '#F7DC6F',
+                    '#BB8FCE', '#85C1E9', '#F8C471', '#82E0AA'
+                ];
+                this.sequence = [];
+                this.playerSequence = [];
+                this.level = 1;
+                this.score = 0;
+                this.bestScore = parseInt(localStorage.getItem('colorMemoryBest') || '0');
+                this.isPlaying = false;
+                this.isPlayerTurn = false;
+                this.difficulty = 'medium';
+                
+                this.difficultySettings = {
+                    easy: { displayTime: 3000, baseScore: 10 },
+                    medium: { displayTime: 2000, baseScore: 15 },
+                    hard: { displayTime: 1500, baseScore: 20 }
+                };
+                
+                this.initializeGrid();
+                this.updateDisplay();
+            }
+            
+            initializeGrid() {
+                const grid = document.getElementById('colorGrid');
+                grid.innerHTML = '';
+                
+                for (let i = 0; i < 12; i++) {
+                    const tile = document.createElement('div');
+                    tile.className = 'color-tile';
+                    tile.style.backgroundColor = this.colors[i];
+                    tile.addEventListener('click', () => this.handleTileClick(i));
+                    grid.appendChild(tile);
+                }
+            }
+            
+            startGame() {
+                this.isPlaying = true;
+                this.level = 1;
+                this.score = 0;
+                this.sequence = [];
+                this.playerSequence = [];
+                this.difficulty = document.getElementById('difficulty').value;
+                
+                document.getElementById('startBtn').disabled = true;
+                document.getElementById('difficulty').disabled = true;
+                
+                this.nextLevel();
+            }
+            
+            nextLevel() {
+                this.playerSequence = [];
+                this.isPlayerTurn = false;
+                
+                // 添加新的颜色到序列
+                const newColor = Math.floor(Math.random() * this.colors.length);
+                this.sequence.push(newColor);
+                
+                this.updateMessage(`关卡 ${this.level} - 观察颜色序列`);
+                this.updateProgress(0);
+                
+                // 显示序列
+                this.showSequence();
+            }
+            
+            showSequence() {
+                const tiles = document.querySelectorAll('.color-tile');
+                const settings = this.difficultySettings[this.difficulty];
+                let index = 0;
+                
+                const showNext = () => {
+                    if (index < this.sequence.length) {
+                        const tileIndex = this.sequence[index];
+                        const tile = tiles[tileIndex];
+                        
+                        tile.classList.add('active');
+                        
+                        setTimeout(() => {
+                            tile.classList.remove('active');
+                            index++;
+                            setTimeout(showNext, 300);
+                        }, settings.displayTime / 2);
+                    } else {
+                        // 序列显示完毕，轮到玩家
+                        setTimeout(() => {
+                            this.isPlayerTurn = true;
+                            this.updateMessage('现在轮到你了！按照刚才的颜色序列点击');
+                        }, 500);
+                    }
+                };
+                
+                showNext();
+            }
+            
+            handleTileClick(tileIndex) {
+                if (!this.isPlaying || !this.isPlayerTurn) return;
+                
+                const tiles = document.querySelectorAll('.color-tile');
+                const tile = tiles[tileIndex];
+                
+                this.playerSequence.push(tileIndex);
+                
+                // 检查是否正确
+                const currentIndex = this.playerSequence.length - 1;
+                const isCorrect = this.sequence[currentIndex] === tileIndex;
+                
+                if (isCorrect) {
+                    tile.classList.add('correct');
+                    setTimeout(() => tile.classList.remove('correct'), 500);
+                    
+                    // 更新进度
+                    this.updateProgress((this.playerSequence.length / this.sequence.length) * 100);
+                    
+                    // 检查是否完成当前关卡
+                    if (this.playerSequence.length === this.sequence.length) {
+                        const settings = this.difficultySettings[this.difficulty];
+                        this.score += settings.baseScore * this.level;
+                        this.level++;
+                        
+                        if (this.score > this.bestScore) {
+                            this.bestScore = this.score;
+                            localStorage.setItem('colorMemoryBest', this.bestScore.toString());
+                        }
+                        
+                        this.updateDisplay();
+                        this.updateMessage('太棒了！准备下一关...');
+                        
+                        setTimeout(() => {
+                            this.nextLevel();
+                        }, 1500);
+                    }
+                } else {
+                    // 错误
+                    tile.classList.add('wrong');
+                    setTimeout(() => tile.classList.remove('wrong'), 500);
+                    
+                    this.gameOver();
+                }
+            }
+            
+            gameOver() {
+                this.isPlaying = false;
+                this.isPlayerTurn = false;
+                
+                this.updateMessage(`游戏结束！最终得分: ${this.score}`);
+                
+                document.getElementById('startBtn').disabled = false;
+                document.getElementById('difficulty').disabled = false;
+                
+                // 显示正确序列
+                this.showCorrectSequence();
+            }
+            
+            showCorrectSequence() {
+                const tiles = document.querySelectorAll('.color-tile');
+                
+                this.sequence.forEach((tileIndex, index) => {
+                    setTimeout(() => {
+                        tiles[tileIndex].classList.add('active');
+                        setTimeout(() => {
+                            tiles[tileIndex].classList.remove('active');
+                        }, 300);
+                    }, index * 400);
+                });
+            }
+            
+            resetGame() {
+                this.isPlaying = false;
+                this.isPlayerTurn = false;
+                this.level = 1;
+                this.score = 0;
+                this.sequence = [];
+                this.playerSequence = [];
+                
+                document.getElementById('startBtn').disabled = false;
+                document.getElementById('difficulty').disabled = false;
+                
+                this.updateMessage('点击开始游戏，观察颜色序列');
+                this.updateProgress(0);
+                this.updateDisplay();
+                
+                // 清除所有活动状态
+                document.querySelectorAll('.color-tile').forEach(tile => {
+                    tile.classList.remove('active', 'correct', 'wrong');
+                });
+            }
+            
+            updateMessage(message) {
+                document.getElementById('gameMessage').textContent = message;
+            }
+            
+            updateProgress(percentage) {
+                document.getElementById('progressFill').style.width = percentage + '%';
+            }
+            
+            updateDisplay() {
+                document.getElementById('level').textContent = this.level;
+                document.getElementById('score').textContent = this.score;
+                document.getElementById('bestScore').textContent = this.bestScore;
+            }
+        }
+        
+        let game;
+        
+        function startGame() {
+            game.startGame();
+        }
+        
+        function resetGame() {
+            game.resetGame();
+        }
+        
+        // 初始化游戏
+        window.addEventListener('load', () => {
+            game = new ColorMemoryGame();
+        });
+    
+                return input;
+            }
+
+            displayResult(result) {
+                document.getElementById('resultContent').textContent = result;
+            }
+
+            clear() {
+                document.getElementById('input').value = '';
+                document.getElementById('resultContent').textContent = '处理结果将在这里显示...';
+            }
+
+            copyResult() {
+                const result = document.getElementById('resultContent').textContent;
+                if (result && result !== '处理结果将在这里显示...') {
+                    ToolUtils.copyToClipboard(result);
+                } else {
+                    ToolUtils.showToast('没有可复制的内容', 'warning');
+                }
+            }
+        }
+
+        // 初始化应用
+        document.addEventListener('DOMContentLoaded', () => {
+            new ToolApp();
+        });
+    </script>
+</body>
+</html>

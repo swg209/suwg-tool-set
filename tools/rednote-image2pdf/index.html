@@ -1,0 +1,896 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>小红书图片转PDF工具 - AI工具集</title>
+    <meta name="description" content="小红书图片转PDF工具">
+    
+    <!-- 外部依赖 -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.15.0/Sortable.min.js"
+    <!-- 样式文件 -->
+    <link rel="stylesheet" href="../../shared/css/common.css">
+    
+    <!-- 工具特定样式 -->
+    <style>
+        :root {
+            --primary-color: #FF2442;
+            --secondary-color: #f8f9fa;
+            --text-color: var(--text-primary);
+            --border-color: #dee2e6;
+            --drop-zone-bg: var(--bg-card);
+            --card-bg: var(--bg-card);
+            --button-text-color: var(--bg-card);
+            --font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+        }
+
+        body {
+            font-family: var(--font-family);
+            background-color: var(--secondary-color);
+            color: var(--text-color);
+            margin: 0;
+            padding: var(--spacing-lg);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 800px;
+            background: var(--bg-card);
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+            overflow: hidden;
+        }
+
+        header {
+            background: var(--primary-color);
+            color: var(--bg-card);
+            padding: var(--spacing-lg);
+            text-align: center;
+        }
+
+        header h1 {
+            margin: 0;
+            font-size: 1.8em;
+        }
+
+        header p {
+            margin: 5px 0 0;
+            opacity: 0.9;
+        }
+
+        main {
+            padding: 25px;
+        }
+
+        .upload-area {
+            border: 2px dashed var(--primary-color);
+            border-radius: 8px;
+            padding: 40px;
+            text-align: center;
+            cursor: pointer;
+            background-color: var(--drop-zone-bg);
+            transition: background-color 0.3s ease;
+        }
+
+        .upload-area.drag-over {
+            background-color: var(--bg-card)5f6;
+        }
+
+        .upload-area-icon {
+            font-size: 40px;
+            color: var(--primary-color);
+        }
+
+        .upload-area p {
+            margin: var(--spacing-md) 0 0;
+            font-weight: 500;
+        }
+        
+        #file-input {
+            display: none;
+        }
+
+        #image-preview-container {
+            margin-top: 20px;
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+            gap: 15px;
+            min-height: 50px;
+        }
+
+        .image-card {
+            position: relative;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            overflow: hidden;
+            background-color: var(--card-bg);
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+            cursor: grab;
+        }
+
+        .image-card img {
+            width: 100%;
+            height: 100px;
+            object-fit: cover;
+            display: block;
+        }
+        
+        .delete-btn {
+            position: absolute;
+            top: 5px;
+            right: 5px;
+            width: 24px;
+            height: 24px;
+            background: rgba(0, 0, 0, 0.6);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 14px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            line-height: 1;
+            padding: 0;
+            opacity: 0;
+            transition: opacity 0.2s ease;
+        }
+
+        .image-card:hover .delete-btn {
+            opacity: 1;
+        }
+
+        .sortable-ghost {
+            opacity: 0.4;
+            border: 2px dashed var(--primary-color);
+        }
+
+        footer {
+            padding: 25px;
+            background-color: var(--secondary-color);
+            border-top: 1px solid var(--border-color);
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            align-items: center;
+        }
+
+        .settings-group, .actions-group {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+        
+        .actions-group {
+            align-items: flex-end;
+        }
+        
+        .control-group {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .control-group label {
+            font-weight: 500;
+        }
+        
+        .radio-group input {
+            margin-left: 5px;
+        }
+
+        .btn {
+            padding: 12px 20px;
+            border-radius: 8px;
+            border: none;
+            cursor: pointer;
+            font-size: 1em;
+            font-weight: 500;
+            transition: background-color 0.3s, box-shadow 0.3s;
+            text-align: center;
+        }
+
+        .btn-primary {
+            background-color: var(--primary-color);
+            color: var(--button-text-color);
+            width: 100%;
+            max-width: 200px;
+        }
+
+        .btn-primary:hover:not(:disabled) {
+            background-color: #d61f3a;
+            box-shadow: 0 4px 10px rgba(255, 36, 66, 0.3);
+        }
+        
+        .btn-secondary {
+            background-color: #6c757d;
+            color: var(--button-text-color);
+            width: 100%;
+            max-width: 200px;
+        }
+
+        .btn-secondary:hover:not(:disabled) {
+            background-color: #5a6268;
+        }
+        
+        .btn-info {
+            background-color: #0d6efd;
+            color: var(--button-text-color);
+            width: 100%;
+            max-width: 200px;
+        }
+
+        .btn-info:hover:not(:disabled) {
+            background-color: #0b5ed7;
+        }
+
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        /* Modal Styles */
+        .modal {
+            display: none; /* Hidden by default */
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0,0,0,0.5);
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal-content {
+            background-color: #fefefe;
+            margin: auto;
+            padding: var(--spacing-lg);
+            border: 1px solid #888;
+            width: 90%;
+            max-width: 800px;
+            height: 90vh;
+            border-radius: 8px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding-bottom: 15px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .modal-header h2 {
+            margin: 0;
+            font-size: 1.5em;
+        }
+
+        .close-btn {
+            color: #aaa;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        .close-btn:hover,
+        .close-btn:focus {
+            color: black;
+            text-decoration: none;
+        }
+
+        .modal-body {
+            flex-grow: 1;
+            padding-top: 15px;
+        }
+
+        .modal-body iframe {
+            width: 100%;
+            height: 100%;
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+        }
+
+        @media (max-width: 600px) {
+            body {
+                padding: var(--spacing-md);
+            }
+            footer {
+                grid-template-columns: 1fr;
+                gap: 25px;
+            }
+            .actions-group {
+                align-items: stretch;
+            }
+            .btn-primary, .btn-secondary, .btn-info {
+                max-width: none;
+            }
+        }
+
+        .language-switcher {
+            position: absolute;
+            top: 50%;
+            right: 25px;
+            transform: translateY(-50%);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .language-switcher .globe-icon {
+            font-size: 24px;
+            color: var(--bg-card);
+        }
+
+        .language-switcher select {
+            background-color: rgba(255, 255, 255, 0.2);
+            color: var(--bg-card);
+            border: 1px solid rgba(255, 255, 255, 0.5);
+            border-radius: 6px;
+            padding: 8px 12px;
+            font-size: 14px;
+            cursor: pointer;
+        }
+
+        .language-switcher select option {
+            background-color: var(--bg-card);
+            color: var(--text-primary);
+        }
+
+        @media (max-width: 700px) {
+            header {
+                padding-bottom: 70px;
+            }
+            .language-switcher {
+                bottom: 15px;
+                left: 50%;
+                transform: translateX(-50%);
+                top: auto;
+                right: auto;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="tool-container">
+        <!-- 工具头部 -->
+        <header class="tool-header">
+            <div class="tool-header-content">
+                <a href="../../index.html" class="back-btn">
+                    <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                        <path d="M10 4l-4 4 4 4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                    返回工具集
+                </a>
+                
+                <div class="tool-title">
+                    <h1>小红书图片转PDF工具</h1>
+                    <p class="tool-subtitle">小红书图片转PDF工具</p>
+                </div>
+                
+                <button class="theme-toggle" id="themeToggle" aria-label="切换主题">
+                    <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                        <circle cx="10" cy="10" r="4" stroke="currentColor" stroke-width="2"/>
+                        <path d="M10 2v2M10 16v2M18 10h-2M4 10H2M15.66 4.34l-1.41 1.41M5.75 14.25l-1.41 1.41M15.66 15.66l-1.41-1.41M5.75 5.75L4.34 4.34" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                    </svg>
+                </button>
+            </div>
+        </header>
+
+        <!-- 工具主内容 -->
+        <main class="tool-main">
+            <div class="tool-card">
+                <div class="tool-section">
+                    <h2>
+                        <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                            <rect x="3" y="3" width="14" height="14" rx="2" stroke="currentColor" stroke-width="2"/>
+                        </svg>
+                        工具功能
+                    </h2>
+                    
+                    
+            <div class="tool-card">
+                <div class="tool-section">
+                    <h2>
+                        <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                            <rect x="3" y="3" width="14" height="14" rx="2" stroke="currentColor" stroke-width="2"/>
+                        </svg>
+                        小红书图片转PDF工具
+                    </h2>
+                    <div class="container">
+        <header>
+            <h1 data-translate-key="title">小红书图片转PDF工具</h1>
+            <p data-translate-key="subtitle">轻松将多张图片合并为一个PDF文档</p>
+            <div class="language-switcher">
+                <span class="globe-icon">🌐</span>
+                <select id="lang-select">
+                    <option value="zh">中文</option>
+                    <option value="en">English</option>
+                    <option value="ru">Русский</option>
+                    <option value="fr">Français</option>
+                </select>
+            </div>
+        </header>
+
+        <main>
+            <div class="upload-area" id="upload-area">
+                <input type="file" id="file-input" multiple accept="image/png, image/jpeg, image/webp">
+                <div class="upload-area-icon">📤</div>
+                <p data-translate-key="upload_prompt">点击或将图片拖拽到这里</p>
+            </div>
+            
+            <div id="image-preview-container">
+                <!-- Image previews will be inserted here -->
+            </div>
+        </main>
+
+        <footer>
+            <div class="settings-group">
+                <div class="control-group">
+                    <label data-translate-key="orientation_label">页面方向:</label>
+                    <div class="radio-group">
+                        <input type="radio" id="orientation-portrait" name="orientation" value="p" checked>
+                        <label for="orientation-portrait" data-translate-key="orientation_portrait">纵向</label>
+                        <input type="radio" id="orientation-landscape" name="orientation" value="l">
+                        <label for="orientation-landscape" data-translate-key="orientation_landscape">横向</label>
+                    </div>
+                </div>
+                 <div class="control-group">
+                    <label data-translate-key="fit_label">图片填充:</label>
+                     <div class="radio-group">
+                        <input type="radio" id="image-fit" name="fit" value="fit" checked>
+                        <label for="image-fit" data-translate-key="fit_fit">适应页面</label>
+                        <input type="radio" id="image-fill" name="fit" value="fill">
+                        <label for="image-fill" data-translate-key="fit_fill">填充页面</label>
+                    </div>
+                </div>
+            </div>
+            <div class="actions-group">
+                <button class="btn btn-secondary" id="clear-btn" disabled data-translate-key="clear_btn">清空列表</button>
+                <button class="btn btn-info" id="preview-pdf-btn" disabled data-translate-key="preview_btn">预览PDF</button>
+                <button class="btn btn-primary" id="generate-pdf-btn" disabled data-translate-key="generate_btn">生成并下载PDF</button>
+            </div>
+        </footer>
+    </div>
+
+    <!-- The Modal -->
+    <div id="preview-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 data-translate-key="preview_modal_title">PDF 预览</h2>
+                <span class="close-btn">&times;</span>
+            </div>
+            <div class="modal-body">
+                <iframe id="pdf-preview-iframe" src="" frameborder="0"></iframe>
+            </div>
+        </div>
+    </div>
+
+    
+                </div>
+            </div>
+                    <!-- 结果显示区域 -->
+                    <div class="result-display" id="result">
+                        <pre id="resultContent">处理结果将在这里显示...</pre>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <!-- 工具页脚 -->
+        <footer class="tool-footer">
+            <p>由 <a href="../../index.html">AI工具集</a> 提供 | 原创工具</p>
+        </footer>
+    </div>
+
+    <!-- JavaScript -->
+    <script src="../../shared/js/utils.js"></script>
+    <script>
+        // 工具特定的JavaScript代码
+        class ToolApp {
+            constructor() {
+                this.init();
+            }
+
+            init() {
+                this.setupEventListeners();
+            }
+
+            setupEventListeners() {
+                document.getElementById('processBtn').addEventListener('click', () => this.process());
+                document.getElementById('clearBtn').addEventListener('click', () => this.clear());
+                document.getElementById('copyBtn').addEventListener('click', () => this.copyResult());
+                
+                // 实时处理（可选）
+                document.getElementById('input').addEventListener('input', 
+                    ToolUtils.debounce(() => this.process(), 300)
+                );
+            }
+
+            process() {
+                const input = document.getElementById('input').value;
+                const result = this.processInput(input);
+                this.displayResult(result);
+            }
+
+            processInput(input) {
+                
+        document.addEventListener('DOMContentLoaded', () => {
+            const { jsPDF } = window.jspdf;
+
+            const translations = {
+                en: {
+                    title: "Image to PDF Converter",
+                    subtitle: "Easily merge multiple images into one PDF document",
+                    upload_prompt: "Click or drag images here",
+                    orientation_label: "Orientation:",
+                    orientation_portrait: "Portrait",
+                    orientation_landscape: "Landscape",
+                    fit_label: "Image Fit:",
+                    fit_fit: "Fit to Page",
+                    fit_fill: "Fill Page",
+                    clear_btn: "Clear List",
+                    preview_btn: "Preview PDF",
+                    generate_btn: "Generate & Download PDF",
+                    preview_modal_title: "PDF Preview",
+                    delete_img_title: "Delete this image",
+                    generating_text: "Generating...",
+                    alert_generate_fail: "PDF generation failed. Check console for details.",
+                    alert_preview_fail: "PDF preview failed. Check console for details.",
+                },
+                zh: {
+                    title: "图片转PDF工具",
+                    subtitle: "轻松将多张图片合并为一个PDF文档",
+                    upload_prompt: "点击或将图片拖拽到这里",
+                    orientation_label: "页面方向:",
+                    orientation_portrait: "纵向",
+                    orientation_landscape: "横向",
+                    fit_label: "图片填充:",
+                    fit_fit: "适应页面",
+                    fit_fill: "填充页面",
+                    clear_btn: "清空列表",
+                    preview_btn: "预览PDF",
+                    generate_btn: "生成并下载PDF",
+                    preview_modal_title: "PDF 预览",
+                    delete_img_title: "删除此图片",
+                    generating_text: "生成中...",
+                    alert_generate_fail: "生成PDF失败，请检查浏览器控制台获取更多信息。",
+                    alert_preview_fail: "生成预览失败，请检查浏览器控制台获取更多信息。",
+                },
+                ru: {
+                    title: "Конвертер изображений в PDF",
+                    subtitle: "Легко объединяйте несколько изображений в один PDF-документ",
+                    upload_prompt: "Нажмите или перетащите изображения сюда",
+                    orientation_label: "Ориентация:",
+                    orientation_portrait: "Портрет",
+                    orientation_landscape: "Альбом",
+                    fit_label: "Масштаб:",
+                    fit_fit: "По размеру страницы",
+                    fit_fill: "Заполнить страницу",
+                    clear_btn: "Очистить список",
+                    preview_btn: "Предпросмотр",
+                    generate_btn: "Создать и скачать PDF",
+                    preview_modal_title: "Предпросмотр PDF",
+                    delete_img_title: "Удалить это изображение",
+                    generating_text: "Создание...",
+                    alert_generate_fail: "Ошибка создания PDF. Подробности в консоли.",
+                    alert_preview_fail: "Ошибка предпросмотра PDF. Подробности в консоли.",
+                },
+                fr: {
+                    title: "Convertisseur d'Image en PDF",
+                    subtitle: "Fusionnez facilement plusieurs images en un seul document PDF",
+                    upload_prompt: "Cliquez ou glissez-déposez des images ici",
+                    orientation_label: "Orientation:",
+                    orientation_portrait: "Portrait",
+                    orientation_landscape: "Paysage",
+                    fit_label: "Ajustement:",
+                    fit_fit: "Ajuster à la page",
+                    fit_fill: "Remplir la page",
+                    clear_btn: "Vider la liste",
+                    preview_btn: "Aperçu PDF",
+                    generate_btn: "Générer et Télécharger PDF",
+                    preview_modal_title: "Aperçu PDF",
+                    delete_img_title: "Supprimer cette image",
+                    generating_text: "Génération...",
+                    alert_generate_fail: "La génération du PDF a échoué. Vérifiez la console.",
+                    alert_preview_fail: "L'aperçu du PDF a échoué. Vérifiez la console.",
+                }
+            };
+
+            let currentLang = 'zh';
+
+            const uploadArea = document.getElementById('upload-area');
+            const fileInput = document.getElementById('file-input');
+            const previewContainer = document.getElementById('image-preview-container');
+            const generatePdfBtn = document.getElementById('generate-pdf-btn');
+            const previewPdfBtn = document.getElementById('preview-pdf-btn');
+            const clearBtn = document.getElementById('clear-btn');
+            
+            // Modal elements
+            const modal = document.getElementById('preview-modal');
+            const closeModalBtn = document.querySelector('.close-btn');
+            const pdfIframe = document.getElementById('pdf-preview-iframe');
+            const langSelect = document.getElementById('lang-select');
+
+            let imageFiles = [];
+
+            // --- Language Functions ---
+            function setLanguage(lang) {
+                if (!translations[lang]) return;
+                currentLang = lang;
+                localStorage.setItem('user-lang', lang);
+                langSelect.value = lang;
+
+                document.querySelectorAll('[data-translate-key]').forEach(elem => {
+                    const key = elem.getAttribute('data-translate-key');
+                    if (translations[lang][key]) {
+                        elem.textContent = translations[lang][key];
+                    }
+                });
+                // Update dynamic titles if needed
+                document.querySelectorAll('.delete-btn').forEach(btn => {
+                    btn.title = translations[currentLang].delete_img_title;
+                });
+            }
+
+            langSelect.addEventListener('change', (e) => setLanguage(e.target.value));
+
+            function getInitialLang() {
+                const savedLang = localStorage.getItem('user-lang');
+                if (savedLang && translations[savedLang]) {
+                    return savedLang;
+                }
+                const browserLang = navigator.language.split('-')[0];
+                if (translations[browserLang]) {
+                    return browserLang;
+                }
+                return 'zh'; // Default
+            }
+
+            // Initialize SortableJS
+            const sortable = new Sortable(previewContainer, {
+                animation: 150,
+                ghostClass: 'sortable-ghost',
+                onEnd: () => {
+                    updateGenerateButtonState();
+                }
+            });
+            
+            // Trigger file input when upload area is clicked
+            uploadArea.addEventListener('click', () => fileInput.click());
+
+            // Handle file selection
+            fileInput.addEventListener('change', (event) => {
+                handleFiles(event.target.files);
+            });
+
+            // Handle drag and drop
+            uploadArea.addEventListener('dragover', (event) => {
+                event.preventDefault();
+                uploadArea.classList.add('drag-over');
+            });
+            uploadArea.addEventListener('dragleave', () => {
+                uploadArea.classList.remove('drag-over');
+            });
+            uploadArea.addEventListener('drop', (event) => {
+                event.preventDefault();
+                uploadArea.classList.remove('drag-over');
+                handleFiles(event.dataTransfer.files);
+            });
+
+            function handleFiles(files) {
+                for (const file of files) {
+                    if (file.type.startsWith('image/')) {
+                        const reader = new FileReader();
+                        reader.onload = (e) => {
+                            const dataUrl = e.target.result;
+                            const card = createImageCard(dataUrl, file.name);
+                            previewContainer.appendChild(card);
+                            updateGenerateButtonState();
+                        };
+                        reader.readAsDataURL(file);
+                    }
+                }
+                fileInput.value = ''; // Reset file input
+            }
+
+            function createImageCard(dataUrl, fileName) {
+                const card = document.createElement('div');
+                card.className = 'image-card';
+                card.dataset.fileName = fileName;
+                card.dataset.dataUrl = dataUrl;
+
+                const img = document.createElement('img');
+                img.src = dataUrl;
+                img.alt = fileName;
+
+                const deleteBtn = document.createElement('button');
+                deleteBtn.className = 'delete-btn';
+                deleteBtn.innerHTML = '🗑️';
+                deleteBtn.title = translations[currentLang].delete_img_title;
+                
+                deleteBtn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    card.remove();
+                    updateGenerateButtonState();
+                });
+
+                card.appendChild(img);
+                card.appendChild(deleteBtn);
+                return card;
+            }
+            
+            function updateGenerateButtonState() {
+                const imageCount = previewContainer.children.length;
+                generatePdfBtn.disabled = imageCount === 0;
+                previewPdfBtn.disabled = imageCount === 0;
+                clearBtn.disabled = imageCount === 0;
+            }
+
+            // Clear all images
+            clearBtn.addEventListener('click', () => {
+                previewContainer.innerHTML = '';
+                updateGenerateButtonState();
+            });
+
+            // --- PDF Generation Logic ---
+            async function createPdfDocument() {
+                const orientation = document.querySelector('input[name="orientation"]:checked').value;
+                const fit = document.querySelector('input[name="fit"]:checked').value;
+                const doc = new jsPDF({ orientation });
+
+                const imageCards = Array.from(previewContainer.children);
+
+                for (let i = 0; i < imageCards.length; i++) {
+                    const card = imageCards[i];
+                    const dataUrl = card.dataset.dataUrl;
+                    const img = new Image();
+                    img.src = dataUrl;
+
+                    await new Promise(resolve => img.onload = resolve);
+
+                    const imgWidth = img.width;
+                    const imgHeight = img.height;
+                    const pdfWidth = doc.internal.pageSize.getWidth();
+                    const pdfHeight = doc.internal.pageSize.getHeight();
+                    const pdfAspectRatio = pdfWidth / pdfHeight;
+                    const imgAspectRatio = imgWidth / imgHeight;
+
+                    let finalWidth, finalHeight, posX, posY;
+
+                    if (fit === 'fit') { // Adapt (fit)
+                        if (imgAspectRatio > pdfAspectRatio) {
+                            finalWidth = pdfWidth;
+                            finalHeight = pdfWidth / imgAspectRatio;
+                        } else {
+                            finalHeight = pdfHeight;
+                            finalWidth = pdfHeight * imgAspectRatio;
+                        }
+                        posX = (pdfWidth - finalWidth) / 2;
+                        posY = (pdfHeight - finalHeight) / 2;
+                    } else { // Fill
+                        if (imgAspectRatio > pdfAspectRatio) {
+                            finalHeight = pdfHeight;
+                            finalWidth = pdfHeight * imgAspectRatio;
+                            posX = (pdfWidth - finalWidth) / 2;
+                            posY = 0;
+                        } else {
+                            finalWidth = pdfWidth;
+                            finalHeight = pdfWidth / imgAspectRatio;
+                            posX = 0;
+                            posY = (pdfHeight - finalHeight) / 2;
+                        }
+                    }
+
+                    if (i > 0) {
+                        doc.addPage();
+                    }
+                    doc.addImage(dataUrl, 'JPEG', posX, posY, finalWidth, finalHeight);
+                }
+                return doc;
+            }
+
+            // Generate and Download PDF
+            generatePdfBtn.addEventListener('click', async () => {
+                if (previewContainer.children.length === 0) return;
+
+                const originalBtnText = generatePdfBtn.textContent;
+                const generatingText = translations[currentLang].generating_text;
+                
+                generatePdfBtn.textContent = generatingText;
+                generatePdfBtn.disabled = true;
+                previewPdfBtn.disabled = true;
+
+                try {
+                    const doc = await createPdfDocument();
+                    doc.save(`xiaohongshu-export-${Date.now()}.pdf`);
+                } catch (error) {
+                    console.error('PDF generation failed:', error);
+                    alert(translations[currentLang].alert_generate_fail);
+                } finally {
+                     generatePdfBtn.textContent = originalBtnText;
+                     updateGenerateButtonState();
+                }
+            });
+
+            // Preview PDF
+            previewPdfBtn.addEventListener('click', async () => {
+                if (previewContainer.children.length === 0) return;
+
+                const originalBtnText = previewPdfBtn.textContent;
+                const generatingText = translations[currentLang].generating_text;
+
+                previewPdfBtn.textContent = generatingText;
+                generatePdfBtn.disabled = true;
+                previewPdfBtn.disabled = true;
+
+                try {
+                    const doc = await createPdfDocument();
+                    const pdfDataUri = doc.output('datauristring');
+                    pdfIframe.src = pdfDataUri;
+                    modal.style.display = 'flex';
+                } catch (error) {
+                    console.error('PDF preview failed:', error);
+                    alert(translations[currentLang].alert_preview_fail);
+                } finally {
+                    previewPdfBtn.textContent = originalBtnText;
+                    updateGenerateButtonState();
+                }
+            });
+
+            // Modal close events
+            closeModalBtn.addEventListener('click', () => {
+                modal.style.display = 'none';
+                pdfIframe.src = ''; // Clear iframe content to free up memory
+            });
+
+            window.addEventListener('click', (event) => {
+                if (event.target == modal) {
+                    modal.style.display = 'none';
+                    pdfIframe.src = ''; // Clear iframe content
+                }
+            });
+            
+            // Initial Setup
+            setLanguage(getInitialLang());
+            updateGenerateButtonState(); // Initial check
+        });
+    
+                return input;
+            }
+
+            displayResult(result) {
+                document.getElementById('resultContent').textContent = result;
+            }
+
+            clear() {
+                document.getElementById('input').value = '';
+                document.getElementById('resultContent').textContent = '处理结果将在这里显示...';
+            }
+
+            copyResult() {
+                const result = document.getElementById('resultContent').textContent;
+                if (result && result !== '处理结果将在这里显示...') {
+                    ToolUtils.copyToClipboard(result);
+                } else {
+                    ToolUtils.showToast('没有可复制的内容', 'warning');
+                }
+            }
+        }
+
+        // 初始化应用
+        document.addEventListener('DOMContentLoaded', () => {
+            new ToolApp();
+        });
+    </script>
+</body>
+</html>

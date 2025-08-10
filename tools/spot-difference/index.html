@@ -1,0 +1,761 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>找不同小游戏 - 小苏趣研AI - AI工具集</title>
+    <meta name="description" content="找不同小游戏 - 小苏趣研AI">
+    
+    <!-- 样式文件 -->
+    <link rel="stylesheet" href="../../shared/css/common.css">
+    
+    <!-- 工具特定样式 -->
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: var(--spacing-lg);
+        }
+
+        .header {
+            background: rgba(255, 255, 255, 0.95);
+            padding: var(--spacing-lg) 40px;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            text-align: center;
+            margin-bottom: 20px;
+            backdrop-filter: blur(10px);
+        }
+
+        .header h1 {
+            color: var(--text-primary);
+            margin-bottom: 10px;
+            font-size: 2em;
+        }
+
+        .header p {
+            color: var(--text-secondary);
+            font-size: 1.1em;
+        }
+
+        .game-container {
+            background: rgba(255, 255, 255, 0.95);
+            padding: 30px;
+            border-radius: 20px;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.1);
+            text-align: center;
+            max-width: 1000px;
+            width: 100%;
+            backdrop-filter: blur(10px);
+        }
+
+        .game-info {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .info-item {
+            background: #f8f9fa;
+            padding: var(--spacing-md) 15px;
+            border-radius: var(--radius-md);
+            font-weight: bold;
+        }
+
+        .info-label {
+            color: var(--text-secondary);
+            font-size: 0.9em;
+        }
+
+        .info-value {
+            color: var(--text-primary);
+            font-size: 1.2em;
+        }
+
+        .timer {
+            color: #dc3545;
+        }
+
+        .images-container {
+            display: flex;
+            gap: 20px;
+            justify-content: center;
+            margin: var(--spacing-lg) 0;
+            flex-wrap: wrap;
+        }
+
+        .image-wrapper {
+            position: relative;
+            border: 3px solid #ddd;
+            border-radius: var(--radius-lg);
+            overflow: hidden;
+            background: #f8f9fa;
+        }
+
+        .game-image {
+            width: 400px;
+            height: 300px;
+            cursor: crosshair;
+            display: block;
+        }
+
+        .difference-mark {
+            position: absolute;
+            width: 30px;
+            height: 30px;
+            border: 3px solid #28a745;
+            border-radius: 50%;
+            background: rgba(40, 167, 69, 0.3);
+            pointer-events: none;
+            animation: foundDifference 0.5s ease;
+        }
+
+        @keyframes foundDifference {
+            0% { transform: scale(0); opacity: 0; }
+            50% { transform: scale(1.2); opacity: 1; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+
+        .game-message {
+            font-size: 1.2em;
+            font-weight: bold;
+            margin: var(--spacing-lg) 0;
+            min-height: 30px;
+            color: var(--text-primary);
+        }
+
+        .controls {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin-top: 20px;
+        }
+
+        .btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            border-radius: var(--radius-lg);
+            font-size: 1em;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: bold;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .btn-success {
+            background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+        }
+
+        .btn-warning {
+            background: linear-gradient(135deg, #ffc107 0%, #fd7e14 100%);
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 10px;
+            background: #e9ecef;
+            border-radius: var(--radius-sm);
+            margin: var(--spacing-lg) 0;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #28a745, #20c997);
+            transition: width 0.3s ease;
+            border-radius: var(--radius-sm);
+        }
+
+        .hint-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(255, 255, 0, 0.3);
+            border-radius: 50%;
+            animation: hintPulse 2s ease-in-out;
+            pointer-events: none;
+        }
+
+        @keyframes hintPulse {
+            0%, 100% { opacity: 0; transform: scale(0.8); }
+            50% { opacity: 1; transform: scale(1.2); }
+        }
+
+        .footer {
+            margin-top: 30px;
+            text-align: center;
+            color: rgba(255, 255, 255, 0.8);
+            font-size: 0.9em;
+        }
+
+        .footer a {
+            color: rgba(255, 255, 255, 0.9);
+            text-decoration: none;
+        }
+
+        @media (max-width: 768px) {
+            .header {
+                padding: 15px 20px;
+            }
+            
+            .header h1 {
+                font-size: 1.5em;
+            }
+            
+            .game-container {
+                padding: var(--spacing-lg);
+            }
+            
+            .images-container {
+                flex-direction: column;
+                align-items: center;
+            }
+            
+            .game-image {
+                width: 300px;
+                height: 225px;
+            }
+            
+            .game-info {
+                justify-content: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="tool-container">
+        <!-- 工具头部 -->
+        <header class="tool-header">
+            <div class="tool-header-content">
+                <a href="../../index.html" class="back-btn">
+                    <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                        <path d="M10 4l-4 4 4 4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                    返回工具集
+                </a>
+                
+                <div class="tool-title">
+                    <h1>找不同小游戏 - 小苏趣研AI</h1>
+                    <p class="tool-subtitle">找不同小游戏 - 小苏趣研AI</p>
+                </div>
+                
+                <button class="theme-toggle" id="themeToggle" aria-label="切换主题">
+                    <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                        <circle cx="10" cy="10" r="4" stroke="currentColor" stroke-width="2"/>
+                        <path d="M10 2v2M10 16v2M18 10h-2M4 10H2M15.66 4.34l-1.41 1.41M5.75 14.25l-1.41 1.41M15.66 15.66l-1.41-1.41M5.75 5.75L4.34 4.34" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                    </svg>
+                </button>
+            </div>
+        </header>
+
+        <!-- 工具主内容 -->
+        <main class="tool-main">
+            <div class="tool-card">
+                <div class="tool-section">
+                    <h2>
+                        <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                            <rect x="3" y="3" width="14" height="14" rx="2" stroke="currentColor" stroke-width="2"/>
+                        </svg>
+                        工具功能
+                    </h2>
+                    
+                    
+            <div class="tool-card">
+                <div class="tool-section">
+                    <h2>
+                        <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                            <rect x="3" y="3" width="14" height="14" rx="2" stroke="currentColor" stroke-width="2"/>
+                        </svg>
+                        找不同小游戏 - 小苏趣研AI
+                    </h2>
+                    <div class="container">
+                        <div class="header">
+        <h1>🔍 找不同小游戏</h1>
+        <p>仔细观察两张图片，找出它们之间的不同之处</p>
+    </div>
+
+    <div class="game-container">
+        <div class="game-info">
+            <div class="info-item">
+                <div class="info-label">已找到</div>
+                <div class="info-value" id="foundCount">0</div>
+            </div>
+            <div class="info-item">
+                <div class="info-label">总共</div>
+                <div class="info-value" id="totalCount">5</div>
+            </div>
+            <div class="info-item">
+                <div class="info-label">时间</div>
+                <div class="info-value timer" id="timer">00:00</div>
+            </div>
+            <div class="info-item">
+                <div class="info-label">提示次数</div>
+                <div class="info-value" id="hintsUsed">0</div>
+            </div>
+        </div>
+
+        <div class="progress-bar">
+            <div class="progress-fill" id="progressFill"></div>
+        </div>
+
+        <div class="game-message" id="gameMessage">点击开始游戏，找出两张图片的不同之处</div>
+
+        <div class="images-container">
+            <div class="image-wrapper">
+                <canvas class="game-image" id="leftImage"></canvas>
+            </div>
+            <div class="image-wrapper">
+                <canvas class="game-image" id="rightImage"></canvas>
+            </div>
+        </div>
+
+        <div class="controls">
+            <button class="btn" id="startBtn" onclick="startGame()">开始游戏</button>
+            <button class="btn btn-warning" id="hintBtn" onclick="getHint()" disabled>获取提示</button>
+            <button class="btn btn-success" id="newGameBtn" onclick="newGame()">新游戏</button>
+        </div>
+    </div>
+
+    <div class="footer">
+        <p>© <a href="#" target="_blank">小苏趣研AI</a> | 找不同小游戏</p>
+        <p style="margin-top: 5px;">锻炼观察力和专注力的经典益智游戏</p>
+    </div>
+
+    
+                    </div>
+                </div>
+            </div>
+                    <!-- 结果显示区域 -->
+                    <div class="result-display" id="result">
+                        <pre id="resultContent">处理结果将在这里显示...</pre>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <!-- 工具页脚 -->
+        <footer class="tool-footer">
+            <p>由 <a href="../../index.html">AI工具集</a> 提供 | 原创工具</p>
+        </footer>
+    </div>
+
+    <!-- JavaScript -->
+    <script src="../../shared/js/utils.js"></script>
+    <script>
+        // 工具特定的JavaScript代码
+        class ToolApp {
+            constructor() {
+                this.init();
+            }
+
+            init() {
+                this.setupEventListeners();
+            }
+
+            setupEventListeners() {
+                document.getElementById('processBtn').addEventListener('click', () => this.process());
+                document.getElementById('clearBtn').addEventListener('click', () => this.clear());
+                document.getElementById('copyBtn').addEventListener('click', () => this.copyResult());
+                
+                // 实时处理（可选）
+                document.getElementById('input').addEventListener('input', 
+                    ToolUtils.debounce(() => this.process(), 300)
+                );
+            }
+
+            process() {
+                const input = document.getElementById('input').value;
+                const result = this.processInput(input);
+                this.displayResult(result);
+            }
+
+            processInput(input) {
+                
+        class SpotDifferenceGame {
+            constructor() {
+                this.leftCanvas = document.getElementById('leftImage');
+                this.rightCanvas = document.getElementById('rightImage');
+                this.leftCtx = this.leftCanvas.getContext('2d');
+                this.rightCtx = this.rightCanvas.getContext('2d');
+                
+                this.differences = [];
+                this.foundDifferences = [];
+                this.totalDifferences = 5;
+                this.isPlaying = false;
+                this.startTime = null;
+                this.timerInterval = null;
+                this.hintsUsed = 0;
+                
+                this.setupCanvas();
+                this.setupEventListeners();
+                this.generateGame();
+            }
+            
+            setupCanvas() {
+                this.leftCanvas.width = 400;
+                this.leftCanvas.height = 300;
+                this.rightCanvas.width = 400;
+                this.rightCanvas.height = 300;
+            }
+            
+            setupEventListeners() {
+                this.leftCanvas.addEventListener('click', (e) => this.handleClick(e, 'left'));
+                this.rightCanvas.addEventListener('click', (e) => this.handleClick(e, 'right'));
+            }
+            
+            generateGame() {
+                // 清空画布
+                this.leftCtx.clearRect(0, 0, 400, 300);
+                this.rightCtx.clearRect(0, 0, 400, 300);
+                
+                // 生成基础图案
+                this.drawBasePattern();
+                
+                // 生成不同点
+                this.generateDifferences();
+                
+                this.updateDisplay();
+            }
+            
+            drawBasePattern() {
+                // 绘制背景
+                const gradient = this.leftCtx.createLinearGradient(0, 0, 400, 300);
+                gradient.addColorStop(0, '#e3f2fd');
+                gradient.addColorStop(1, '#bbdefb');
+                
+                this.leftCtx.fillStyle = gradient;
+                this.leftCtx.fillRect(0, 0, 400, 300);
+                
+                this.rightCtx.fillStyle = gradient;
+                this.rightCtx.fillRect(0, 0, 400, 300);
+                
+                // 绘制一些基础图形
+                this.drawShapes();
+            }
+            
+            drawShapes() {
+                const shapes = [
+                    { type: 'circle', x: 100, y: 80, radius: 30, color: '#ff5722' },
+                    { type: 'rect', x: 200, y: 50, width: 60, height: 40, color: '#4caf50' },
+                    { type: 'circle', x: 320, y: 100, radius: 25, color: '#2196f3' },
+                    { type: 'rect', x: 50, y: 150, width: 80, height: 30, color: '#ff9800' },
+                    { type: 'circle', x: 180, y: 180, radius: 35, color: '#9c27b0' },
+                    { type: 'rect', x: 280, y: 200, width: 50, height: 50, color: '#607d8b' },
+                    { type: 'circle', x: 120, y: 240, radius: 20, color: '#795548' },
+                    { type: 'rect', x: 300, y: 250, width: 70, height: 25, color: '#e91e63' }
+                ];
+                
+                shapes.forEach(shape => {
+                    this.drawShape(this.leftCtx, shape);
+                    this.drawShape(this.rightCtx, shape);
+                });
+            }
+            
+            drawShape(ctx, shape) {
+                ctx.fillStyle = shape.color;
+                
+                if (shape.type === 'circle') {
+                    ctx.beginPath();
+                    ctx.arc(shape.x, shape.y, shape.radius, 0, Math.PI * 2);
+                    ctx.fill();
+                } else if (shape.type === 'rect') {
+                    ctx.fillRect(shape.x, shape.y, shape.width, shape.height);
+                }
+            }
+            
+            generateDifferences() {
+                this.differences = [];
+                
+                // 生成5个不同点
+                for (let i = 0; i < this.totalDifferences; i++) {
+                    const difference = this.createRandomDifference();
+                    this.differences.push(difference);
+                    this.applyDifference(difference);
+                }
+            }
+            
+            createRandomDifference() {
+                const types = ['color', 'size', 'position', 'shape'];
+                const type = types[Math.floor(Math.random() * types.length)];
+                
+                return {
+                    type: type,
+                    x: 50 + Math.random() * 300,
+                    y: 50 + Math.random() * 200,
+                    radius: 20 + Math.random() * 15
+                };
+            }
+            
+            applyDifference(diff) {
+                // 在右侧图片上应用不同点
+                this.rightCtx.fillStyle = this.getRandomColor();
+                
+                switch (diff.type) {
+                    case 'color':
+                        this.rightCtx.beginPath();
+                        this.rightCtx.arc(diff.x, diff.y, diff.radius, 0, Math.PI * 2);
+                        this.rightCtx.fill();
+                        break;
+                    case 'size':
+                        this.rightCtx.beginPath();
+                        this.rightCtx.arc(diff.x, diff.y, diff.radius * 1.5, 0, Math.PI * 2);
+                        this.rightCtx.fill();
+                        break;
+                    case 'position':
+                        this.rightCtx.beginPath();
+                        this.rightCtx.arc(diff.x + 20, diff.y + 10, diff.radius, 0, Math.PI * 2);
+                        this.rightCtx.fill();
+                        break;
+                    case 'shape':
+                        this.rightCtx.fillRect(diff.x - diff.radius, diff.y - diff.radius, 
+                                             diff.radius * 2, diff.radius * 2);
+                        break;
+                }
+            }
+            
+            getRandomColor() {
+                const colors = ['#f44336', '#e91e63', '#9c27b0', '#673ab7', '#3f51b5', 
+                               '#2196f3', '#03a9f4', '#00bcd4', '#009688', '#4caf50'];
+                return colors[Math.floor(Math.random() * colors.length)];
+            }
+            
+            handleClick(event, side) {
+                if (!this.isPlaying) return;
+                
+                const rect = event.target.getBoundingClientRect();
+                const x = event.clientX - rect.left;
+                const y = event.clientY - rect.top;
+                
+                // 检查是否点击到不同点
+                const foundDiff = this.checkDifference(x, y);
+                
+                if (foundDiff && !this.foundDifferences.includes(foundDiff)) {
+                    this.foundDifferences.push(foundDiff);
+                    this.markDifference(x, y, side);
+                    this.updateDisplay();
+                    
+                    if (this.foundDifferences.length === this.totalDifferences) {
+                        this.gameWon();
+                    }
+                }
+            }
+            
+            checkDifference(x, y) {
+                for (let i = 0; i < this.differences.length; i++) {
+                    const diff = this.differences[i];
+                    const distance = Math.sqrt((x - diff.x) ** 2 + (y - diff.y) ** 2);
+                    
+                    if (distance <= diff.radius) {
+                        return i;
+                    }
+                }
+                return null;
+            }
+            
+            markDifference(x, y, side) {
+                const canvas = side === 'left' ? this.leftCanvas : this.rightCanvas;
+                const wrapper = canvas.parentElement;
+                
+                const mark = document.createElement('div');
+                mark.className = 'difference-mark';
+                mark.style.left = (x - 15) + 'px';
+                mark.style.top = (y - 15) + 'px';
+                
+                wrapper.appendChild(mark);
+                
+                // 在另一侧也标记
+                const otherCanvas = side === 'left' ? this.rightCanvas : this.leftCanvas;
+                const otherWrapper = otherCanvas.parentElement;
+                
+                const otherMark = document.createElement('div');
+                otherMark.className = 'difference-mark';
+                otherMark.style.left = (x - 15) + 'px';
+                otherMark.style.top = (y - 15) + 'px';
+                
+                otherWrapper.appendChild(otherMark);
+            }
+            
+            startGame() {
+                this.isPlaying = true;
+                this.foundDifferences = [];
+                this.hintsUsed = 0;
+                this.startTime = Date.now();
+                
+                // 清除之前的标记
+                document.querySelectorAll('.difference-mark').forEach(mark => mark.remove());
+                
+                document.getElementById('startBtn').disabled = true;
+                document.getElementById('hintBtn').disabled = false;
+                
+                this.startTimer();
+                this.updateMessage('开始寻找不同点！点击你发现的差异处');
+                this.updateDisplay();
+            }
+            
+            startTimer() {
+                this.timerInterval = setInterval(() => {
+                    const elapsed = Math.floor((Date.now() - this.startTime) / 1000);
+                    const minutes = Math.floor(elapsed / 60);
+                    const seconds = elapsed % 60;
+                    document.getElementById('timer').textContent = 
+                        `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+                }, 1000);
+            }
+            
+            getHint() {
+                if (!this.isPlaying || this.hintsUsed >= 3) return;
+                
+                // 找到一个未发现的不同点
+                const unFoundDiffs = this.differences.filter((_, index) => 
+                    !this.foundDifferences.includes(index));
+                
+                if (unFoundDiffs.length > 0) {
+                    const randomDiff = unFoundDiffs[Math.floor(Math.random() * unFoundDiffs.length)];
+                    const diffIndex = this.differences.indexOf(randomDiff);
+                    
+                    this.showHint(randomDiff);
+                    this.hintsUsed++;
+                    
+                    if (this.hintsUsed >= 3) {
+                        document.getElementById('hintBtn').disabled = true;
+                    }
+                    
+                    this.updateDisplay();
+                }
+            }
+            
+            showHint(diff) {
+                const hint = document.createElement('div');
+                hint.className = 'hint-overlay';
+                hint.style.left = (diff.x - diff.radius) + 'px';
+                hint.style.top = (diff.y - diff.radius) + 'px';
+                hint.style.width = (diff.radius * 2) + 'px';
+                hint.style.height = (diff.radius * 2) + 'px';
+                
+                this.rightCanvas.parentElement.appendChild(hint);
+                
+                setTimeout(() => {
+                    hint.remove();
+                }, 2000);
+            }
+            
+            gameWon() {
+                this.isPlaying = false;
+                clearInterval(this.timerInterval);
+                
+                const elapsed = Math.floor((Date.now() - this.startTime) / 1000);
+                this.updateMessage(`恭喜！你找到了所有不同点！用时: ${elapsed}秒`);
+                
+                document.getElementById('startBtn').disabled = false;
+                document.getElementById('hintBtn').disabled = true;
+            }
+            
+            newGame() {
+                this.isPlaying = false;
+                this.foundDifferences = [];
+                this.hintsUsed = 0;
+                
+                if (this.timerInterval) {
+                    clearInterval(this.timerInterval);
+                }
+                
+                document.querySelectorAll('.difference-mark').forEach(mark => mark.remove());
+                document.querySelectorAll('.hint-overlay').forEach(hint => hint.remove());
+                
+                document.getElementById('startBtn').disabled = false;
+                document.getElementById('hintBtn').disabled = true;
+                document.getElementById('timer').textContent = '00:00';
+                
+                this.generateGame();
+                this.updateMessage('点击开始游戏，找出两张图片的不同之处');
+            }
+            
+            updateMessage(message) {
+                document.getElementById('gameMessage').textContent = message;
+            }
+            
+            updateDisplay() {
+                document.getElementById('foundCount').textContent = this.foundDifferences.length;
+                document.getElementById('totalCount').textContent = this.totalDifferences;
+                document.getElementById('hintsUsed').textContent = this.hintsUsed;
+                
+                const progress = (this.foundDifferences.length / this.totalDifferences) * 100;
+                document.getElementById('progressFill').style.width = progress + '%';
+            }
+        }
+        
+        let game;
+        
+        function startGame() {
+            game.startGame();
+        }
+        
+        function getHint() {
+            game.getHint();
+        }
+        
+        function newGame() {
+            game.newGame();
+        }
+        
+        // 初始化游戏
+        window.addEventListener('load', () => {
+            game = new SpotDifferenceGame();
+        });
+    
+                return input;
+            }
+
+            displayResult(result) {
+                document.getElementById('resultContent').textContent = result;
+            }
+
+            clear() {
+                document.getElementById('input').value = '';
+                document.getElementById('resultContent').textContent = '处理结果将在这里显示...';
+            }
+
+            copyResult() {
+                const result = document.getElementById('resultContent').textContent;
+                if (result && result !== '处理结果将在这里显示...') {
+                    ToolUtils.copyToClipboard(result);
+                } else {
+                    ToolUtils.showToast('没有可复制的内容', 'warning');
+                }
+            }
+        }
+
+        // 初始化应用
+        document.addEventListener('DOMContentLoaded', () => {
+            new ToolApp();
+        });
+    </script>
+</body>
+</html>

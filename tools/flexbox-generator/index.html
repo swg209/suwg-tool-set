@@ -1,0 +1,599 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CSS Flexbox 布局生成器 - AI工具集</title>
+    <meta name="description" content="CSS Flexbox 布局生成器">
+    
+    <!-- 样式文件 -->
+    <link rel="stylesheet" href="../../shared/css/common.css">
+    
+    <!-- 工具特定样式 -->
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: var(--spacing-lg);
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white;
+            text-align: center;
+            padding: 40px 20px;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            font-size: 1.1em;
+            opacity: 0.9;
+        }
+
+        .content {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 0;
+        }
+
+        .controls {
+            background: #f8f9fa;
+            padding: 30px;
+            border-right: 1px solid #e9ecef;
+        }
+
+        .preview {
+            padding: 30px;
+        }
+
+        .control-group {
+            margin-bottom: 25px;
+        }
+
+        .control-label {
+            font-weight: bold;
+            margin-bottom: 10px;
+            color: var(--text-primary);
+            display: block;
+        }
+
+        .control-input {
+            width: 100%;
+            padding: var(--spacing-md) 15px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 14px;
+            transition: border-color 0.3s;
+        }
+
+        .control-input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .radio-group {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 10px;
+        }
+
+        .radio-option {
+            position: relative;
+        }
+
+        .radio-option input[type="radio"] {
+            position: absolute;
+            opacity: 0;
+        }
+
+        .radio-option label {
+            display: block;
+            padding: var(--spacing-md) 15px;
+            background: white;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            cursor: pointer;
+            text-align: center;
+            font-size: 14px;
+            transition: all 0.3s;
+        }
+
+        .radio-option input[type="radio"]:checked + label {
+            background: #667eea;
+            color: white;
+            border-color: #667eea;
+        }
+
+        .preview-container {
+            border: 2px solid #ddd;
+            border-radius: var(--radius-md);
+            min-height: 300px;
+            background: var(--bg-card);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .flex-container {
+            width: 100%;
+            height: 100%;
+            min-height: 300px;
+            display: flex;
+            background: linear-gradient(45deg, #f8f9fa 25%, transparent 25%), 
+                        linear-gradient(-45deg, #f8f9fa 25%, transparent 25%), 
+                        linear-gradient(45deg, transparent 75%, #f8f9fa 75%), 
+                        linear-gradient(-45deg, transparent 75%, #f8f9fa 75%);
+            background-size: 20px 20px;
+            background-position: 0 0, 0 10px, 10px -10px, -10px 0px;
+        }
+
+        .flex-item {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 18px;
+            margin: 5px;
+            border-radius: 8px;
+            min-width: 60px;
+            min-height: 60px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+
+        .code-section {
+            background: #f8f9fa;
+            padding: 30px;
+            border-top: 1px solid #e9ecef;
+        }
+
+        .code-title {
+            font-size: 1.3em;
+            font-weight: bold;
+            margin-bottom: 15px;
+            color: var(--text-primary);
+        }
+
+        .code-block {
+            background: #2d3748;
+            color: #e2e8f0;
+            padding: var(--spacing-lg);
+            border-radius: var(--radius-md);
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            line-height: 1.5;
+            overflow-x: auto;
+            position: relative;
+        }
+
+        .copy-btn {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: var(--radius-sm);
+            cursor: pointer;
+            font-size: 12px;
+            transition: background 0.3s;
+        }
+
+        .copy-btn:hover {
+            background: #5a6fd8;
+        }
+
+        .footer {
+            background: #f8f9fa;
+            text-align: center;
+            padding: var(--spacing-lg);
+            color: var(--text-secondary);
+        }
+
+        @media (max-width: 768px) {
+            .content {
+                grid-template-columns: 1fr;
+            }
+            
+            .controls {
+                border-right: none;
+                border-bottom: 1px solid #e9ecef;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="tool-container">
+        <!-- 工具头部 -->
+        <header class="tool-header">
+            <div class="tool-header-content">
+                <a href="../../index.html" class="back-btn">
+                    <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                        <path d="M10 4l-4 4 4 4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                    返回工具集
+                </a>
+                
+                <div class="tool-title">
+                    <h1>CSS Flexbox 布局生成器</h1>
+                    <p class="tool-subtitle">CSS Flexbox 布局生成器</p>
+                </div>
+                
+                <button class="theme-toggle" id="themeToggle" aria-label="切换主题">
+                    <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                        <circle cx="10" cy="10" r="4" stroke="currentColor" stroke-width="2"/>
+                        <path d="M10 2v2M10 16v2M18 10h-2M4 10H2M15.66 4.34l-1.41 1.41M5.75 14.25l-1.41 1.41M15.66 15.66l-1.41-1.41M5.75 5.75L4.34 4.34" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                    </svg>
+                </button>
+            </div>
+        </header>
+
+        <!-- 工具主内容 -->
+        <main class="tool-main">
+            <div class="tool-card">
+                <div class="tool-section">
+                    <h2>
+                        <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                            <rect x="3" y="3" width="14" height="14" rx="2" stroke="currentColor" stroke-width="2"/>
+                        </svg>
+                        工具功能
+                    </h2>
+                    
+                    
+            <div class="tool-card">
+                <div class="tool-section">
+                    <h2>
+                        <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                            <rect x="3" y="3" width="14" height="14" rx="2" stroke="currentColor" stroke-width="2"/>
+                        </svg>
+                        CSS Flexbox 布局生成器
+                    </h2>
+                    <div class="container">
+        <div class="header">
+            <h1>📐 CSS Flexbox 生成器</h1>
+            <p>交互式调整 Flexbox 属性，实时预览并生成 CSS 代码</p>
+        </div>
+
+        <div class="content">
+            <div class="controls">
+                <div class="control-group">
+                    <label class="control-label">Flex Direction</label>
+                    <div class="radio-group">
+                        <div class="radio-option">
+                            <input type="radio" id="row" name="direction" value="row" checked>
+                            <label for="row">row</label>
+                        </div>
+                        <div class="radio-option">
+                            <input type="radio" id="column" name="direction" value="column">
+                            <label for="column">column</label>
+                        </div>
+                        <div class="radio-option">
+                            <input type="radio" id="row-reverse" name="direction" value="row-reverse">
+                            <label for="row-reverse">row-reverse</label>
+                        </div>
+                        <div class="radio-option">
+                            <input type="radio" id="column-reverse" name="direction" value="column-reverse">
+                            <label for="column-reverse">column-reverse</label>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="control-group">
+                    <label class="control-label">Justify Content</label>
+                    <div class="radio-group">
+                        <div class="radio-option">
+                            <input type="radio" id="flex-start" name="justify" value="flex-start" checked>
+                            <label for="flex-start">flex-start</label>
+                        </div>
+                        <div class="radio-option">
+                            <input type="radio" id="center" name="justify" value="center">
+                            <label for="center">center</label>
+                        </div>
+                        <div class="radio-option">
+                            <input type="radio" id="flex-end" name="justify" value="flex-end">
+                            <label for="flex-end">flex-end</label>
+                        </div>
+                        <div class="radio-option">
+                            <input type="radio" id="space-between" name="justify" value="space-between">
+                            <label for="space-between">space-between</label>
+                        </div>
+                        <div class="radio-option">
+                            <input type="radio" id="space-around" name="justify" value="space-around">
+                            <label for="space-around">space-around</label>
+                        </div>
+                        <div class="radio-option">
+                            <input type="radio" id="space-evenly" name="justify" value="space-evenly">
+                            <label for="space-evenly">space-evenly</label>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="control-group">
+                    <label class="control-label">Align Items</label>
+                    <div class="radio-group">
+                        <div class="radio-option">
+                            <input type="radio" id="stretch" name="align" value="stretch" checked>
+                            <label for="stretch">stretch</label>
+                        </div>
+                        <div class="radio-option">
+                            <input type="radio" id="align-start" name="align" value="flex-start">
+                            <label for="align-start">flex-start</label>
+                        </div>
+                        <div class="radio-option">
+                            <input type="radio" id="align-center" name="align" value="center">
+                            <label for="align-center">center</label>
+                        </div>
+                        <div class="radio-option">
+                            <input type="radio" id="align-end" name="align" value="flex-end">
+                            <label for="align-end">flex-end</label>
+                        </div>
+                        <div class="radio-option">
+                            <input type="radio" id="baseline" name="align" value="baseline">
+                            <label for="baseline">baseline</label>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="control-group">
+                    <label class="control-label">Flex Wrap</label>
+                    <div class="radio-group">
+                        <div class="radio-option">
+                            <input type="radio" id="nowrap" name="wrap" value="nowrap" checked>
+                            <label for="nowrap">nowrap</label>
+                        </div>
+                        <div class="radio-option">
+                            <input type="radio" id="wrap" name="wrap" value="wrap">
+                            <label for="wrap">wrap</label>
+                        </div>
+                        <div class="radio-option">
+                            <input type="radio" id="wrap-reverse" name="wrap" value="wrap-reverse">
+                            <label for="wrap-reverse">wrap-reverse</label>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="control-group">
+                    <label class="control-label">Gap (px)</label>
+                    <input type="range" class="control-input" id="gap" min="0" max="50" value="10">
+                    <span id="gap-value">10px</span>
+                </div>
+
+                <div class="control-group">
+                    <label class="control-label">子元素数量</label>
+                    <input type="range" class="control-input" id="item-count" min="1" max="8" value="4">
+                    <span id="item-count-value">4</span>
+                </div>
+            </div>
+
+            <div class="preview">
+                <h3 style="margin-bottom: 20px; color: #333;">实时预览</h3>
+                <div class="preview-container">
+                    <div class="flex-container" id="flexContainer">
+                        <div class="flex-item">1</div>
+                        <div class="flex-item">2</div>
+                        <div class="flex-item">3</div>
+                        <div class="flex-item">4</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="code-section">
+            <div class="code-title">生成的 CSS 代码</div>
+            <div class="code-block">
+                <button class="copy-btn" onclick="copyCode()">复制代码</button>
+                <pre id="generatedCode">.flex-container {
+  display: flex;
+  flex-direction: row;
+  justify-content: flex-start;
+  align-items: stretch;
+  flex-wrap: nowrap;
+  gap: 10px;
+}</pre>
+            </div>
+        </div>
+
+        <div class="footer">
+            <p>© 小苏趣研AI | CSS Flexbox 生成器</p>
+            <p style="margin-top: 10px; opacity: 0.8;">
+                <a href="#" target="_blank" style="color: #666; text-decoration: none;">小苏趣研AI</a> - 
+                交互式Flexbox布局工具，可视化调整属性参数，实时预览布局效果，自动生成CSS代码，让前端布局开发更高效。
+            </p>
+        </div>
+    </div>
+
+    
+                </div>
+            </div>
+                    <!-- 结果显示区域 -->
+                    <div class="result-display" id="result">
+                        <pre id="resultContent">处理结果将在这里显示...</pre>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <!-- 工具页脚 -->
+        <footer class="tool-footer">
+            <p>由 <a href="../../index.html">AI工具集</a> 提供 | 原创工具</p>
+        </footer>
+    </div>
+
+    <!-- JavaScript -->
+    <script src="../../shared/js/utils.js"></script>
+    <script>
+        // 工具特定的JavaScript代码
+        class ToolApp {
+            constructor() {
+                this.init();
+            }
+
+            init() {
+                this.setupEventListeners();
+            }
+
+            setupEventListeners() {
+                document.getElementById('processBtn').addEventListener('click', () => this.process());
+                document.getElementById('clearBtn').addEventListener('click', () => this.clear());
+                document.getElementById('copyBtn').addEventListener('click', () => this.copyResult());
+                
+                // 实时处理（可选）
+                document.getElementById('input').addEventListener('input', 
+                    ToolUtils.debounce(() => this.process(), 300)
+                );
+            }
+
+            process() {
+                const input = document.getElementById('input').value;
+                const result = this.processInput(input);
+                this.displayResult(result);
+            }
+
+            processInput(input) {
+                
+        class FlexboxGenerator {
+            constructor() {
+                this.flexContainer = document.getElementById('flexContainer');
+                this.codeElement = document.getElementById('generatedCode');
+                this.gapSlider = document.getElementById('gap');
+                this.itemCountSlider = document.getElementById('item-count');
+                
+                this.init();
+            }
+
+            init() {
+                this.setupEventListeners();
+                this.updatePreview();
+            }
+
+            setupEventListeners() {
+                // 监听所有单选按钮
+                document.querySelectorAll('input[type="radio"]').forEach(radio => {
+                    radio.addEventListener('change', () => this.updatePreview());
+                });
+
+                // 监听滑块
+                this.gapSlider.addEventListener('input', (e) => {
+                    document.getElementById('gap-value').textContent = e.target.value + 'px';
+                    this.updatePreview();
+                });
+
+                this.itemCountSlider.addEventListener('input', (e) => {
+                    document.getElementById('item-count-value').textContent = e.target.value;
+                    this.updateItemCount(parseInt(e.target.value));
+                    this.updatePreview();
+                });
+            }
+
+            updateItemCount(count) {
+                this.flexContainer.innerHTML = '';
+                for (let i = 1; i <= count; i++) {
+                    const item = document.createElement('div');
+                    item.className = 'flex-item';
+                    item.textContent = i;
+                    this.flexContainer.appendChild(item);
+                }
+            }
+
+            updatePreview() {
+                const direction = document.querySelector('input[name="direction"]:checked').value;
+                const justify = document.querySelector('input[name="justify"]:checked').value;
+                const align = document.querySelector('input[name="align"]:checked').value;
+                const wrap = document.querySelector('input[name="wrap"]:checked').value;
+                const gap = this.gapSlider.value;
+
+                // 应用样式到预览容器
+                this.flexContainer.style.flexDirection = direction;
+                this.flexContainer.style.justifyContent = justify;
+                this.flexContainer.style.alignItems = align;
+                this.flexContainer.style.flexWrap = wrap;
+                this.flexContainer.style.gap = gap + 'px';
+
+                // 生成CSS代码
+                this.generateCode(direction, justify, align, wrap, gap);
+            }
+
+            generateCode(direction, justify, align, wrap, gap) {
+                const code = `.flex-container {
+  display: flex;
+  flex-direction: ${direction};
+  justify-content: ${justify};
+  align-items: ${align};
+  flex-wrap: ${wrap};
+  gap: ${gap}px;
+}`;
+
+                this.codeElement.textContent = code;
+            }
+        }
+
+        function copyCode() {
+            const code = document.getElementById('generatedCode').textContent;
+            navigator.clipboard.writeText(code).then(() => {
+                const btn = document.querySelector('.copy-btn');
+                const originalText = btn.textContent;
+                btn.textContent = '已复制!';
+                btn.style.background = '#28a745';
+                
+                setTimeout(() => {
+                    btn.textContent = originalText;
+                    btn.style.background = '#667eea';
+                }, 1000);
+            });
+        }
+
+        // 初始化
+        document.addEventListener('DOMContentLoaded', () => {
+            new FlexboxGenerator();
+        });
+    
+                return input;
+            }
+
+            displayResult(result) {
+                document.getElementById('resultContent').textContent = result;
+            }
+
+            clear() {
+                document.getElementById('input').value = '';
+                document.getElementById('resultContent').textContent = '处理结果将在这里显示...';
+            }
+
+            copyResult() {
+                const result = document.getElementById('resultContent').textContent;
+                if (result && result !== '处理结果将在这里显示...') {
+                    ToolUtils.copyToClipboard(result);
+                } else {
+                    ToolUtils.showToast('没有可复制的内容', 'warning');
+                }
+            }
+        }
+
+        // 初始化应用
+        document.addEventListener('DOMContentLoaded', () => {
+            new ToolApp();
+        });
+    </script>
+</body>
+</html>

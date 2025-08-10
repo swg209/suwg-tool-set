@@ -1,0 +1,420 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>批量图片重命名工具 - AI工具集</title>
+    <meta name="description" content="批量图片重命名工具">
+    
+    <!-- 外部依赖 -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"
+    <!-- 样式文件 -->
+    <link rel="stylesheet" href="../../shared/css/common.css">
+    
+    <!-- 工具特定样式 -->
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background-color: var(--bg-secondary);
+            color: var(--text-primary);
+            line-height: 1.6;
+            padding: var(--spacing-lg);
+        }
+        
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background-color: var(--bg-card);
+            border-radius: var(--radius-md);
+            box-shadow: var(--shadow-md);
+            padding: 30px;
+        }
+        
+        h1 {
+            text-align: center;
+            margin-bottom: 30px;
+            color: #2c3e50;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: bold;
+            color: #34495e;
+        }
+        
+        input[type="text"],
+        input[type="number"],
+        input[type="file"] {
+            width: 100%;
+            padding: var(--spacing-md);
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 16px;
+        }
+
+        input[type="file"] {
+            padding: 5px;
+            background-color: #ecf0f1;
+        }
+        
+        button {
+            background-color: #3498db;
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s ease;
+            width: 100%;
+            display: block;
+            text-align: center;
+        }
+        
+        button:hover {
+            background-color: #2980b9;
+        }
+
+        button:disabled {
+            background-color: #95a5a6;
+            cursor: not-allowed;
+        }
+        
+        #file-preview {
+            margin-top: 25px;
+            padding: 15px;
+            background-color: #f9f9f9;
+            border-radius: 4px;
+            border: 1px solid #eee;
+        }
+
+        #file-preview h4 {
+            margin-bottom: 10px;
+        }
+
+        #file-preview table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        #file-preview th, #file-preview td {
+            text-align: left;
+            padding: 8px;
+            border-bottom: 1px solid #ddd;
+        }
+
+        #file-preview th {
+            background-color: #f2f2f2;
+        }
+
+        .info-box {
+            background-color: #eaf5ff;
+            border-left: 4px solid #3498db;
+            padding: 15px;
+            margin-bottom: 20px;
+            border-radius: 4px;
+        }
+        
+        .footer {
+            margin-top: 30px;
+            text-align: center;
+            font-size: 14px;
+            color: #7f8c8d;
+        }
+        
+        @media (max-width: 768px) {
+            .container {
+                padding: var(--spacing-md);
+                margin: var(--spacing-sm);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="tool-container">
+        <!-- 工具头部 -->
+        <header class="tool-header">
+            <div class="tool-header-content">
+                <a href="../../index.html" class="back-btn">
+                    <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                        <path d="M10 4l-4 4 4 4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                    返回工具集
+                </a>
+                
+                <div class="tool-title">
+                    <h1>批量图片重命名工具</h1>
+                    <p class="tool-subtitle">批量图片重命名工具</p>
+                </div>
+                
+                <button class="theme-toggle" id="themeToggle" aria-label="切换主题">
+                    <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                        <circle cx="10" cy="10" r="4" stroke="currentColor" stroke-width="2"/>
+                        <path d="M10 2v2M10 16v2M18 10h-2M4 10H2M15.66 4.34l-1.41 1.41M5.75 14.25l-1.41 1.41M15.66 15.66l-1.41-1.41M5.75 5.75L4.34 4.34" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                    </svg>
+                </button>
+            </div>
+        </header>
+
+        <!-- 工具主内容 -->
+        <main class="tool-main">
+            <div class="tool-card">
+                <div class="tool-section">
+                    <h2>
+                        <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                            <rect x="3" y="3" width="14" height="14" rx="2" stroke="currentColor" stroke-width="2"/>
+                        </svg>
+                        工具功能
+                    </h2>
+                    
+                    
+            <div class="tool-card">
+                <div class="tool-section">
+                    <h2>
+                        <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                            <rect x="3" y="3" width="14" height="14" rx="2" stroke="currentColor" stroke-width="2"/>
+                        </svg>
+                        批量图片重命名工具
+                    </h2>
+                    <div class="container">
+        <h1>批量图片重命名工具</h1>
+
+        <div class="info-box">
+            <p><strong>使用说明:</strong></p>
+            <ol>
+                <li>点击 "选择文件" 按钮，选择您想要重命名的图片。</li>
+                <li>在下方输入您想要的 "文件名前缀" 和 "起始序号"。</li>
+                <li>系统会实时生成新文件名预览。</li>
+                <li>确认无误后，点击 "重命名并打包下载" 按钮即可。</li>
+            </ol>
+        </div>
+        
+        <div class="form-group">
+            <label for="image-upload">1. 选择图片文件:</label>
+            <input type="file" id="image-upload" multiple accept="image/*">
+        </div>
+
+        <div id="rename-rules" style="display: none;">
+            <div class="form-group">
+                <label for="name-prefix">2. 文件名前缀:</label>
+                <input type="text" id="name-prefix" placeholder="例如: travel-photo-">
+            </div>
+            <div class="form-group">
+                <label for="start-number">3. 起始序号:</label>
+                <input type="number" id="start-number" value="1" min="0">
+            </div>
+             <button id="rename-btn">重命名并打包下载</button>
+        </div>
+
+        <div id="file-preview"></div>
+
+        <div class="footer">
+             <p>© 小苏趣研AI 批量图片重命名工具 | 所有操作均在本地完成，保护您的隐私</p>
+        </div>
+    </div>
+
+    
+                </div>
+            </div>
+                    <!-- 结果显示区域 -->
+                    <div class="result-display" id="result">
+                        <pre id="resultContent">处理结果将在这里显示...</pre>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <!-- 工具页脚 -->
+        <footer class="tool-footer">
+            <p>由 <a href="../../index.html">AI工具集</a> 提供 | 原创工具</p>
+        </footer>
+    </div>
+
+    <!-- JavaScript -->
+    <script src="../../shared/js/utils.js"></script>
+    <script>
+        // 工具特定的JavaScript代码
+        class ToolApp {
+            constructor() {
+                this.init();
+            }
+
+            init() {
+                this.setupEventListeners();
+            }
+
+            setupEventListeners() {
+                document.getElementById('processBtn').addEventListener('click', () => this.process());
+                document.getElementById('clearBtn').addEventListener('click', () => this.clear());
+                document.getElementById('copyBtn').addEventListener('click', () => this.copyResult());
+                
+                // 实时处理（可选）
+                document.getElementById('input').addEventListener('input', 
+                    ToolUtils.debounce(() => this.process(), 300)
+                );
+            }
+
+            process() {
+                const input = document.getElementById('input').value;
+                const result = this.processInput(input);
+                this.displayResult(result);
+            }
+
+            processInput(input) {
+                
+        // DOM 元素获取
+        const imageUpload = document.getElementById('image-upload');
+        const renameRules = document.getElementById('rename-rules');
+        const filePreview = document.getElementById('file-preview');
+        const renameBtn = document.getElementById('rename-btn');
+        const namePrefixInput = document.getElementById('name-prefix');
+        const startNumberInput = document.getElementById('start-number');
+
+        let uploadedFiles = [];
+
+        // 监听文件选择事件
+        imageUpload.addEventListener('change', (event) => {
+            uploadedFiles = Array.from(event.target.files);
+            if (uploadedFiles.length > 0) {
+                renameRules.style.display = 'block';
+                displayFilePreview();
+            } else {
+                renameRules.style.display = 'none';
+                filePreview.innerHTML = '';
+            }
+        });
+        
+        // 监听重命名规则输入框的变化，实时更新预览
+        namePrefixInput.addEventListener('input', displayFilePreview);
+        startNumberInput.addEventListener('input', displayFilePreview);
+        
+        /**
+         * 显示文件重命名预览
+         */
+        function displayFilePreview() {
+            if (uploadedFiles.length === 0) {
+                filePreview.innerHTML = '';
+                return;
+            }
+
+            const prefix = namePrefixInput.value;
+            const startNumber = parseInt(startNumberInput.value, 10) || 0;
+            const numDigits = String(uploadedFiles.length + startNumber - 1).length;
+
+            let previewHtml = '<h4>文件重命名预览:</h4><table><thead><tr><th>原文件名</th><th>新文件名</th></tr></thead><tbody>';
+
+            uploadedFiles.forEach((file, index) => {
+                const extension = file.name.split('.').pop();
+                const numberStr = String(startNumber + index).padStart(numDigits, '0');
+                const newFilename = `${prefix}${numberStr}.${extension}`;
+                previewHtml += `<tr><td>${escapeHtml(file.name)}</td><td>${escapeHtml(newFilename)}</td></tr>`;
+            });
+
+            previewHtml += '</tbody></table>';
+            filePreview.innerHTML = previewHtml;
+        }
+
+        /**
+         * 处理重命名和下载逻辑
+         */
+        renameBtn.addEventListener('click', async () => {
+            if (uploadedFiles.length === 0) {
+                alert('请先选择图片文件！');
+                return;
+            }
+
+            renameBtn.textContent = '正在处理中，请稍候...';
+            renameBtn.disabled = true;
+
+            const zip = new JSZip();
+            const prefix = namePrefixInput.value;
+            const startNumber = parseInt(startNumberInput.value, 10) || 0;
+            const numDigits = String(uploadedFiles.length + startNumber - 1).length;
+
+            // 异步将所有文件添加到 zip 中
+            const promises = uploadedFiles.map((file, index) => {
+                return new Promise((resolve) => {
+                    const extension = file.name.split('.').pop();
+                    const numberStr = String(startNumber + index).padStart(numDigits, '0');
+                    const newFilename = `${prefix}${numberStr}.${extension}`;
+                    zip.file(newFilename, file);
+                    resolve();
+                });
+            });
+
+            await Promise.all(promises);
+
+            // 生成并下载 ZIP 文件
+            try {
+                const content = await zip.generateAsync({ type: 'blob' });
+                const link = document.createElement('a');
+                link.href = URL.createObjectURL(content);
+                link.download = 'renamed_images.zip';
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                 URL.revokeObjectURL(link.href); // 释放内存
+            } catch (error) {
+                console.error('打包文件时出错:', error);
+                alert('创建ZIP文件失败。请检查浏览器控制台以获取更多信息。');
+            } finally {
+                renameBtn.textContent = '重命名并打包下载';
+                renameBtn.disabled = false;
+            }
+        });
+
+        /**
+         * 对HTML内容进行转义，防止XSS攻击
+         * @param {string} unsafe - 不安全的字符串
+         * @returns {string} - 转义后的安全字符串
+         */
+        function escapeHtml(unsafe) {
+            return unsafe
+                 .replace(/&/g, "&amp;")
+                 .replace(/</g, "&lt;")
+                 .replace(/>/g, "&gt;")
+                 .replace(/"/g, "&quot;")
+                 .replace(/'/g, "&#039;");
+        }
+
+    
+                return input;
+            }
+
+            displayResult(result) {
+                document.getElementById('resultContent').textContent = result;
+            }
+
+            clear() {
+                document.getElementById('input').value = '';
+                document.getElementById('resultContent').textContent = '处理结果将在这里显示...';
+            }
+
+            copyResult() {
+                const result = document.getElementById('resultContent').textContent;
+                if (result && result !== '处理结果将在这里显示...') {
+                    ToolUtils.copyToClipboard(result);
+                } else {
+                    ToolUtils.showToast('没有可复制的内容', 'warning');
+                }
+            }
+        }
+
+        // 初始化应用
+        document.addEventListener('DOMContentLoaded', () => {
+            new ToolApp();
+        });
+    </script>
+</body>
+</html>

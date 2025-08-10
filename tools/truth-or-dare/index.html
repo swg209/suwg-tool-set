@@ -1,0 +1,1114 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>真心话大冒险生成器 - AI工具集</title>
+    <meta name="description" content="真心话大冒险生成器">
+    
+    <!-- 样式文件 -->
+    <link rel="stylesheet" href="../../shared/css/common.css">
+    
+    <!-- 工具特定样式 -->
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: var(--spacing-lg);
+        }
+
+        .container {
+            max-width: 600px;
+            width: 100%;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+            animation: fadeIn 0.5s ease-out;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .header p {
+            font-size: 1.1em;
+            opacity: 0.9;
+        }
+
+        .main-content {
+            padding: 40px 30px;
+        }
+
+        .mode-selector {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 30px;
+            background: #f8f9fa;
+            padding: 8px;
+            border-radius: 12px;
+        }
+
+        .mode-btn {
+            flex: 1;
+            padding: 15px 20px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s;
+            background: transparent;
+            color: #6c757d;
+        }
+
+        .mode-btn.active {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.3);
+        }
+
+        .mode-btn:hover:not(.active) {
+            background: rgba(102, 126, 234, 0.1);
+            color: #667eea;
+        }
+
+        .question-display {
+            background: #f8f9fa;
+            border-radius: var(--radius-lg);
+            padding: 30px;
+            margin-bottom: 30px;
+            min-height: 200px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            border: 2px solid #e9ecef;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .question-display::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: linear-gradient(45deg, transparent, rgba(102, 126, 234, 0.05), transparent);
+            transform: rotate(45deg);
+            transition: all 0.5s;
+        }
+
+        .question-display.truth::before {
+            background: linear-gradient(45deg, transparent, rgba(76, 175, 80, 0.05), transparent);
+        }
+
+        .question-display.dare::before {
+            background: linear-gradient(45deg, transparent, rgba(255, 152, 0, 0.05), transparent);
+        }
+
+        .question-text {
+            font-size: 1.4em;
+            line-height: 1.6;
+            color: var(--text-primary);
+            position: relative;
+            z-index: 1;
+            animation: slideIn 0.5s ease-out;
+        }
+
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .placeholder-text {
+            color: #adb5bd;
+            font-style: italic;
+        }
+
+        .controls {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+
+        .generate-btn {
+            flex: 2;
+            padding: 15px 25px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-size: 1.1em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+        }
+
+        .generate-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.4);
+        }
+
+        .generate-btn:active {
+            transform: translateY(0);
+        }
+
+        .random-btn {
+            flex: 1;
+            padding: 15px;
+            background: #6c757d;
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-size: 1.1em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .random-btn:hover {
+            background: #5a6268;
+            transform: translateY(-2px);
+        }
+
+        .settings {
+            background: #f8f9fa;
+            border-radius: var(--radius-lg);
+            padding: 25px;
+            margin-bottom: 30px;
+            border: 2px solid #e9ecef;
+        }
+
+        .settings h3 {
+            color: #495057;
+            margin-bottom: 20px;
+            font-size: 1.2em;
+        }
+
+        .setting-group {
+            margin-bottom: 20px;
+        }
+
+        .setting-label {
+            display: block;
+            font-weight: 600;
+            color: #495057;
+            margin-bottom: 8px;
+        }
+
+        .difficulty-selector {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .difficulty-btn {
+            padding: 8px 16px;
+            border: 2px solid #dee2e6;
+            background: white;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: 0.9em;
+            font-weight: 600;
+            color: #6c757d;
+        }
+
+        .difficulty-btn.active {
+            border-color: #667eea;
+            background: #667eea;
+            color: white;
+        }
+
+        .difficulty-btn:hover:not(.active) {
+            border-color: #adb5bd;
+            background: #f8f9fa;
+        }
+
+        .category-filters {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .category-tag {
+            padding: 6px 12px;
+            background: #e9ecef;
+            border-radius: var(--radius-lg);
+            font-size: 0.9em;
+            cursor: pointer;
+            transition: all 0.3s;
+            border: 2px solid transparent;
+        }
+
+        .category-tag.active {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .category-tag:hover:not(.active) {
+            background: #dee2e6;
+        }
+
+        .stats {
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            border-radius: var(--radius-lg);
+            padding: var(--spacing-lg);
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 15px;
+        }
+
+        .stat-item {
+            text-align: center;
+            padding: 15px;
+            background: white;
+            border-radius: var(--radius-md);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        .stat-number {
+            font-size: 1.8em;
+            font-weight: bold;
+            color: #667eea;
+            margin-bottom: 5px;
+        }
+
+        .stat-label {
+            color: #6c757d;
+            font-size: 0.9em;
+        }
+
+        .history {
+            margin-top: 30px;
+            background: #f8f9fa;
+            border-radius: var(--radius-lg);
+            padding: 25px;
+            border: 2px solid #e9ecef;
+        }
+
+        .history h3 {
+            color: #495057;
+            margin-bottom: 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .clear-history {
+            background: #dc3545;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            padding: 5px 10px;
+            font-size: 0.8em;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .clear-history:hover {
+            background: #c82333;
+        }
+
+        .history-list {
+            max-height: 200px;
+            overflow-y: auto;
+            border-radius: 8px;
+        }
+
+        .history-item {
+            background: white;
+            padding: 12px 15px;
+            margin-bottom: 8px;
+            border-radius: 8px;
+            border-left: 4px solid #667eea;
+            cursor: pointer;
+            transition: all 0.3s;
+            border-left-color: #4caf50;
+        }
+
+        .history-item.dare {
+            border-left-color: #ff9800;
+        }
+
+        .history-item:hover {
+            transform: translateX(5px);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        .history-item-text {
+            font-size: 0.95em;
+            line-height: 1.4;
+            color: #495057;
+        }
+
+        .history-item-meta {
+            font-size: 0.8em;
+            color: #6c757d;
+            margin-top: 5px;
+        }
+
+        .footer {
+            text-align: center;
+            padding: var(--spacing-lg);
+            background: #f8f9fa;
+            color: #6c757d;
+            font-size: 0.9em;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                margin: var(--spacing-md);
+                border-radius: var(--radius-lg);
+            }
+            
+            .header {
+                padding: 25px 20px;
+            }
+            
+            .header h1 {
+                font-size: 2em;
+            }
+            
+            .main-content {
+                padding: 30px 20px;
+            }
+            
+            .controls {
+                flex-direction: column;
+            }
+            
+            .mode-selector {
+                flex-direction: column;
+                gap: 10px;
+            }
+            
+            .question-text {
+                font-size: 1.2em;
+            }
+            
+            .stats {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="tool-container">
+        <!-- 工具头部 -->
+        <header class="tool-header">
+            <div class="tool-header-content">
+                <a href="../../index.html" class="back-btn">
+                    <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                        <path d="M10 4l-4 4 4 4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                    返回工具集
+                </a>
+                
+                <div class="tool-title">
+                    <h1>真心话大冒险生成器</h1>
+                    <p class="tool-subtitle">真心话大冒险生成器</p>
+                </div>
+                
+                <button class="theme-toggle" id="themeToggle" aria-label="切换主题">
+                    <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                        <circle cx="10" cy="10" r="4" stroke="currentColor" stroke-width="2"/>
+                        <path d="M10 2v2M10 16v2M18 10h-2M4 10H2M15.66 4.34l-1.41 1.41M5.75 14.25l-1.41 1.41M15.66 15.66l-1.41-1.41M5.75 5.75L4.34 4.34" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                    </svg>
+                </button>
+            </div>
+        </header>
+
+        <!-- 工具主内容 -->
+        <main class="tool-main">
+            <div class="tool-card">
+                <div class="tool-section">
+                    <h2>
+                        <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                            <rect x="3" y="3" width="14" height="14" rx="2" stroke="currentColor" stroke-width="2"/>
+                        </svg>
+                        工具功能
+                    </h2>
+                    
+                    
+            <div class="tool-card">
+                <div class="tool-section">
+                    <h2>
+                        <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                            <rect x="3" y="3" width="14" height="14" rx="2" stroke="currentColor" stroke-width="2"/>
+                        </svg>
+                        真心话大冒险生成器
+                    </h2>
+                    <div class="container">
+        <div class="header">
+            <h1>🎲 真心话大冒险</h1>
+            <p>随机生成真心话问题或大冒险挑战</p>
+        </div>
+
+        <div class="main-content">
+            <!-- 模式选择 -->
+            <div class="mode-selector">
+                <button class="mode-btn active" id="truthBtn" onclick="setMode('truth')">💚 真心话</button>
+                <button class="mode-btn" id="dareBtn" onclick="setMode('dare')">🧡 大冒险</button>
+            </div>
+
+            <!-- 问题显示区 -->
+            <div class="question-display truth" id="questionDisplay">
+                <div class="question-text placeholder-text" id="questionText">
+                    点击下方按钮开始游戏！
+                </div>
+            </div>
+
+            <!-- 控制按钮 -->
+            <div class="controls">
+                <button class="generate-btn" id="generateBtn" onclick="generateQuestion()">
+                    🎯 生成真心话
+                </button>
+                <button class="random-btn" onclick="randomMode()">
+                    🎲 随机
+                </button>
+            </div>
+
+            <!-- 设置选项 -->
+            <div class="settings">
+                <h3>⚙️ 游戏设置</h3>
+                
+                <div class="setting-group">
+                    <label class="setting-label">难度等级</label>
+                    <div class="difficulty-selector">
+                        <button class="difficulty-btn" onclick="setDifficulty('easy')">😊 简单</button>
+                        <button class="difficulty-btn active" onclick="setDifficulty('normal')">😐 中等</button>
+                        <button class="difficulty-btn" onclick="setDifficulty('hard')">😈 困难</button>
+                        <button class="difficulty-btn" onclick="setDifficulty('extreme')">🔥 极限</button>
+                    </div>
+                </div>
+
+                <div class="setting-group">
+                    <label class="setting-label">类别筛选</label>
+                    <div class="category-filters">
+                        <span class="category-tag active" onclick="toggleCategory('general')">通用</span>
+                        <span class="category-tag active" onclick="toggleCategory('friendship')">友情</span>
+                        <span class="category-tag active" onclick="toggleCategory('funny')">搞笑</span>
+                        <span class="category-tag active" onclick="toggleCategory('personal')">个人</span>
+                        <span class="category-tag active" onclick="toggleCategory('creative')">创意</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 统计信息 -->
+            <div class="stats">
+                <div class="stat-item">
+                    <div class="stat-number" id="truthCount">0</div>
+                    <div class="stat-label">真心话</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-number" id="dareCount">0</div>
+                    <div class="stat-label">大冒险</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-number" id="totalCount">0</div>
+                    <div class="stat-label">总计</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-number" id="currentStreak">0</div>
+                    <div class="stat-label">连续</div>
+                </div>
+            </div>
+
+            <!-- 历史记录 -->
+            <div class="history">
+                <h3>
+                    📝 历史记录
+                    <button class="clear-history" onclick="clearHistory()">清空</button>
+                </h3>
+                <div class="history-list" id="historyList">
+                    <div style="text-align: center; color: #adb5bd; padding: 20px;">
+                        暂无记录
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="footer">
+            <p>💡 适合朋友聚会、派对、团建等场合使用</p>
+            <p>脚注：小苏趣研AI - 让聚会变得更有趣</p>
+        </div>
+    </div>
+
+    
+                </div>
+            </div>
+                    <!-- 结果显示区域 -->
+                    <div class="result-display" id="result">
+                        <pre id="resultContent">处理结果将在这里显示...</pre>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <!-- 工具页脚 -->
+        <footer class="tool-footer">
+            <p>由 <a href="../../index.html">AI工具集</a> 提供 | 原创工具</p>
+        </footer>
+    </div>
+
+    <!-- JavaScript -->
+    <script src="../../shared/js/utils.js"></script>
+    <script>
+        // 工具特定的JavaScript代码
+        class ToolApp {
+            constructor() {
+                this.init();
+            }
+
+            init() {
+                this.setupEventListeners();
+            }
+
+            setupEventListeners() {
+                document.getElementById('processBtn').addEventListener('click', () => this.process());
+                document.getElementById('clearBtn').addEventListener('click', () => this.clear());
+                document.getElementById('copyBtn').addEventListener('click', () => this.copyResult());
+                
+                // 实时处理（可选）
+                document.getElementById('input').addEventListener('input', 
+                    ToolUtils.debounce(() => this.process(), 300)
+                );
+            }
+
+            process() {
+                const input = document.getElementById('input').value;
+                const result = this.processInput(input);
+                this.displayResult(result);
+            }
+
+            processInput(input) {
+                
+        // 游戏状态
+        let currentMode = 'truth';
+        let currentDifficulty = 'normal';
+        let activeCategories = ['general', 'friendship', 'funny', 'personal', 'creative'];
+        let gameStats = {
+            truthCount: 0,
+            dareCount: 0,
+            totalCount: 0,
+            currentStreak: 0,
+            lastMode: null
+        };
+        let questionHistory = [];
+
+        // 题库
+        const questionBank = {
+            truth: {
+                easy: {
+                    general: [
+                        "你最喜欢的颜色是什么？",
+                        "你最喜欢的食物是什么？",
+                        "你最喜欢的电影类型是什么？",
+                        "你最想去哪个国家旅行？",
+                        "你最怕什么动物？"
+                    ],
+                    friendship: [
+                        "你觉得在座的谁最搞笑？",
+                        "你最欣赏朋友的哪个品质？",
+                        "你第一次见到最好朋友时的印象是什么？",
+                        "你觉得真正的友谊需要什么？",
+                        "你和朋友之间最难忘的回忆是什么？"
+                    ],
+                    funny: [
+                        "你做过最尴尬的事是什么？",
+                        "你小时候最害怕的东西是什么？",
+                        "你有什么奇怪的习惯吗？",
+                        "你最喜欢的搞笑视频是什么？",
+                        "你觉得自己最搞笑的特点是什么？"
+                    ],
+                    personal: [
+                        "你最骄傲的成就是什么？",
+                        "你最想改变自己的哪个习惯？",
+                        "你觉得自己最大的优点是什么？",
+                        "你最想学会的技能是什么？",
+                        "你童年时最喜欢的玩具是什么？"
+                    ],
+                    creative: [
+                        "如果你能拥有任何超能力，你会选择什么？",
+                        "如果你能和历史上任何人共进晚餐，你会选择谁？",
+                        "如果你中了彩票，你会做的第一件事是什么？",
+                        "如果你能时光倒流，你最想回到什么时候？",
+                        "如果你能变成任何动物，你会选择什么？"
+                    ]
+                },
+                normal: {
+                    general: [
+                        "你有没有偷偷暗恋过某个人？",
+                        "你最后悔做的一件事是什么？",
+                        "你最想对某个人说但没说出口的话是什么？",
+                        "你觉得自己最大的缺点是什么？",
+                        "你有什么不敢告诉父母的秘密？"
+                    ],
+                    friendship: [
+                        "你有没有背后说过朋友的坏话？",
+                        "你觉得在座的谁最值得信任？",
+                        "你有没有嫉妒过好朋友？",
+                        "你最不想让朋友知道的事是什么？",
+                        "你觉得友谊中最重要的是什么？"
+                    ],
+                    funny: [
+                        "你有没有在公共场合做过特别尴尬的事？",
+                        "你最丢脸的经历是什么？",
+                        "你有没有因为搞笑的原因被罚过？",
+                        "你做过最愚蠢的事情是什么？",
+                        "你有什么让人意想不到的爱好？"
+                    ],
+                    personal: [
+                        "你最害怕面对的是什么？",
+                        "你有没有撒过让自己后悔的谎？",
+                        "你最想改变过去的哪个决定？",
+                        "你觉得自己最不可告人的秘密是什么？",
+                        "你有没有做过违法的事情？"
+                    ],
+                    creative: [
+                        "如果明天是世界末日，你会做什么？",
+                        "如果你能读懂任何人的内心，你最想知道谁在想什么？",
+                        "如果你必须删除一个社交媒体应用，你会选择哪个？",
+                        "如果你能听到所有人对你的真实想法，你愿意吗？",
+                        "如果你能让一个已故的人复活，你会选择谁？"
+                    ]
+                },
+                hard: [
+                    "你有没有出轨过或者想过出轨？",
+                    "你做过的最不道德的事是什么？",
+                    "你最深层的恐惧是什么？",
+                    "你有没有真正恨过某个人？",
+                    "你觉得自己最虚伪的地方是什么？",
+                    "你有没有伤害过无辜的人？",
+                    "你最见不得人的秘密是什么？",
+                    "你有没有背叛过信任你的人？"
+                ],
+                extreme: [
+                    "你做过的最极端的事情是什么？",
+                    "你有没有考虑过自己的死亡方式？",
+                    "你最黑暗的想法是什么？",
+                    "你有没有想过要报复某个人？",
+                    "你做过的最让自己羞耻的事是什么？"
+                ]
+            },
+            dare: {
+                easy: {
+                    general: [
+                        "唱一首你最喜欢的歌",
+                        "模仿一个动物的叫声",
+                        "做10个俯卧撑",
+                        "跳一段舞蹈",
+                        "说一个笑话让大家笑"
+                    ],
+                    friendship: [
+                        "给在座的每个人一个拥抱",
+                        "夸奖在座的每个人一句",
+                        "和左边的人握手30秒",
+                        "给最好的朋友发一条感谢信息",
+                        "模仿在座某个人的说话方式"
+                    ],
+                    funny: [
+                        "用屁股写出自己的名字",
+                        "学鸡叫30秒",
+                        "做一个搞笑的表情并保持1分钟",
+                        "用最尴尬的方式介绍自己",
+                        "表演一个无声哑剧"
+                    ],
+                    personal: [
+                        "分享一个童年趣事",
+                        "展示你的特殊技能",
+                        "说出你的三个优点",
+                        "分享你最自豪的时刻",
+                        "做你最拿手的表情"
+                    ],
+                    creative: [
+                        "用身体拼出一个字母",
+                        "创编一个30秒的故事",
+                        "发明一个新的握手方式",
+                        "用三个词描述在座的每个人",
+                        "即兴表演一个情景剧"
+                    ]
+                },
+                normal: {
+                    general: [
+                        "打电话给家人说你爱他们",
+                        "在社交媒体上发一条搞笑状态",
+                        "让别人在你脸上画画",
+                        "倒立30秒",
+                        "闭眼走20步"
+                    ],
+                    friendship: [
+                        "给朋友发一条告白信息（友情）",
+                        "让朋友选择你的发型",
+                        "公开表扬一个朋友",
+                        "和朋友交换衣服",
+                        "让朋友决定你下一个社交媒体头像"
+                    ],
+                    funny: [
+                        "用袜子当手套吃东西",
+                        "模仿婴儿哭泣1分钟",
+                        "用夸张的方式重现你的出生过程",
+                        "学猫咪舔爪子清洁自己",
+                        "假装你是一个机器人"
+                    ],
+                    personal: [
+                        "分享你最尴尬的经历",
+                        "公开道歉一件你做错的事",
+                        "承认一个你的坏习惯",
+                        "说出你最害怕的三件事",
+                        "展示你最难看的照片"
+                    ],
+                    creative: [
+                        "用你的身体拼出在座人数的数字",
+                        "创作一首关于友谊的诗",
+                        "设计一个新的问候语",
+                        "用不同的声音讲同一个故事",
+                        "发明一种新的舞蹈动作"
+                    ]
+                },
+                hard: [
+                    "给你暗恋的人发信息表白",
+                    "删除你最喜欢的社交媒体应用24小时",
+                    "让大家看你最私密的聊天记录",
+                    "公开一个你的黑历史",
+                    "做一件让你感到羞耻的事",
+                    "承认你对在座某人的真实看法",
+                    "让别人翻看你的手机相册",
+                    "公开你最不想让人知道的秘密"
+                ],
+                extreme: [
+                    "在公共场所大喊一分钟",
+                    "给随机陌生人发搞笑信息",
+                    "在视频通话中做最尴尬的动作",
+                    "承诺做一件改变生活的事",
+                    "当众承认你最羞耻的行为"
+                ]
+            }
+        };
+
+        // 初始化
+        function init() {
+            loadGameData();
+            updateStats();
+            updateHistoryDisplay();
+        }
+
+        // 设置模式
+        function setMode(mode) {
+            currentMode = mode;
+            
+            // 更新按钮状态
+            document.querySelectorAll('.mode-btn').forEach(btn => btn.classList.remove('active'));
+            document.getElementById(mode + 'Btn').classList.add('active');
+            
+            // 更新显示区样式
+            const display = document.getElementById('questionDisplay');
+            display.className = `question-display ${mode}`;
+            
+            // 更新生成按钮文本
+            const generateBtn = document.getElementById('generateBtn');
+            generateBtn.textContent = mode === 'truth' ? '🎯 生成真心话' : '🎯 生成大冒险';
+        }
+
+        // 设置难度
+        function setDifficulty(difficulty) {
+            currentDifficulty = difficulty;
+            
+            // 更新按钮状态
+            document.querySelectorAll('.difficulty-btn').forEach(btn => btn.classList.remove('active'));
+            event.target.classList.add('active');
+        }
+
+        // 切换类别
+        function toggleCategory(category) {
+            const index = activeCategories.indexOf(category);
+            if (index > -1) {
+                if (activeCategories.length > 1) { // 至少保留一个类别
+                    activeCategories.splice(index, 1);
+                    event.target.classList.remove('active');
+                }
+            } else {
+                activeCategories.push(category);
+                event.target.classList.add('active');
+            }
+        }
+
+        // 生成问题
+        function generateQuestion() {
+            const question = getRandomQuestion(currentMode, currentDifficulty);
+            displayQuestion(question);
+            updateGameStats(currentMode);
+            addToHistory(question, currentMode);
+            saveGameData();
+        }
+
+        // 随机模式
+        function randomMode() {
+            const mode = Math.random() < 0.5 ? 'truth' : 'dare';
+            const difficulties = ['easy', 'normal', 'hard', 'extreme'];
+            const difficulty = difficulties[Math.floor(Math.random() * difficulties.length)];
+            
+            currentMode = mode;
+            currentDifficulty = difficulty;
+            
+            // 更新UI状态
+            setMode(mode);
+            document.querySelectorAll('.difficulty-btn').forEach(btn => btn.classList.remove('active'));
+            document.querySelector(`[onclick="setDifficulty('${difficulty}')"]`).classList.add('active');
+            
+            generateQuestion();
+        }
+
+        // 获取随机问题
+        function getRandomQuestion(mode, difficulty) {
+            const bank = questionBank[mode][difficulty];
+            
+            if (typeof bank === 'object' && !Array.isArray(bank)) {
+                // 从激活的类别中随机选择
+                const availableCategories = activeCategories.filter(cat => bank[cat]);
+                if (availableCategories.length === 0) return "没有找到合适的问题";
+                
+                const randomCategory = availableCategories[Math.floor(Math.random() * availableCategories.length)];
+                const questions = bank[randomCategory];
+                return questions[Math.floor(Math.random() * questions.length)];
+            } else if (Array.isArray(bank)) {
+                // 直接从数组中选择
+                return bank[Math.floor(Math.random() * bank.length)];
+            }
+            
+            return "没有找到合适的问题";
+        }
+
+        // 显示问题
+        function displayQuestion(question) {
+            const questionText = document.getElementById('questionText');
+            questionText.textContent = question;
+            questionText.classList.remove('placeholder-text');
+            
+            // 添加动画效果
+            questionText.style.animation = 'none';
+            setTimeout(() => {
+                questionText.style.animation = 'slideIn 0.5s ease-out';
+            }, 10);
+        }
+
+        // 更新游戏统计
+        function updateGameStats(mode) {
+            if (mode === 'truth') {
+                gameStats.truthCount++;
+            } else {
+                gameStats.dareCount++;
+            }
+            gameStats.totalCount++;
+            
+            // 更新连续记录
+            if (gameStats.lastMode === mode) {
+                gameStats.currentStreak++;
+            } else {
+                gameStats.currentStreak = 1;
+                gameStats.lastMode = mode;
+            }
+            
+            updateStats();
+        }
+
+        // 更新统计显示
+        function updateStats() {
+            document.getElementById('truthCount').textContent = gameStats.truthCount;
+            document.getElementById('dareCount').textContent = gameStats.dareCount;
+            document.getElementById('totalCount').textContent = gameStats.totalCount;
+            document.getElementById('currentStreak').textContent = gameStats.currentStreak;
+        }
+
+        // 添加到历史记录
+        function addToHistory(question, mode) {
+            const historyItem = {
+                question: question,
+                mode: mode,
+                difficulty: currentDifficulty,
+                timestamp: new Date().toLocaleString()
+            };
+            
+            questionHistory.unshift(historyItem);
+            
+            // 限制历史记录数量
+            if (questionHistory.length > 20) {
+                questionHistory = questionHistory.slice(0, 20);
+            }
+            
+            updateHistoryDisplay();
+        }
+
+        // 更新历史记录显示
+        function updateHistoryDisplay() {
+            const historyList = document.getElementById('historyList');
+            
+            if (questionHistory.length === 0) {
+                historyList.innerHTML = '<div style="text-align: center; color: #adb5bd; padding: 20px;">暂无记录</div>';
+                return;
+            }
+            
+            const historyHTML = questionHistory.map((item, index) => `
+                <div class="history-item ${item.mode}" onclick="repeatQuestion(${index})">
+                    <div class="history-item-text">${item.question}</div>
+                    <div class="history-item-meta">
+                        ${item.mode === 'truth' ? '💚 真心话' : '🧡 大冒险'} · 
+                        ${getDifficultyText(item.difficulty)} · 
+                        ${item.timestamp}
+                    </div>
+                </div>
+            `).join('');
+            
+            historyList.innerHTML = historyHTML;
+        }
+
+        // 重复问题
+        function repeatQuestion(index) {
+            const item = questionHistory[index];
+            displayQuestion(item.question);
+        }
+
+        // 获取难度文本
+        function getDifficultyText(difficulty) {
+            const difficultyMap = {
+                'easy': '😊 简单',
+                'normal': '😐 中等',
+                'hard': '😈 困难',
+                'extreme': '🔥 极限'
+            };
+            return difficultyMap[difficulty] || difficulty;
+        }
+
+        // 清空历史记录
+        function clearHistory() {
+            if (confirm('确定要清空所有历史记录吗？')) {
+                questionHistory = [];
+                updateHistoryDisplay();
+                saveGameData();
+            }
+        }
+
+        // 保存游戏数据
+        function saveGameData() {
+            const gameData = {
+                stats: gameStats,
+                history: questionHistory,
+                settings: {
+                    mode: currentMode,
+                    difficulty: currentDifficulty,
+                    categories: activeCategories
+                }
+            };
+            
+            try {
+                localStorage.setItem('truth_or_dare_data', JSON.stringify(gameData));
+            } catch (error) {
+                console.error('保存数据失败:', error);
+            }
+        }
+
+        // 加载游戏数据
+        function loadGameData() {
+            try {
+                const savedData = localStorage.getItem('truth_or_dare_data');
+                if (savedData) {
+                    const gameData = JSON.parse(savedData);
+                    
+                    if (gameData.stats) {
+                        gameStats = { ...gameStats, ...gameData.stats };
+                    }
+                    
+                    if (gameData.history) {
+                        questionHistory = gameData.history;
+                    }
+                    
+                    if (gameData.settings) {
+                        if (gameData.settings.mode) {
+                            setMode(gameData.settings.mode);
+                        }
+                        if (gameData.settings.difficulty) {
+                            currentDifficulty = gameData.settings.difficulty;
+                            document.querySelectorAll('.difficulty-btn').forEach(btn => btn.classList.remove('active'));
+                            document.querySelector(`[onclick="setDifficulty('${gameData.settings.difficulty}')"]`)?.classList.add('active');
+                        }
+                        if (gameData.settings.categories) {
+                            activeCategories = gameData.settings.categories;
+                            document.querySelectorAll('.category-tag').forEach(tag => {
+                                const category = tag.textContent.toLowerCase().replace(/[^a-z]/g, '');
+                                if (activeCategories.includes(category)) {
+                                    tag.classList.add('active');
+                                } else {
+                                    tag.classList.remove('active');
+                                }
+                            });
+                        }
+                    }
+                }
+            } catch (error) {
+                console.error('加载数据失败:', error);
+            }
+        }
+
+        // 初始化应用
+        window.addEventListener('load', init);
+        
+        // 页面卸载前保存数据
+        window.addEventListener('beforeunload', saveGameData);
+    
+                return input;
+            }
+
+            displayResult(result) {
+                document.getElementById('resultContent').textContent = result;
+            }
+
+            clear() {
+                document.getElementById('input').value = '';
+                document.getElementById('resultContent').textContent = '处理结果将在这里显示...';
+            }
+
+            copyResult() {
+                const result = document.getElementById('resultContent').textContent;
+                if (result && result !== '处理结果将在这里显示...') {
+                    ToolUtils.copyToClipboard(result);
+                } else {
+                    ToolUtils.showToast('没有可复制的内容', 'warning');
+                }
+            }
+        }
+
+        // 初始化应用
+        document.addEventListener('DOMContentLoaded', () => {
+            new ToolApp();
+        });
+    </script>
+</body>
+</html>

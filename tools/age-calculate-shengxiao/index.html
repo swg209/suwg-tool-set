@@ -1,0 +1,390 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>年龄和生肖计算器 - AI工具集</title>
+    <meta name="description" content="年龄和生肖计算器">
+    
+    <!-- 样式文件 -->
+    <link rel="stylesheet" href="../../shared/css/common.css">
+    
+    <!-- 工具特定样式 -->
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background-color: var(--bg-secondary);
+            color: var(--text-primary);
+            line-height: 1.6;
+            padding: var(--spacing-lg);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+        
+        .container {
+            width: 100%;
+            max-width: 500px;
+            margin: 0 auto;
+            background-color: var(--bg-card);
+            border-radius: var(--radius-md);
+            box-shadow: 0 0 15px rgba(0, 0, 0, 0.1);
+            padding: 30px;
+        }
+        
+        h1 {
+            text-align: center;
+            margin-bottom: 30px;
+            color: #2c3e50;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: bold;
+            color: #555;
+        }
+        
+        input[type="date"] {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: var(--radius-sm);
+            font-size: 16px;
+            position: relative;
+        }
+
+        /* 兼容性样式，用于美化日期选择器的图标 */
+        input[type="date"]::-webkit-calendar-picker-indicator {
+            background: transparent;
+            bottom: 0;
+            color: transparent;
+            cursor: pointer;
+            height: auto;
+            left: 0;
+            position: absolute;
+            right: 0;
+            top: 0;
+            width: auto;
+        }
+        
+        button {
+            background-color: #3498db;
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: var(--radius-sm);
+            cursor: pointer;
+            font-size: 18px;
+            transition: background-color 0.3s ease;
+            width: 100%;
+            margin-bottom: 20px;
+        }
+        
+        button:hover {
+            background-color: #2980b9;
+        }
+        
+        .result {
+            margin-top: 20px;
+            padding: var(--spacing-lg);
+            background-color: #f9f9f9;
+            border-radius: var(--radius-sm);
+            border-left: 4px solid #2ecc71;
+            display: none; /* 默认隐藏 */
+        }
+
+        .result h2 {
+            margin-bottom: 15px;
+            color: #2c3e50;
+            font-size: 20px;
+        }
+        
+        .result p {
+            font-size: 18px;
+            margin-bottom: 10px;
+        }
+
+        .result span {
+            font-weight: bold;
+            color: #3498db;
+        }
+        
+        .error-message {
+            color: #e74c3c;
+            background-color: #fadbd8;
+            padding: var(--spacing-md) 15px;
+            border-radius: var(--radius-sm);
+            margin-top: 15px;
+            display: none; /* 默认隐藏 */
+            text-align: center;
+        }
+
+        .footer {
+            margin-top: 30px;
+            text-align: center;
+            font-size: 14px;
+            color: #7f8c8d;
+        }
+        
+        @media (max-width: 768px) {
+            .container {
+                padding: var(--spacing-md);
+                margin: var(--spacing-sm);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="tool-container">
+        <!-- 工具头部 -->
+        <header class="tool-header">
+            <div class="tool-header-content">
+                <a href="../../index.html" class="back-btn">
+                    <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                        <path d="M10 4l-4 4 4 4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                    返回工具集
+                </a>
+                
+                <div class="tool-title">
+                    <h1>年龄和生肖计算器</h1>
+                    <p class="tool-subtitle">年龄和生肖计算器</p>
+                </div>
+                
+                <button class="theme-toggle" id="themeToggle" aria-label="切换主题">
+                    <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                        <circle cx="10" cy="10" r="4" stroke="currentColor" stroke-width="2"/>
+                        <path d="M10 2v2M10 16v2M18 10h-2M4 10H2M15.66 4.34l-1.41 1.41M5.75 14.25l-1.41 1.41M15.66 15.66l-1.41-1.41M5.75 5.75L4.34 4.34" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                    </svg>
+                </button>
+            </div>
+        </header>
+
+        <!-- 工具主内容 -->
+        <main class="tool-main">
+            <div class="tool-card">
+                <div class="tool-section">
+                    <h2>
+                        <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                            <rect x="3" y="3" width="14" height="14" rx="2" stroke="currentColor" stroke-width="2"/>
+                        </svg>
+                        工具功能
+                    </h2>
+                    
+                    
+            <div class="tool-card">
+                <div class="tool-section">
+                    <h2>
+                        <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                            <rect x="3" y="3" width="14" height="14" rx="2" stroke="currentColor" stroke-width="2"/>
+                        </svg>
+                        年龄和生肖计算器
+                    </h2>
+                    <div class="container">
+        <h1>年龄和生肖计算器</h1>
+        
+        <div class="form-group">
+            <label for="birthdate">请选择您的出生日期:</label>
+            <input type="date" id="birthdate" max="">
+        </div>
+        
+        <button id="calculate-btn">开始计算</button>
+        
+        <div class="error-message" id="error-message"></div>
+        
+        <div class="result" id="result">
+            <h2>计算结果</h2>
+            <p>您的年龄是: <span id="age"></span></p>
+            <p>您的生肖是: <span id="zodiac"></span></p>
+            <p style="font-size: 12px; color: #7f8c8d; margin-top: 15px; margin-bottom: 0;">*生肖按立春（约公历2月4日）为分界线计算，结果更准确。</p>
+        </div>
+        
+        <div class="footer">
+            <p>© 小苏趣研AI | 年龄生肖计算器</p>
+        </div>
+    </div>
+
+    
+                </div>
+            </div>
+                    <!-- 结果显示区域 -->
+                    <div class="result-display" id="result">
+                        <pre id="resultContent">处理结果将在这里显示...</pre>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <!-- 工具页脚 -->
+        <footer class="tool-footer">
+            <p>由 <a href="../../index.html">AI工具集</a> 提供 | 原创工具</p>
+        </footer>
+    </div>
+
+    <!-- JavaScript -->
+    <script src="../../shared/js/utils.js"></script>
+    <script>
+        // 工具特定的JavaScript代码
+        class ToolApp {
+            constructor() {
+                this.init();
+            }
+
+            init() {
+                this.setupEventListeners();
+            }
+
+            setupEventListeners() {
+                document.getElementById('processBtn').addEventListener('click', () => this.process());
+                document.getElementById('clearBtn').addEventListener('click', () => this.clear());
+                document.getElementById('copyBtn').addEventListener('click', () => this.copyResult());
+                
+                // 实时处理（可选）
+                document.getElementById('input').addEventListener('input', 
+                    ToolUtils.debounce(() => this.process(), 300)
+                );
+            }
+
+            process() {
+                const input = document.getElementById('input').value;
+                const result = this.processInput(input);
+                this.displayResult(result);
+            }
+
+            processInput(input) {
+                
+        // 设置日期输入的最大值为今天
+        const birthdateInput = document.getElementById('birthdate');
+        const today = new Date();
+        const yyyy = today.getFullYear();
+        const mm = String(today.getMonth() + 1).padStart(2, '0'); // 月份从0开始
+        const dd = String(today.getDate()).padStart(2, '0');
+        birthdateInput.max = `${yyyy}-${mm}-${dd}`;
+
+        // 获取DOM元素
+        const calculateBtn = document.getElementById('calculate-btn');
+        const resultDiv = document.getElementById('result');
+        const errorMessageDiv = document.getElementById('error-message');
+        const ageSpan = document.getElementById('age');
+        const zodiacSpan = document.getElementById('zodiac');
+
+        // 显示/隐藏错误消息
+        function showError(message) {
+            if (message) {
+                errorMessageDiv.textContent = message;
+                errorMessageDiv.style.display = 'block';
+                resultDiv.style.display = 'none';
+            } else {
+                errorMessageDiv.style.display = 'none';
+            }
+        }
+
+        // 计算按钮的点击事件监听
+        calculateBtn.addEventListener('click', function() {
+            const birthdateString = birthdateInput.value;
+            
+            if (!birthdateString) {
+                showError('请输入您的出生日期。');
+                return;
+            }
+            
+            const birthDate = new Date(birthdateString);
+            
+            // 再次验证日期有效性
+            if (isNaN(birthDate.getTime())) {
+                showError('您输入的日期无效，请重新选择。');
+                return;
+            }
+
+            if (birthDate > today) {
+                showError('出生日期不能在未来，请重新选择。');
+                return;
+            }
+
+            if (birthDate.getFullYear() < 1901) {
+                showError('请输入1901年之后的日期。');
+                return;
+            }
+            
+            // 清除之前的错误信息
+            showError(false);
+            
+            // --- 1. 计算年龄（周岁） ---
+            let age = today.getFullYear() - birthDate.getFullYear();
+            const monthDifference = today.getMonth() - birthDate.getMonth();
+            const dayDifference = today.getDate() - birthDate.getDate();
+
+            // 如果当前月小于出生月，或者同月但当前日小于出生日，则年龄减1
+            if (monthDifference < 0 || (monthDifference === 0 && dayDifference < 0)) {
+                age--;
+            }
+            
+            ageSpan.textContent = age + " 周岁";
+            
+            // --- 2. 计算生肖 ---
+            // 生肖数组
+            const zodiacs = ['鼠', '牛', '虎', '兔', '龙', '蛇', '马', '羊', '猴', '鸡', '狗', '猪'];
+            
+            let zodiacYear = birthDate.getFullYear();
+            const birthMonth = birthDate.getMonth() + 1; // getMonth()返回0-11
+            const birthDay = birthDate.getDate();
+            
+            // 中国的生肖年通常以立春为界（大约在公历的2月4日或5日）
+            // 如果生日在当年的立春之前，则应算作上一个生肖年
+            if (birthMonth < 2 || (birthMonth === 2 && birthDay < 4)) {
+                zodiacYear--;
+            }
+            
+            // (年份 - 4) % 12 的余数对应生肖数组的索引
+            // 例如: 2020年(鼠年) (2020-4)%12 = 0。所以鼠在数组第0位。
+            const zodiacIndex = (zodiacYear - 4) % 12;
+            
+            // 处理负数结果（对于早于公元4年的年份）
+            zodiacSpan.textContent = zodiacs[zodiacIndex < 0 ? zodiacIndex + 12 : zodiacIndex];
+            
+            // 显示结果区域
+            resultDiv.style.display = 'block';
+        });
+
+    
+                return input;
+            }
+
+            displayResult(result) {
+                document.getElementById('resultContent').textContent = result;
+            }
+
+            clear() {
+                document.getElementById('input').value = '';
+                document.getElementById('resultContent').textContent = '处理结果将在这里显示...';
+            }
+
+            copyResult() {
+                const result = document.getElementById('resultContent').textContent;
+                if (result && result !== '处理结果将在这里显示...') {
+                    ToolUtils.copyToClipboard(result);
+                } else {
+                    ToolUtils.showToast('没有可复制的内容', 'warning');
+                }
+            }
+        }
+
+        // 初始化应用
+        document.addEventListener('DOMContentLoaded', () => {
+            new ToolApp();
+        });
+    </script>
+</body>
+</html>

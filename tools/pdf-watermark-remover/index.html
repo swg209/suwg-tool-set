@@ -1,0 +1,503 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PDF 水印移除工具 - AI工具集</title>
+    <meta name="description" content="PDF 水印移除工具">
+    
+    <!-- 外部依赖 -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.10.377/pdf.min.js"
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.4.0/jspdf.umd.min.js"
+    <!-- 样式文件 -->
+    <link rel="stylesheet" href="../../shared/css/common.css">
+    
+    <!-- 工具特定样式 -->
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background-color: #f0f2f5;
+            color: var(--text-primary);
+            margin: 0;
+            padding: var(--spacing-lg);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        h1 {
+            color: #1a1a1a;
+        }
+        .container {
+            width: 100%;
+            max-width: 900px;
+            background: var(--bg-card);
+            padding: 25px;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+        .controls, .processing-controls, .navigation-controls {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid #e8e8e8;
+        }
+        .file-input-wrapper {
+            position: relative;
+            overflow: hidden;
+            display: inline-block;
+        }
+        .btn {
+            background-color: #007bff;
+            color: white;
+            padding: var(--spacing-md) 15px;
+            border: none;
+            border-radius: var(--radius-sm);
+            cursor: pointer;
+            font-size: 14px;
+            transition: background-color 0.3s;
+        }
+        .btn:hover {
+            background-color: #0056b3;
+        }
+        .btn:disabled {
+            background-color: #a0a0a0;
+            cursor: not-allowed;
+        }
+        .file-input-wrapper input[type=file] {
+            font-size: 100px;
+            position: absolute;
+            left: 0;
+            top: 0;
+            opacity: 0;
+            cursor: pointer;
+        }
+        #watermark-text {
+            padding: 9px;
+            border: 1px solid #ccc;
+            border-radius: var(--radius-sm);
+            font-size: 14px;
+            flex-grow: 1;
+        }
+        #page-info {
+            font-size: 16px;
+            font-weight: 500;
+        }
+        #pdf-viewer {
+            border: 1px solid #ddd;
+            background-color: #f8f9fa;
+            min-height: 500px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: auto;
+        }
+        canvas {
+            border: 1px dashed #aaa;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+        }
+        .loader {
+            font-size: 18px;
+            color: #555;
+        }
+        
+        @media (max-width: 768px) {
+            .container {
+                padding: var(--spacing-md);
+                margin: var(--spacing-sm);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="tool-container">
+        <!-- 工具头部 -->
+        <header class="tool-header">
+            <div class="tool-header-content">
+                <a href="../../index.html" class="back-btn">
+                    <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                        <path d="M10 4l-4 4 4 4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                    返回工具集
+                </a>
+                
+                <div class="tool-title">
+                    <h1>PDF 水印移除工具</h1>
+                    <p class="tool-subtitle">PDF 水印移除工具</p>
+                </div>
+                
+                <button class="theme-toggle" id="themeToggle" aria-label="切换主题">
+                    <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                        <circle cx="10" cy="10" r="4" stroke="currentColor" stroke-width="2"/>
+                        <path d="M10 2v2M10 16v2M18 10h-2M4 10H2M15.66 4.34l-1.41 1.41M5.75 14.25l-1.41 1.41M15.66 15.66l-1.41-1.41M5.75 5.75L4.34 4.34" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                    </svg>
+                </button>
+            </div>
+        </header>
+
+        <!-- 工具主内容 -->
+        <main class="tool-main">
+            <div class="tool-card">
+                <div class="tool-section">
+                    <h2>
+                        <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                            <rect x="3" y="3" width="14" height="14" rx="2" stroke="currentColor" stroke-width="2"/>
+                        </svg>
+                        工具功能
+                    </h2>
+                    
+                    
+            <div class="tool-card">
+                <div class="tool-section">
+                    <h2>
+                        <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                            <rect x="3" y="3" width="14" height="14" rx="2" stroke="currentColor" stroke-width="2"/>
+                        </svg>
+                        PDF 水印移除工具
+                    </h2>
+                    <div class="container">
+        <h1>PDF 水印移除工具</h1>
+
+        <div class="controls">
+            <div class="file-input-wrapper">
+                <button class="btn">1. 选择PDF文件</button>
+                <input type="file" id="pdf-file" accept=".pdf">
+            </div>
+            <span id="file-name">未选择任何文件</span>
+        </div>
+
+        <div class="processing-controls">
+            <input type="text" id="watermark-text" placeholder="2. 在此输入要移除的文字水印内容">
+            <button id="remove-text-btn" class="btn" disabled>一键清除文字水印</button>
+        </div>
+
+        <div class="navigation-controls">
+            <button id="prev-page" class="btn" disabled>上一页</button>
+            <button id="next-page" class="btn" disabled>下一页</button>
+            <span id="page-info">第 0 / 0 页</span>
+            <button id="download-pdf" class="btn" style="background-color: #28a745;" disabled>3. 生成并下载PDF</button>
+        </div>
+
+        <div id="pdf-viewer">
+            <div id="loader" class="loader">请先选择一个PDF文件</div>
+        </div>
+    </div>
+
+    
+                </div>
+            </div>
+                    <!-- 结果显示区域 -->
+                    <div class="result-display" id="result">
+                        <pre id="resultContent">处理结果将在这里显示...</pre>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <!-- 工具页脚 -->
+        <footer class="tool-footer">
+            <p>由 <a href="../../index.html">AI工具集</a> 提供 | 原创工具</p>
+        </footer>
+    </div>
+
+    <!-- JavaScript -->
+    <script src="../../shared/js/utils.js"></script>
+    <script>
+        // 工具特定的JavaScript代码
+        class ToolApp {
+            constructor() {
+                this.init();
+            }
+
+            init() {
+                this.setupEventListeners();
+            }
+
+            setupEventListeners() {
+                document.getElementById('processBtn').addEventListener('click', () => this.process());
+                document.getElementById('clearBtn').addEventListener('click', () => this.clear());
+                document.getElementById('copyBtn').addEventListener('click', () => this.copyResult());
+                
+                // 实时处理（可选）
+                document.getElementById('input').addEventListener('input', 
+                    ToolUtils.debounce(() => this.process(), 300)
+                );
+            }
+
+            process() {
+                const input = document.getElementById('input').value;
+                const result = this.processInput(input);
+                this.displayResult(result);
+            }
+
+            processInput(input) {
+                
+        // 设置 PDF.js worker 的路径
+        pdfjsLib.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.10.377/pdf.worker.min.js`;
+
+        // 全局变量
+        let pdfDoc = null;
+        let currentPageNum = 1;
+        let watermarkRects = {}; // 存储每一页需要遮盖的矩形位置
+
+        // DOM 元素
+        const fileInput = document.getElementById('pdf-file');
+        const fileNameLabel = document.getElementById('file-name');
+        const watermarkTextInput = document.getElementById('watermark-text');
+        const removeTextBtn = document.getElementById('remove-text-btn');
+        const prevPageBtn = document.getElementById('prev-page');
+        const nextPageBtn = document.getElementById('next-page');
+        const pageInfo = document.getElementById('page-info');
+        const downloadBtn = document.getElementById('download-pdf');
+        const viewer = document.getElementById('pdf-viewer');
+        const loader = document.getElementById('loader');
+
+        // --- 1. 文件加载逻辑 ---
+        fileInput.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (!file || file.type !== 'application/pdf') {
+                return;
+            }
+
+            fileNameLabel.textContent = file.name;
+            loader.textContent = '正在加载PDF...';
+            viewer.innerHTML = ''; // 清空预览区
+            viewer.appendChild(loader);
+
+            const fileReader = new FileReader();
+            fileReader.onload = function() {
+                const typedarray = new Uint8Array(this.result);
+                const loadingTask = pdfjsLib.getDocument(typedarray);
+                loadingTask.promise.then(pdf => {
+                    pdfDoc = pdf;
+                    currentPageNum = 1;
+                    watermarkRects = {}; // 重置
+                    updateControls();
+                    renderPage(currentPageNum);
+                });
+            };
+            fileReader.readAsArrayBuffer(file);
+        });
+
+        // --- 2. 渲染页面 ---
+        async function renderPage(num) {
+            loader.textContent = `正在渲染第 ${num} 页...`;
+            viewer.innerHTML = ''; // 清空旧页面
+            viewer.appendChild(loader);
+
+            const page = await pdfDoc.getPage(num);
+            const viewport = page.getViewport({ scale: 1.5 });
+            
+            const canvas = document.createElement('canvas');
+            const context = canvas.getContext('2d');
+            canvas.height = viewport.height;
+            canvas.width = viewport.width;
+
+            const renderContext = {
+                canvasContext: context,
+                viewport: viewport
+            };
+
+            await page.render(renderContext).promise;
+            
+            // 如果有需要遮盖的矩形，就在这里绘制
+            if (watermarkRects[num]) {
+                context.fillStyle = 'white';
+                watermarkRects[num].forEach(rect => {
+                    context.fillRect(rect.x, rect.y, rect.width, rect.height);
+                });
+            }
+
+            viewer.innerHTML = ''; // 清空加载提示
+            viewer.appendChild(canvas);
+            pageInfo.textContent = `第 ${num} / ${pdfDoc.numPages} 页`;
+        }
+
+        // --- 3. 导航逻辑 ---
+        prevPageBtn.addEventListener('click', () => {
+            if (currentPageNum <= 1) return;
+            currentPageNum--;
+            renderPage(currentPageNum);
+            updateControls();
+        });
+
+        nextPageBtn.addEventListener('click', () => {
+            if (currentPageNum >= pdfDoc.numPages) return;
+            currentPageNum++;
+            renderPage(currentPageNum);
+            updateControls();
+        });
+
+        function updateControls() {
+            if (!pdfDoc) return;
+            // 导航按钮
+            prevPageBtn.disabled = currentPageNum <= 1;
+            nextPageBtn.disabled = currentPageNum >= pdfDoc.numPages;
+            // 功能按钮
+            removeTextBtn.disabled = false;
+            downloadBtn.disabled = false;
+        }
+
+        // --- 4. 文字水印移除逻辑 ---
+        removeTextBtn.addEventListener('click', async () => {
+            const watermarkText = watermarkTextInput.value.trim();
+            if (!watermarkText) {
+                alert('请输入要移除的水印文字！');
+                return;
+            }
+
+            loader.textContent = '正在所有页面上查找水印，请稍候...';
+            viewer.innerHTML = '';
+            viewer.appendChild(loader);
+
+            watermarkRects = {}; // 重置
+
+            for (let i = 1; i <= pdfDoc.numPages; i++) {
+                const page = await pdfDoc.getPage(i);
+                const viewport = page.getViewport({ scale: 1.5 });
+                const textContent = await page.getTextContent();
+                
+                watermarkRects[i] = [];
+                const items = textContent.items;
+
+                // 新的序列匹配逻辑，用于处理中文等被分割的文字
+                for (let j = 0; j < items.length; j++) {
+                    let combinedStr = '';
+                    let matchedItems = [];
+
+                    // 从当前项开始，向后拼接，尝试匹配水印文字
+                    for (let k = j; k < items.length; k++) {
+                        // 忽略空的或只有空格的项
+                        if (!items[k].str || items[k].str.trim() === '') continue;
+
+                        combinedStr += items[k].str;
+                        matchedItems.push(items[k]);
+
+                        // 如果拼接后的字符串与水印文本匹配
+                        if (combinedStr === watermarkText) {
+                            let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+
+                            // 计算能覆盖所有匹配项的最小矩形
+                            matchedItems.forEach(item => {
+                                const transform = item.transform;
+                                const itemWidth = item.width * viewport.scale;
+                                const itemHeight = item.height * viewport.scale;
+                                const canvasX = transform[4] * viewport.scale;
+                                const canvasY = viewport.height - (transform[5] * viewport.scale);
+                                const rectTopLeftY = canvasY - itemHeight;
+
+                                minX = Math.min(minX, canvasX);
+                                minY = Math.min(minY, rectTopLeftY);
+                                maxX = Math.max(maxX, canvasX + itemWidth);
+                                maxY = Math.max(maxY, rectTopLeftY + itemHeight);
+                            });
+
+                            // 创建一个覆盖整个序列的大矩形
+                            const combinedRect = {
+                                x: minX - 2,
+                                y: minY - 2,
+                                width: (maxX - minX) + 4,
+                                height: (maxY - minY) + 4
+                            };
+                            watermarkRects[i].push(combinedRect);
+
+                            // 跳过已经匹配过的项
+                            j = k; 
+                            break; // 结束内层循环
+                        }
+
+                        // 如果拼接后的字符串长度已超过目标，但仍不匹配，则停止拼接
+                        if (combinedStr.length >= watermarkText.length && combinedStr !== watermarkText) {
+                            break;
+                        }
+                    }
+                }
+            }
+            alert(`已在所有页面上标记了 "${watermarkText}" 的位置。现在您可以预览或直接下载。`);
+            renderPage(currentPageNum);
+        });
+
+        // --- 5. 下载PDF逻辑 ---
+        downloadBtn.addEventListener('click', async () => {
+            loader.textContent = '正在生成新的PDF文件，请稍候...';
+            viewer.innerHTML = '';
+            viewer.appendChild(loader);
+
+            const { jsPDF } = window.jspdf;
+            let newPdf = null;
+
+            for (let i = 1; i <= pdfDoc.numPages; i++) {
+                const page = await pdfDoc.getPage(i);
+                const viewport = page.getViewport({ scale: 1.5 });
+                
+                const canvas = document.createElement('canvas');
+                const context = canvas.getContext('2d');
+                canvas.height = viewport.height;
+                canvas.width = viewport.width;
+
+                const renderContext = {
+                    canvasContext: context,
+                    viewport: viewport
+                };
+                await page.render(renderContext).promise;
+
+                // 绘制遮盖
+                if (watermarkRects[i]) {
+                    context.fillStyle = 'white';
+                    watermarkRects[i].forEach(rect => {
+                        context.fillRect(rect.x, rect.y, rect.width, rect.height);
+                    });
+                }
+                
+                const imgData = canvas.toDataURL('image/jpeg', 0.95);
+
+                if (!newPdf) {
+                    // 使用第一页的尺寸初始化PDF
+                    newPdf = new jsPDF({
+                        orientation: canvas.width > canvas.height ? 'l' : 'p',
+                        unit: 'px',
+                        format: [canvas.width, canvas.height]
+                    });
+                } else {
+                    newPdf.addPage([canvas.width, canvas.height], canvas.width > canvas.height ? 'l' : 'p');
+                }
+
+                newPdf.addImage(imgData, 'JPEG', 0, 0, canvas.width, canvas.height);
+            }
+            
+            newPdf.save('cleaned-document.pdf');
+            loader.textContent = 'PDF已生成！';
+        });
+
+    
+                return input;
+            }
+
+            displayResult(result) {
+                document.getElementById('resultContent').textContent = result;
+            }
+
+            clear() {
+                document.getElementById('input').value = '';
+                document.getElementById('resultContent').textContent = '处理结果将在这里显示...';
+            }
+
+            copyResult() {
+                const result = document.getElementById('resultContent').textContent;
+                if (result && result !== '处理结果将在这里显示...') {
+                    ToolUtils.copyToClipboard(result);
+                } else {
+                    ToolUtils.showToast('没有可复制的内容', 'warning');
+                }
+            }
+        }
+
+        // 初始化应用
+        document.addEventListener('DOMContentLoaded', () => {
+            new ToolApp();
+        });
+    </script>
+</body>
+</html>

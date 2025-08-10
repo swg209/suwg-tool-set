@@ -1,0 +1,996 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>像素风头像生成器 - AI工具集</title>
+    <meta name="description" content="像素风头像生成器">
+    
+    <!-- 样式文件 -->
+    <link rel="stylesheet" href="../../shared/css/common.css">
+    
+    <!-- 工具特定样式 -->
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Courier New', monospace;
+            background: linear-gradient(45deg, #2c3e50, #34495e);
+            min-height: 100vh;
+            color: #ecf0f1;
+            padding: var(--spacing-lg);
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            background: rgba(0, 0, 0, 0.3);
+            padding: var(--spacing-lg);
+            border-radius: var(--radius-md);
+            border: 2px solid #3498db;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            color: #3498db;
+            text-shadow: 2px 2px 0px #2c3e50;
+            margin-bottom: 10px;
+        }
+
+        .pixel-icon {
+            display: inline-block;
+            width: 40px;
+            height: 40px;
+            background: #e74c3c;
+            margin: 0 10px;
+            image-rendering: pixelated;
+            border: 2px solid #c0392b;
+        }
+
+        .main-content {
+            display: grid;
+            grid-template-columns: 300px 1fr 300px;
+            gap: 20px;
+            align-items: start;
+        }
+
+        .control-panel, .preview-panel, .export-panel {
+            background: rgba(0, 0, 0, 0.4);
+            border: 2px solid #3498db;
+            border-radius: var(--radius-md);
+            padding: var(--spacing-lg);
+        }
+
+        .panel-title {
+            font-size: 1.2em;
+            color: #3498db;
+            margin-bottom: 15px;
+            text-align: center;
+            border-bottom: 1px solid #3498db;
+            padding-bottom: 10px;
+        }
+
+        .control-group {
+            margin-bottom: 20px;
+        }
+
+        .control-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: #ecf0f1;
+            font-weight: bold;
+        }
+
+        .option-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 8px;
+        }
+
+        .option-btn {
+            width: 60px;
+            height: 60px;
+            border: 2px solid #7f8c8d;
+            background: #34495e;
+            cursor: pointer;
+            border-radius: var(--radius-sm);
+            transition: all 0.2s ease;
+            image-rendering: pixelated;
+            position: relative;
+        }
+
+        .option-btn:hover {
+            border-color: #3498db;
+            transform: scale(1.05);
+        }
+
+        .option-btn.active {
+            border-color: #e74c3c;
+            box-shadow: 0 0 10px rgba(231, 76, 60, 0.5);
+        }
+
+        .color-picker {
+            width: 100%;
+            height: 40px;
+            border: 2px solid #7f8c8d;
+            border-radius: var(--radius-sm);
+            cursor: pointer;
+        }
+
+        .avatar-canvas {
+            width: 300px;
+            height: 300px;
+            border: 3px solid #3498db;
+            border-radius: var(--radius-md);
+            background: #ecf0f1;
+            image-rendering: pixelated;
+            margin: 0 auto;
+            display: block;
+            box-shadow: 0 0 20px rgba(52, 152, 219, 0.3);
+        }
+
+        .random-btn, .download-btn, .share-btn {
+            width: 100%;
+            padding: 12px;
+            margin: var(--spacing-md) 0;
+            border: 2px solid #3498db;
+            background: #2c3e50;
+            color: #ecf0f1;
+            font-family: 'Courier New', monospace;
+            font-weight: bold;
+            cursor: pointer;
+            border-radius: var(--radius-sm);
+            transition: all 0.3s ease;
+        }
+
+        .random-btn:hover, .download-btn:hover, .share-btn:hover {
+            background: #3498db;
+            transform: translateY(-2px);
+        }
+
+        .size-selector {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .size-btn {
+            flex: 1;
+            padding: 8px;
+            border: 2px solid #7f8c8d;
+            background: #34495e;
+            color: #ecf0f1;
+            cursor: pointer;
+            border-radius: var(--radius-sm);
+            font-family: 'Courier New', monospace;
+        }
+
+        .size-btn.active {
+            border-color: #e74c3c;
+            background: #e74c3c;
+        }
+
+        .footer {
+            text-align: center;
+            margin-top: 30px;
+            color: #bdc3c7;
+            font-size: 0.9em;
+        }
+
+        @media (max-width: 1024px) {
+            .main-content {
+                grid-template-columns: 1fr;
+                gap: 15px;
+            }
+            
+            .avatar-canvas {
+                width: 250px;
+                height: 250px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="tool-container">
+        <!-- 工具头部 -->
+        <header class="tool-header">
+            <div class="tool-header-content">
+                <a href="../../index.html" class="back-btn">
+                    <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                        <path d="M10 4l-4 4 4 4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                    返回工具集
+                </a>
+                
+                <div class="tool-title">
+                    <h1>像素风头像生成器</h1>
+                    <p class="tool-subtitle">像素风头像生成器</p>
+                </div>
+                
+                <button class="theme-toggle" id="themeToggle" aria-label="切换主题">
+                    <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                        <circle cx="10" cy="10" r="4" stroke="currentColor" stroke-width="2"/>
+                        <path d="M10 2v2M10 16v2M18 10h-2M4 10H2M15.66 4.34l-1.41 1.41M5.75 14.25l-1.41 1.41M15.66 15.66l-1.41-1.41M5.75 5.75L4.34 4.34" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                    </svg>
+                </button>
+            </div>
+        </header>
+
+        <!-- 工具主内容 -->
+        <main class="tool-main">
+            <div class="tool-card">
+                <div class="tool-section">
+                    <h2>
+                        <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                            <rect x="3" y="3" width="14" height="14" rx="2" stroke="currentColor" stroke-width="2"/>
+                        </svg>
+                        工具功能
+                    </h2>
+                    
+                    
+            <div class="tool-card">
+                <div class="tool-section">
+                    <h2>
+                        <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                            <rect x="3" y="3" width="14" height="14" rx="2" stroke="currentColor" stroke-width="2"/>
+                        </svg>
+                        像素风头像生成器
+                    </h2>
+                    <div class="container">
+        <div class="header">
+            <h1>
+                <span class="pixel-icon"></span>
+                像素风头像生成器
+                <span class="pixel-icon"></span>
+            </h1>
+            <p>创造属于你的8-bit复古游戏风头像</p>
+        </div>
+
+        <div class="main-content">
+            <!-- 控制面板 -->
+            <div class="control-panel">
+                <div class="panel-title">🎮 角色定制</div>
+                
+                <div class="control-group">
+                    <label>脸型</label>
+                    <div class="option-grid" id="faceOptions">
+                        <!-- 脸型选项将由JS生成 -->
+                    </div>
+                </div>
+
+                <div class="control-group">
+                    <label>眼睛</label>
+                    <div class="option-grid" id="eyeOptions">
+                        <!-- 眼睛选项将由JS生成 -->
+                    </div>
+                </div>
+
+                <div class="control-group">
+                    <label>嘴巴</label>
+                    <div class="option-grid" id="mouthOptions">
+                        <!-- 嘴巴选项将由JS生成 -->
+                    </div>
+                </div>
+
+                <div class="control-group">
+                    <label>发型</label>
+                    <div class="option-grid" id="hairOptions">
+                        <!-- 发型选项将由JS生成 -->
+                    </div>
+                </div>
+
+                <div class="control-group">
+                    <label>肤色</label>
+                    <input type="color" class="color-picker" id="skinColor" value="#FFDBAC">
+                </div>
+
+                <div class="control-group">
+                    <label>头发颜色</label>
+                    <input type="color" class="color-picker" id="hairColor" value="#8B4513">
+                </div>
+
+                <button class="random-btn" id="randomBtn">🎲 随机生成</button>
+            </div>
+
+            <!-- 预览面板 -->
+            <div class="preview-panel">
+                <div class="panel-title">👤 头像预览</div>
+                <canvas id="avatarCanvas" class="avatar-canvas" width="300" height="300"></canvas>
+            </div>
+
+            <!-- 导出面板 -->
+            <div class="export-panel">
+                <div class="panel-title">💾 导出设置</div>
+                
+                <div class="control-group">
+                    <label>导出尺寸</label>
+                    <div class="size-selector">
+                        <button class="size-btn active" data-size="64">64x64</button>
+                        <button class="size-btn" data-size="128">128x128</button>
+                        <button class="size-btn" data-size="256">256x256</button>
+                    </div>
+                </div>
+
+                <button class="download-btn" id="downloadBtn">📥 下载头像</button>
+                <button class="share-btn" id="shareBtn">📤 分享头像</button>
+
+                <div style="margin-top: 20px; padding: 15px; background: rgba(0,0,0,0.3); border-radius: 5px;">
+                    <div style="font-size: 0.9em; color: #bdc3c7;">
+                        <strong>💡 使用提示：</strong><br>
+                        • 点击各部位选择不同样式<br>
+                        • 调整颜色创造独特外观<br>
+                        • 随机生成获得灵感<br>
+                        • 支持多种尺寸导出
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="footer">
+            <p>© 小苏趣研AI 像素风头像生成器 | 重温经典游戏时代</p>
+        </div>
+    </div>
+
+    
+                </div>
+            </div>
+                    <!-- 结果显示区域 -->
+                    <div class="result-display" id="result">
+                        <pre id="resultContent">处理结果将在这里显示...</pre>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <!-- 工具页脚 -->
+        <footer class="tool-footer">
+            <p>由 <a href="../../index.html">AI工具集</a> 提供 | 原创工具</p>
+        </footer>
+    </div>
+
+    <!-- JavaScript -->
+    <script src="../../shared/js/utils.js"></script>
+    <script>
+        // 工具特定的JavaScript代码
+        class ToolApp {
+            constructor() {
+                this.init();
+            }
+
+            init() {
+                this.setupEventListeners();
+            }
+
+            setupEventListeners() {
+                document.getElementById('processBtn').addEventListener('click', () => this.process());
+                document.getElementById('clearBtn').addEventListener('click', () => this.clear());
+                document.getElementById('copyBtn').addEventListener('click', () => this.copyResult());
+                
+                // 实时处理（可选）
+                document.getElementById('input').addEventListener('input', 
+                    ToolUtils.debounce(() => this.process(), 300)
+                );
+            }
+
+            process() {
+                const input = document.getElementById('input').value;
+                const result = this.processInput(input);
+                this.displayResult(result);
+            }
+
+            processInput(input) {
+                
+        class PixelAvatarGenerator {
+            constructor() {
+                this.canvas = document.getElementById('avatarCanvas');
+                this.ctx = this.canvas.getContext('2d');
+                this.ctx.imageSmoothingEnabled = false;
+                
+                this.currentAvatar = {
+                    face: 0,
+                    eyes: 0,
+                    mouth: 0,
+                    hair: 0,
+                    skinColor: '#FFDBAC',
+                    hairColor: '#8B4513'
+                };
+                
+                this.exportSize = 64;
+                
+                this.initializeOptions();
+                this.bindEvents();
+                this.drawAvatar();
+            }
+
+            initializeOptions() {
+                // 生成脸型选项
+                this.generateOptions('faceOptions', 6, 'face');
+                
+                // 生成眼睛选项
+                this.generateOptions('eyeOptions', 9, 'eyes');
+                
+                // 生成嘴巴选项
+                this.generateOptions('mouthOptions', 6, 'mouth');
+                
+                // 生成发型选项
+                this.generateOptions('hairOptions', 8, 'hair');
+            }
+
+            generateOptions(containerId, count, type) {
+                const container = document.getElementById(containerId);
+                
+                for (let i = 0; i < count; i++) {
+                    const btn = document.createElement('div');
+                    btn.className = 'option-btn';
+                    if (i === 0) btn.classList.add('active');
+                    btn.dataset.type = type;
+                    btn.dataset.index = i;
+                    
+                    // 创建小预览canvas
+                    const previewCanvas = document.createElement('canvas');
+                    previewCanvas.width = 56;
+                    previewCanvas.height = 56;
+                    const previewCtx = previewCanvas.getContext('2d');
+                    previewCtx.imageSmoothingEnabled = false;
+                    
+                    this.drawPreview(previewCtx, type, i);
+                    
+                    btn.appendChild(previewCanvas);
+                    container.appendChild(btn);
+                }
+            }
+
+            drawPreview(ctx, type, index) {
+                ctx.fillStyle = '#ecf0f1';
+                ctx.fillRect(0, 0, 56, 56);
+                
+                // 绘制简化预览
+                switch (type) {
+                    case 'face':
+                        this.drawFacePreview(ctx, index);
+                        break;
+                    case 'eyes':
+                        this.drawEyesPreview(ctx, index);
+                        break;
+                    case 'mouth':
+                        this.drawMouthPreview(ctx, index);
+                        break;
+                    case 'hair':
+                        this.drawHairPreview(ctx, index);
+                        break;
+                }
+            }
+
+            drawFacePreview(ctx, index) {
+                ctx.fillStyle = '#FFDBAC';
+                const shapes = [
+                    () => ctx.fillRect(14, 14, 28, 28), // 方形
+                    () => { // 圆形
+                        ctx.beginPath();
+                        ctx.arc(28, 28, 14, 0, Math.PI * 2);
+                        ctx.fill();
+                    },
+                    () => ctx.fillRect(16, 12, 24, 32), // 长方形
+                    () => { // 椭圆
+                        ctx.beginPath();
+                        ctx.ellipse(28, 28, 12, 16, 0, 0, Math.PI * 2);
+                        ctx.fill();
+                    },
+                    () => { // 梯形
+                        ctx.beginPath();
+                        ctx.moveTo(18, 12);
+                        ctx.lineTo(38, 12);
+                        ctx.lineTo(42, 44);
+                        ctx.lineTo(14, 44);
+                        ctx.closePath();
+                        ctx.fill();
+                    },
+                    () => { // 心形脸
+                        ctx.beginPath();
+                        ctx.moveTo(28, 44);
+                        ctx.quadraticCurveTo(14, 32, 20, 16);
+                        ctx.quadraticCurveTo(28, 8, 36, 16);
+                        ctx.quadraticCurveTo(42, 32, 28, 44);
+                        ctx.fill();
+                    }
+                ];
+                shapes[index]();
+            }
+
+            drawEyesPreview(ctx, index) {
+                ctx.fillStyle = '#2c3e50';
+                const eyeStyles = [
+                    () => { // 圆点眼
+                        ctx.fillRect(18, 22, 4, 4);
+                        ctx.fillRect(34, 22, 4, 4);
+                    },
+                    () => { // 方形眼
+                        ctx.fillRect(16, 20, 6, 6);
+                        ctx.fillRect(34, 20, 6, 6);
+                    },
+                    () => { // 线条眼
+                        ctx.fillRect(16, 24, 8, 2);
+                        ctx.fillRect(32, 24, 8, 2);
+                    },
+                    () => { // 大眼睛
+                        ctx.fillRect(14, 18, 8, 8);
+                        ctx.fillRect(34, 18, 8, 8);
+                        ctx.fillStyle = '#ecf0f1';
+                        ctx.fillRect(16, 20, 4, 4);
+                        ctx.fillRect(36, 20, 4, 4);
+                    },
+                    () => { // 眯眯眼
+                        ctx.fillRect(16, 23, 8, 2);
+                        ctx.fillRect(32, 23, 8, 2);
+                    },
+                    () => { // 星星眼
+                        ctx.fillRect(18, 20, 2, 6);
+                        ctx.fillRect(16, 22, 6, 2);
+                        ctx.fillRect(34, 20, 2, 6);
+                        ctx.fillRect(32, 22, 6, 2);
+                    },
+                    () => { // X眼
+                        ctx.fillRect(16, 20, 2, 2);
+                        ctx.fillRect(18, 22, 2, 2);
+                        ctx.fillRect(20, 24, 2, 2);
+                        ctx.fillRect(20, 20, 2, 2);
+                        ctx.fillRect(18, 22, 2, 2);
+                        ctx.fillRect(16, 24, 2, 2);
+                        ctx.fillRect(34, 20, 2, 2);
+                        ctx.fillRect(36, 22, 2, 2);
+                        ctx.fillRect(38, 24, 2, 2);
+                        ctx.fillRect(38, 20, 2, 2);
+                        ctx.fillRect(36, 22, 2, 2);
+                        ctx.fillRect(34, 24, 2, 2);
+                    },
+                    () => { // 心形眼
+                        ctx.fillRect(16, 22, 2, 2);
+                        ctx.fillRect(18, 20, 2, 2);
+                        ctx.fillRect(20, 20, 2, 2);
+                        ctx.fillRect(22, 22, 2, 2);
+                        ctx.fillRect(20, 24, 2, 2);
+                        ctx.fillRect(34, 22, 2, 2);
+                        ctx.fillRect(36, 20, 2, 2);
+                        ctx.fillRect(38, 20, 2, 2);
+                        ctx.fillRect(40, 22, 2, 2);
+                        ctx.fillRect(38, 24, 2, 2);
+                    },
+                    () => { // 机器人眼
+                        ctx.fillStyle = '#e74c3c';
+                        ctx.fillRect(16, 20, 6, 6);
+                        ctx.fillRect(34, 20, 6, 6);
+                        ctx.fillStyle = '#2c3e50';
+                        ctx.fillRect(18, 22, 2, 2);
+                        ctx.fillRect(36, 22, 2, 2);
+                    }
+                ];
+                eyeStyles[index]();
+            }
+
+            drawMouthPreview(ctx, index) {
+                ctx.fillStyle = '#e74c3c';
+                const mouthStyles = [
+                    () => ctx.fillRect(24, 32, 8, 2), // 直线
+                    () => { // 微笑
+                        ctx.fillRect(22, 32, 2, 2);
+                        ctx.fillRect(24, 34, 8, 2);
+                        ctx.fillRect(32, 32, 2, 2);
+                    },
+                    () => { // 大笑
+                        ctx.fillRect(20, 30, 2, 2);
+                        ctx.fillRect(22, 32, 12, 2);
+                        ctx.fillRect(34, 30, 2, 2);
+                        ctx.fillRect(22, 34, 12, 2);
+                    },
+                    () => { // 惊讶
+                        ctx.fillRect(26, 30, 4, 6);
+                    },
+                    () => { // 撅嘴
+                        ctx.fillRect(24, 30, 8, 2);
+                        ctx.fillRect(26, 32, 4, 2);
+                    },
+                    () => { // 吐舌头
+                        ctx.fillRect(24, 32, 8, 2);
+                        ctx.fillStyle = '#ff69b4';
+                        ctx.fillRect(26, 34, 4, 2);
+                    }
+                ];
+                mouthStyles[index]();
+            }
+
+            drawHairPreview(ctx, index) {
+                ctx.fillStyle = '#8B4513';
+                const hairStyles = [
+                    () => {}, // 光头
+                    () => ctx.fillRect(14, 8, 28, 12), // 平头
+                    () => { // 刘海
+                        ctx.fillRect(14, 8, 28, 8);
+                        ctx.fillRect(18, 16, 20, 4);
+                    },
+                    () => { // 卷发
+                        ctx.fillRect(12, 6, 32, 14);
+                        ctx.fillRect(8, 10, 8, 8);
+                        ctx.fillRect(40, 10, 8, 8);
+                    },
+                    () => { // 马尾
+                        ctx.fillRect(14, 8, 28, 10);
+                        ctx.fillRect(38, 18, 12, 8);
+                    },
+                    () => { // 爆炸头
+                        ctx.fillRect(10, 4, 36, 18);
+                        ctx.fillRect(6, 8, 8, 10);
+                        ctx.fillRect(42, 8, 8, 10);
+                    },
+                    () => { // 莫西干
+                        ctx.fillRect(24, 4, 8, 16);
+                        ctx.fillRect(22, 6, 12, 4);
+                    },
+                    () => { // 双马尾
+                        ctx.fillRect(14, 8, 28, 8);
+                        ctx.fillRect(8, 12, 8, 12);
+                        ctx.fillRect(40, 12, 8, 12);
+                    }
+                ];
+                hairStyles[index]();
+            }
+
+            bindEvents() {
+                // 选项按钮事件
+                document.addEventListener('click', (e) => {
+                    if (e.target.closest('.option-btn')) {
+                        const btn = e.target.closest('.option-btn');
+                        const type = btn.dataset.type;
+                        const index = parseInt(btn.dataset.index);
+                        
+                        // 更新选中状态
+                        btn.parentElement.querySelectorAll('.option-btn').forEach(b => b.classList.remove('active'));
+                        btn.classList.add('active');
+                        
+                        // 更新头像数据
+                        this.currentAvatar[type] = index;
+                        this.drawAvatar();
+                    }
+                });
+
+                // 颜色选择器事件
+                document.getElementById('skinColor').addEventListener('change', (e) => {
+                    this.currentAvatar.skinColor = e.target.value;
+                    this.drawAvatar();
+                });
+
+                document.getElementById('hairColor').addEventListener('change', (e) => {
+                    this.currentAvatar.hairColor = e.target.value;
+                    this.drawAvatar();
+                });
+
+                // 尺寸选择事件
+                document.querySelectorAll('.size-btn').forEach(btn => {
+                    btn.addEventListener('click', (e) => {
+                        document.querySelectorAll('.size-btn').forEach(b => b.classList.remove('active'));
+                        e.target.classList.add('active');
+                        this.exportSize = parseInt(e.target.dataset.size);
+                    });
+                });
+
+                // 随机生成事件
+                document.getElementById('randomBtn').addEventListener('click', () => {
+                    this.randomizeAvatar();
+                });
+
+                // 下载事件
+                document.getElementById('downloadBtn').addEventListener('click', () => {
+                    this.downloadAvatar();
+                });
+
+                // 分享事件
+                document.getElementById('shareBtn').addEventListener('click', () => {
+                    this.shareAvatar();
+                });
+            }
+
+            drawAvatar() {
+                // 清空画布
+                this.ctx.fillStyle = '#ecf0f1';
+                this.ctx.fillRect(0, 0, 300, 300);
+
+                // 绘制头像各部分
+                this.drawFace();
+                this.drawHair();
+                this.drawEyes();
+                this.drawMouth();
+            }
+
+            drawFace() {
+                this.ctx.fillStyle = this.currentAvatar.skinColor;
+                
+                const faceShapes = [
+                    () => this.ctx.fillRect(75, 75, 150, 150), // 方形
+                    () => { // 圆形
+                        this.ctx.beginPath();
+                        this.ctx.arc(150, 150, 75, 0, Math.PI * 2);
+                        this.ctx.fill();
+                    },
+                    () => this.ctx.fillRect(90, 60, 120, 180), // 长方形
+                    () => { // 椭圆
+                        this.ctx.beginPath();
+                        this.ctx.ellipse(150, 150, 60, 90, 0, 0, Math.PI * 2);
+                        this.ctx.fill();
+                    },
+                    () => { // 梯形
+                        this.ctx.beginPath();
+                        this.ctx.moveTo(100, 60);
+                        this.ctx.lineTo(200, 60);
+                        this.ctx.lineTo(220, 240);
+                        this.ctx.lineTo(80, 240);
+                        this.ctx.closePath();
+                        this.ctx.fill();
+                    },
+                    () => { // 心形脸
+                        this.ctx.beginPath();
+                        this.ctx.moveTo(150, 240);
+                        this.ctx.quadraticCurveTo(80, 180, 110, 80);
+                        this.ctx.quadraticCurveTo(150, 40, 190, 80);
+                        this.ctx.quadraticCurveTo(220, 180, 150, 240);
+                        this.ctx.fill();
+                    }
+                ];
+                
+                faceShapes[this.currentAvatar.face]();
+            }
+
+            drawHair() {
+                this.ctx.fillStyle = this.currentAvatar.hairColor;
+                
+                const hairStyles = [
+                    () => {}, // 光头
+                    () => this.ctx.fillRect(75, 45, 150, 60), // 平头
+                    () => { // 刘海
+                        this.ctx.fillRect(75, 45, 150, 45);
+                        this.ctx.fillRect(90, 90, 120, 20);
+                    },
+                    () => { // 卷发
+                        this.ctx.fillRect(60, 30, 180, 75);
+                        this.ctx.fillRect(45, 60, 45, 45);
+                        this.ctx.fillRect(210, 60, 45, 45);
+                    },
+                    () => { // 马尾
+                        this.ctx.fillRect(75, 45, 150, 60);
+                        this.ctx.fillRect(210, 105, 60, 45);
+                    },
+                    () => { // 爆炸头
+                        this.ctx.fillRect(45, 15, 210, 105);
+                        this.ctx.fillRect(30, 45, 45, 60);
+                        this.ctx.fillRect(225, 45, 45, 60);
+                    },
+                    () => { // 莫西干
+                        this.ctx.fillRect(135, 15, 30, 90);
+                        this.ctx.fillRect(120, 30, 60, 30);
+                    },
+                    () => { // 双马尾
+                        this.ctx.fillRect(75, 45, 150, 45);
+                        this.ctx.fillRect(30, 75, 45, 75);
+                        this.ctx.fillRect(225, 75, 45, 75);
+                    }
+                ];
+                
+                hairStyles[this.currentAvatar.hair]();
+            }
+
+            drawEyes() {
+                this.ctx.fillStyle = '#2c3e50';
+                
+                const eyeStyles = [
+                    () => { // 圆点眼
+                        this.ctx.fillRect(105, 120, 15, 15);
+                        this.ctx.fillRect(180, 120, 15, 15);
+                    },
+                    () => { // 方形眼
+                        this.ctx.fillRect(90, 105, 30, 30);
+                        this.ctx.fillRect(180, 105, 30, 30);
+                    },
+                    () => { // 线条眼
+                        this.ctx.fillRect(90, 127, 45, 6);
+                        this.ctx.fillRect(165, 127, 45, 6);
+                    },
+                    () => { // 大眼睛
+                        this.ctx.fillRect(75, 90, 45, 45);
+                        this.ctx.fillRect(180, 90, 45, 45);
+                        this.ctx.fillStyle = '#ecf0f1';
+                        this.ctx.fillRect(90, 105, 15, 15);
+                        this.ctx.fillRect(195, 105, 15, 15);
+                    },
+                    () => { // 眯眯眼
+                        this.ctx.fillRect(90, 120, 45, 9);
+                        this.ctx.fillRect(165, 120, 45, 9);
+                    },
+                    () => { // 星星眼
+                        this.ctx.fillRect(105, 105, 9, 30);
+                        this.ctx.fillRect(90, 120, 39, 9);
+                        this.ctx.fillRect(186, 105, 9, 30);
+                        this.ctx.fillRect(171, 120, 39, 9);
+                    },
+                    () => { // X眼
+                        for(let i = 0; i < 5; i++) {
+                            this.ctx.fillRect(90 + i * 6, 105 + i * 6, 6, 6);
+                            this.ctx.fillRect(120 - i * 6, 105 + i * 6, 6, 6);
+                            this.ctx.fillRect(180 + i * 6, 105 + i * 6, 6, 6);
+                            this.ctx.fillRect(210 - i * 6, 105 + i * 6, 6, 6);
+                        }
+                    },
+                    () => { // 心形眼
+                        this.ctx.fillRect(90, 120, 9, 9);
+                        this.ctx.fillRect(99, 105, 9, 9);
+                        this.ctx.fillRect(108, 105, 9, 9);
+                        this.ctx.fillRect(117, 120, 9, 9);
+                        this.ctx.fillRect(108, 135, 9, 9);
+                        this.ctx.fillRect(180, 120, 9, 9);
+                        this.ctx.fillRect(189, 105, 9, 9);
+                        this.ctx.fillRect(198, 105, 9, 9);
+                        this.ctx.fillRect(207, 120, 9, 9);
+                        this.ctx.fillRect(198, 135, 9, 9);
+                    },
+                    () => { // 机器人眼
+                        this.ctx.fillStyle = '#e74c3c';
+                        this.ctx.fillRect(90, 105, 30, 30);
+                        this.ctx.fillRect(180, 105, 30, 30);
+                        this.ctx.fillStyle = '#2c3e50';
+                        this.ctx.fillRect(105, 120, 9, 9);
+                        this.ctx.fillRect(195, 120, 9, 9);
+                    }
+                ];
+                
+                eyeStyles[this.currentAvatar.eyes]();
+            }
+
+            drawMouth() {
+                this.ctx.fillStyle = '#e74c3c';
+                
+                const mouthStyles = [
+                    () => this.ctx.fillRect(120, 180, 60, 9), // 直线
+                    () => { // 微笑
+                        this.ctx.fillRect(105, 180, 15, 9);
+                        this.ctx.fillRect(120, 195, 60, 9);
+                        this.ctx.fillRect(180, 180, 15, 9);
+                    },
+                    () => { // 大笑
+                        this.ctx.fillRect(90, 165, 15, 9);
+                        this.ctx.fillRect(105, 180, 90, 9);
+                        this.ctx.fillRect(195, 165, 15, 9);
+                        this.ctx.fillRect(105, 195, 90, 9);
+                    },
+                    () => { // 惊讶
+                        this.ctx.fillRect(135, 165, 30, 45);
+                    },
+                    () => { // 撅嘴
+                        this.ctx.fillRect(120, 165, 60, 9);
+                        this.ctx.fillRect(135, 180, 30, 9);
+                    },
+                    () => { // 吐舌头
+                        this.ctx.fillRect(120, 180, 60, 9);
+                        this.ctx.fillStyle = '#ff69b4';
+                        this.ctx.fillRect(135, 195, 30, 15);
+                    }
+                ];
+                
+                mouthStyles[this.currentAvatar.mouth]();
+            }
+
+            randomizeAvatar() {
+                this.currentAvatar.face = Math.floor(Math.random() * 6);
+                this.currentAvatar.eyes = Math.floor(Math.random() * 9);
+                this.currentAvatar.mouth = Math.floor(Math.random() * 6);
+                this.currentAvatar.hair = Math.floor(Math.random() * 8);
+                
+                // 随机颜色
+                const skinColors = ['#FFDBAC', '#F1C27D', '#E0AC69', '#C68642', '#8D5524', '#975A3E'];
+                const hairColors = ['#8B4513', '#000000', '#654321', '#D2691E', '#FFD700', '#FF6347', '#9932CC', '#32CD32'];
+                
+                this.currentAvatar.skinColor = skinColors[Math.floor(Math.random() * skinColors.length)];
+                this.currentAvatar.hairColor = hairColors[Math.floor(Math.random() * hairColors.length)];
+                
+                // 更新UI
+                document.getElementById('skinColor').value = this.currentAvatar.skinColor;
+                document.getElementById('hairColor').value = this.currentAvatar.hairColor;
+                
+                // 更新选中状态
+                this.updateActiveOptions();
+                
+                this.drawAvatar();
+            }
+
+            updateActiveOptions() {
+                const types = ['face', 'eyes', 'mouth', 'hair'];
+                types.forEach(type => {
+                    const container = document.getElementById(type + 'Options');
+                    container.querySelectorAll('.option-btn').forEach((btn, index) => {
+                        btn.classList.toggle('active', index === this.currentAvatar[type]);
+                    });
+                });
+            }
+
+            downloadAvatar() {
+                // 创建导出画布
+                const exportCanvas = document.createElement('canvas');
+                const exportCtx = exportCanvas.getContext('2d');
+                exportCtx.imageSmoothingEnabled = false;
+                
+                exportCanvas.width = this.exportSize;
+                exportCanvas.height = this.exportSize;
+                
+                // 缩放绘制
+                exportCtx.scale(this.exportSize / 300, this.exportSize / 300);
+                exportCtx.drawImage(this.canvas, 0, 0);
+                
+                // 下载
+                const link = document.createElement('a');
+                link.download = `pixel-avatar-${Date.now()}.png`;
+                link.href = exportCanvas.toDataURL('image/png');
+                link.click();
+            }
+
+            shareAvatar() {
+                this.canvas.toBlob((blob) => {
+                    if (navigator.share) {
+                        const file = new File([blob], 'pixel-avatar.png', { type: 'image/png' });
+                        navigator.share({
+                            title: '我的像素风头像',
+                            text: '看看我用像素风头像生成器创造的头像！',
+                            files: [file]
+                        });
+                    } else {
+                        // 复制到剪贴板
+                        this.canvas.toBlob((blob) => {
+                            navigator.clipboard.write([
+                                new ClipboardItem({ 'image/png': blob })
+                            ]).then(() => {
+                                alert('头像已复制到剪贴板！');
+                            });
+                        });
+                    }
+                });
+            }
+        }
+
+        // 初始化生成器
+        document.addEventListener('DOMContentLoaded', () => {
+            new PixelAvatarGenerator();
+        });
+    
+                return input;
+            }
+
+            displayResult(result) {
+                document.getElementById('resultContent').textContent = result;
+            }
+
+            clear() {
+                document.getElementById('input').value = '';
+                document.getElementById('resultContent').textContent = '处理结果将在这里显示...';
+            }
+
+            copyResult() {
+                const result = document.getElementById('resultContent').textContent;
+                if (result && result !== '处理结果将在这里显示...') {
+                    ToolUtils.copyToClipboard(result);
+                } else {
+                    ToolUtils.showToast('没有可复制的内容', 'warning');
+                }
+            }
+        }
+
+        // 初始化应用
+        document.addEventListener('DOMContentLoaded', () => {
+            new ToolApp();
+        });
+    </script>
+</body>
+</html>

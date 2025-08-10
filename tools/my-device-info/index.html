@@ -1,0 +1,662 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>设备信息查看器 - My Device Info - AI工具集</title>
+    <meta name="description" content="设备信息查看器 - My Device Info">
+    
+    <!-- 样式文件 -->
+    <link rel="stylesheet" href="../../shared/css/common.css">
+    
+    <!-- 工具特定样式 -->
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: var(--spacing-lg);
+            color: var(--text-primary);
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white;
+            text-align: center;
+            padding: 40px 20px;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .header p {
+            font-size: 1.1em;
+            opacity: 0.9;
+        }
+
+        .content {
+            padding: 40px;
+        }
+
+        .info-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 25px;
+            margin-bottom: 30px;
+        }
+
+        .info-card {
+            background: #f8f9fa;
+            border-radius: var(--radius-lg);
+            padding: 25px;
+            border-left: 5px solid #667eea;
+            transition: transform 0.3s ease;
+        }
+
+        .info-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+        }
+
+        .card-title {
+            font-size: 1.3em;
+            font-weight: bold;
+            color: var(--text-primary);
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+        }
+
+        .card-title .icon {
+            font-size: 1.5em;
+            margin-right: 10px;
+        }
+
+        .info-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: var(--spacing-md) 0;
+            border-bottom: 1px solid #eee;
+        }
+
+        .info-item:last-child {
+            border-bottom: none;
+        }
+
+        .info-label {
+            font-weight: 500;
+            color: #555;
+            flex: 1;
+        }
+
+        .info-value {
+            color: var(--text-primary);
+            font-weight: bold;
+            flex: 2;
+            text-align: right;
+            word-break: break-all;
+        }
+
+        .copy-btn {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 5px 10px;
+            border-radius: var(--radius-sm);
+            cursor: pointer;
+            font-size: 12px;
+            margin-left: 10px;
+            transition: background 0.3s;
+        }
+
+        .copy-btn:hover {
+            background: #5a6fd8;
+        }
+
+        .loading {
+            text-align: center;
+            color: var(--text-secondary);
+            font-style: italic;
+        }
+
+        .refresh-btn {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            font-size: 18px;
+            border-radius: 50px;
+            cursor: pointer;
+            display: block;
+            margin: 30px auto;
+            transition: all 0.3s ease;
+            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
+        }
+
+        .refresh-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 15px 30px rgba(102, 126, 234, 0.4);
+        }
+
+        .network-status {
+            padding: 15px;
+            border-radius: var(--radius-md);
+            text-align: center;
+            font-weight: bold;
+            margin-bottom: 20px;
+        }
+
+        .network-status.online {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .network-status.offline {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        .footer {
+            text-align: center;
+            padding: var(--spacing-lg);
+            color: var(--text-secondary);
+            font-size: 0.9em;
+            border-top: 1px solid #eee;
+        }
+
+        @media (max-width: 768px) {
+            .content {
+                padding: var(--spacing-lg);
+            }
+            
+            .info-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .info-item {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 5px;
+            }
+            
+            .info-value {
+                text-align: left;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="tool-container">
+        <!-- 工具头部 -->
+        <header class="tool-header">
+            <div class="tool-header-content">
+                <a href="../../index.html" class="back-btn">
+                    <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                        <path d="M10 4l-4 4 4 4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                    返回工具集
+                </a>
+                
+                <div class="tool-title">
+                    <h1>设备信息查看器 - My Device Info</h1>
+                    <p class="tool-subtitle">设备信息查看器 - My Device Info</p>
+                </div>
+                
+                <button class="theme-toggle" id="themeToggle" aria-label="切换主题">
+                    <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                        <circle cx="10" cy="10" r="4" stroke="currentColor" stroke-width="2"/>
+                        <path d="M10 2v2M10 16v2M18 10h-2M4 10H2M15.66 4.34l-1.41 1.41M5.75 14.25l-1.41 1.41M15.66 15.66l-1.41-1.41M5.75 5.75L4.34 4.34" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                    </svg>
+                </button>
+            </div>
+        </header>
+
+        <!-- 工具主内容 -->
+        <main class="tool-main">
+            <div class="tool-card">
+                <div class="tool-section">
+                    <h2>
+                        <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                            <rect x="3" y="3" width="14" height="14" rx="2" stroke="currentColor" stroke-width="2"/>
+                        </svg>
+                        工具功能
+                    </h2>
+                    
+                    
+            <div class="tool-card">
+                <div class="tool-section">
+                    <h2>
+                        <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                            <rect x="3" y="3" width="14" height="14" rx="2" stroke="currentColor" stroke-width="2"/>
+                        </svg>
+                        设备信息查看器 - My Device Info
+                    </h2>
+                    <div class="container">
+        <div class="header">
+            <h1>🖥️ 设备信息查看器</h1>
+            <p>一键获取您设备的详细信息和网络状态</p>
+        </div>
+
+        <div class="content">
+            <div class="network-status" id="networkStatus">
+                <span id="networkText">检测网络状态中...</span>
+            </div>
+
+            <div class="info-grid">
+                <div class="info-card">
+                    <div class="card-title">
+                        <span class="icon">🌐</span>
+                        浏览器信息
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">浏览器名称</span>
+                        <span class="info-value" id="browserName">检测中...</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">浏览器版本</span>
+                        <span class="info-value" id="browserVersion">检测中...</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">用户代理</span>
+                        <span class="info-value" id="userAgent">检测中...</span>
+                        <button class="copy-btn" onclick="copyToClipboard('userAgent')">复制</button>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">Cookie支持</span>
+                        <span class="info-value" id="cookieEnabled">检测中...</span>
+                    </div>
+                </div>
+
+                <div class="info-card">
+                    <div class="card-title">
+                        <span class="icon">💻</span>
+                        操作系统
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">操作系统</span>
+                        <span class="info-value" id="platform">检测中...</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">CPU架构</span>
+                        <span class="info-value" id="architecture">检测中...</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">语言设置</span>
+                        <span class="info-value" id="language">检测中...</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">时区</span>
+                        <span class="info-value" id="timezone">检测中...</span>
+                    </div>
+                </div>
+
+                <div class="info-card">
+                    <div class="card-title">
+                        <span class="icon">📱</span>
+                        屏幕信息
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">屏幕分辨率</span>
+                        <span class="info-value" id="screenResolution">检测中...</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">可用分辨率</span>
+                        <span class="info-value" id="availableResolution">检测中...</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">颜色深度</span>
+                        <span class="info-value" id="colorDepth">检测中...</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">像素比</span>
+                        <span class="info-value" id="pixelRatio">检测中...</span>
+                    </div>
+                </div>
+
+                <div class="info-card">
+                    <div class="card-title">
+                        <span class="icon">🌍</span>
+                        网络信息
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">IP地址</span>
+                        <span class="info-value" id="ipAddress">获取中...</span>
+                        <button class="copy-btn" onclick="copyToClipboard('ipAddress')">复制</button>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">连接类型</span>
+                        <span class="info-value" id="connectionType">检测中...</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">在线状态</span>
+                        <span class="info-value" id="onlineStatus">检测中...</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">地理位置</span>
+                        <span class="info-value" id="location">获取中...</span>
+                    </div>
+                </div>
+
+                <div class="info-card">
+                    <div class="card-title">
+                        <span class="icon">⚡</span>
+                        性能信息
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">CPU核心数</span>
+                        <span class="info-value" id="cpuCores">检测中...</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">内存大小</span>
+                        <span class="info-value" id="memory">检测中...</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">存储配额</span>
+                        <span class="info-value" id="storage">检测中...</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">电池状态</span>
+                        <span class="info-value" id="battery">检测中...</span>
+                    </div>
+                </div>
+
+                <div class="info-card">
+                    <div class="card-title">
+                        <span class="icon">🔧</span>
+                        其他信息
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">JavaScript支持</span>
+                        <span class="info-value">✅ 已启用</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">触摸支持</span>
+                        <span class="info-value" id="touchSupport">检测中...</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">WebGL支持</span>
+                        <span class="info-value" id="webglSupport">检测中...</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">当前时间</span>
+                        <span class="info-value" id="currentTime">检测中...</span>
+                    </div>
+                </div>
+            </div>
+
+            <button class="refresh-btn" onclick="refreshAllInfo()">🔄 刷新所有信息</button>
+        </div>
+
+        <div class="footer">
+            由 <strong>小苏趣研AI</strong> 制作 | 了解您的设备，优化使用体验
+        </div>
+    </div>
+
+    
+                </div>
+            </div>
+                    <!-- 结果显示区域 -->
+                    <div class="result-display" id="result">
+                        <pre id="resultContent">处理结果将在这里显示...</pre>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <!-- 工具页脚 -->
+        <footer class="tool-footer">
+            <p>由 <a href="../../index.html">AI工具集</a> 提供 | 原创工具</p>
+        </footer>
+    </div>
+
+    <!-- JavaScript -->
+    <script src="../../shared/js/utils.js"></script>
+    <script>
+        // 工具特定的JavaScript代码
+        class ToolApp {
+            constructor() {
+                this.init();
+            }
+
+            init() {
+                this.setupEventListeners();
+            }
+
+            setupEventListeners() {
+                document.getElementById('processBtn').addEventListener('click', () => this.process());
+                document.getElementById('clearBtn').addEventListener('click', () => this.clear());
+                document.getElementById('copyBtn').addEventListener('click', () => this.copyResult());
+                
+                // 实时处理（可选）
+                document.getElementById('input').addEventListener('input', 
+                    ToolUtils.debounce(() => this.process(), 300)
+                );
+            }
+
+            process() {
+                const input = document.getElementById('input').value;
+                const result = this.processInput(input);
+                this.displayResult(result);
+            }
+
+            processInput(input) {
+                
+        function detectBrowserInfo() {
+            const ua = navigator.userAgent;
+            let browserName = '未知浏览器';
+            let browserVersion = '未知版本';
+
+            if (ua.includes('Chrome') && !ua.includes('Edg')) {
+                browserName = 'Google Chrome';
+                browserVersion = ua.match(/Chrome\/([0-9.]+)/)?.[1] || '未知';
+            } else if (ua.includes('Firefox')) {
+                browserName = 'Mozilla Firefox';
+                browserVersion = ua.match(/Firefox\/([0-9.]+)/)?.[1] || '未知';
+            } else if (ua.includes('Safari') && !ua.includes('Chrome')) {
+                browserName = 'Safari';
+                browserVersion = ua.match(/Version\/([0-9.]+)/)?.[1] || '未知';
+            } else if (ua.includes('Edg')) {
+                browserName = 'Microsoft Edge';
+                browserVersion = ua.match(/Edg\/([0-9.]+)/)?.[1] || '未知';
+            }
+
+            document.getElementById('browserName').textContent = browserName;
+            document.getElementById('browserVersion').textContent = browserVersion;
+            document.getElementById('userAgent').textContent = ua;
+            document.getElementById('cookieEnabled').textContent = navigator.cookieEnabled ? '✅ 支持' : '❌ 不支持';
+        }
+
+        function detectSystemInfo() {
+            const platform = navigator.platform || navigator.userAgentData?.platform || '未知';
+            document.getElementById('platform').textContent = platform;
+            document.getElementById('architecture').textContent = navigator.userAgentData?.architecture || '未知';
+            document.getElementById('language').textContent = navigator.language;
+            document.getElementById('timezone').textContent = Intl.DateTimeFormat().resolvedOptions().timeZone;
+        }
+
+        function detectScreenInfo() {
+            document.getElementById('screenResolution').textContent = `${screen.width} × ${screen.height}`;
+            document.getElementById('availableResolution').textContent = `${screen.availWidth} × ${screen.availHeight}`;
+            document.getElementById('colorDepth').textContent = `${screen.colorDepth} 位`;
+            document.getElementById('pixelRatio').textContent = window.devicePixelRatio;
+        }
+
+        function detectNetworkInfo() {
+            document.getElementById('onlineStatus').textContent = navigator.onLine ? '🟢 在线' : '🔴 离线';
+            
+            const connection = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
+            if (connection) {
+                document.getElementById('connectionType').textContent = connection.effectiveType || connection.type || '未知';
+            } else {
+                document.getElementById('connectionType').textContent = '不支持检测';
+            }
+
+            // 获取IP地址
+            fetch('https://api.ipify.org?format=json')
+                .then(response => response.json())
+                .then(data => {
+                    document.getElementById('ipAddress').textContent = data.ip;
+                })
+                .catch(() => {
+                    document.getElementById('ipAddress').textContent = '获取失败';
+                });
+
+            // 获取地理位置
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(
+                    (position) => {
+                        const lat = position.coords.latitude.toFixed(2);
+                        const lon = position.coords.longitude.toFixed(2);
+                        document.getElementById('location').textContent = `${lat}, ${lon}`;
+                    },
+                    () => {
+                        document.getElementById('location').textContent = '获取失败或被拒绝';
+                    }
+                );
+            } else {
+                document.getElementById('location').textContent = '不支持地理定位';
+            }
+        }
+
+        function detectPerformanceInfo() {
+            document.getElementById('cpuCores').textContent = navigator.hardwareConcurrency || '未知';
+            
+            if (navigator.deviceMemory) {
+                document.getElementById('memory').textContent = `${navigator.deviceMemory} GB`;
+            } else {
+                document.getElementById('memory').textContent = '不支持检测';
+            }
+
+            if (navigator.storage && navigator.storage.estimate) {
+                navigator.storage.estimate().then(estimate => {
+                    const quota = (estimate.quota / (1024 ** 3)).toFixed(2);
+                    const usage = (estimate.usage / (1024 ** 3)).toFixed(2);
+                    document.getElementById('storage').textContent = `${usage}GB / ${quota}GB`;
+                });
+            } else {
+                document.getElementById('storage').textContent = '不支持检测';
+            }
+
+            if (navigator.getBattery) {
+                navigator.getBattery().then(battery => {
+                    const level = Math.round(battery.level * 100);
+                    const charging = battery.charging ? '充电中' : '未充电';
+                    document.getElementById('battery').textContent = `${level}% (${charging})`;
+                });
+            } else {
+                document.getElementById('battery').textContent = '不支持检测';
+            }
+        }
+
+        function detectOtherInfo() {
+            document.getElementById('touchSupport').textContent = 'ontouchstart' in window ? '✅ 支持' : '❌ 不支持';
+            
+            const canvas = document.createElement('canvas');
+            const gl = canvas.getContext('webgl') || canvas.getContext('experimental-webgl');
+            document.getElementById('webglSupport').textContent = gl ? '✅ 支持' : '❌ 不支持';
+            
+            updateCurrentTime();
+        }
+
+        function updateCurrentTime() {
+            const now = new Date();
+            document.getElementById('currentTime').textContent = now.toLocaleString();
+        }
+
+        function updateNetworkStatus() {
+            const status = document.getElementById('networkStatus');
+            const text = document.getElementById('networkText');
+            
+            if (navigator.onLine) {
+                status.className = 'network-status online';
+                text.textContent = '🟢 网络连接正常';
+            } else {
+                status.className = 'network-status offline';
+                text.textContent = '🔴 网络连接断开';
+            }
+        }
+
+        function copyToClipboard(elementId) {
+            const text = document.getElementById(elementId).textContent;
+            navigator.clipboard.writeText(text).then(() => {
+                const btn = event.target;
+                const originalText = btn.textContent;
+                btn.textContent = '已复制!';
+                setTimeout(() => {
+                    btn.textContent = originalText;
+                }, 1000);
+            });
+        }
+
+        function refreshAllInfo() {
+            detectBrowserInfo();
+            detectSystemInfo();
+            detectScreenInfo();
+            detectNetworkInfo();
+            detectPerformanceInfo();
+            detectOtherInfo();
+            updateNetworkStatus();
+        }
+
+        // 页面加载时获取所有信息
+        window.onload = function() {
+            refreshAllInfo();
+            
+            // 每秒更新时间
+            setInterval(updateCurrentTime, 1000);
+            
+            // 监听网络状态变化
+            window.addEventListener('online', updateNetworkStatus);
+            window.addEventListener('offline', updateNetworkStatus);
+        };
+    
+                return input;
+            }
+
+            displayResult(result) {
+                document.getElementById('resultContent').textContent = result;
+            }
+
+            clear() {
+                document.getElementById('input').value = '';
+                document.getElementById('resultContent').textContent = '处理结果将在这里显示...';
+            }
+
+            copyResult() {
+                const result = document.getElementById('resultContent').textContent;
+                if (result && result !== '处理结果将在这里显示...') {
+                    ToolUtils.copyToClipboard(result);
+                } else {
+                    ToolUtils.showToast('没有可复制的内容', 'warning');
+                }
+            }
+        }
+
+        // 初始化应用
+        document.addEventListener('DOMContentLoaded', () => {
+            new ToolApp();
+        });
+    </script>
+</body>
+</html>

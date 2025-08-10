@@ -1,0 +1,1304 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>图片颜色提取器 - AI工具集</title>
+    <meta name="description" content="图片颜色提取器">
+    
+    <!-- 样式文件 -->
+    <link rel="stylesheet" href="../../shared/css/common.css">
+    
+    <!-- 工具特定样式 -->
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: var(--spacing-lg);
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            font-size: 1.1em;
+            opacity: 0.9;
+        }
+
+        .main-content {
+            padding: 30px;
+        }
+
+        .upload-section {
+            background: #f8f9fa;
+            border-radius: var(--radius-lg);
+            padding: 25px;
+            margin-bottom: 30px;
+            border: 2px dashed #dee2e6;
+            text-align: center;
+            transition: all 0.3s;
+        }
+
+        .upload-section.dragover {
+            border-color: #667eea;
+            background: #f0f4ff;
+        }
+
+        .upload-icon {
+            font-size: 4em;
+            color: #6c757d;
+            margin-bottom: 15px;
+        }
+
+        .upload-text {
+            font-size: 1.2em;
+            color: #495057;
+            margin-bottom: 15px;
+        }
+
+        .upload-hint {
+            color: #6c757d;
+            font-size: 0.9em;
+            margin-bottom: 20px;
+        }
+
+        .file-input {
+            display: none;
+        }
+
+        .upload-btn {
+            padding: 12px 24px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 16px;
+            transition: all 0.3s;
+        }
+
+        .upload-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .analysis-section {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin-bottom: 30px;
+        }
+
+        .image-preview {
+            background: #f8f9fa;
+            border-radius: var(--radius-lg);
+            padding: 25px;
+            border: 2px solid #e9ecef;
+        }
+
+        .image-preview h3 {
+            color: #495057;
+            margin-bottom: 15px;
+            font-size: 1.3em;
+        }
+
+        .preview-container {
+            position: relative;
+            background: var(--bg-card);
+            border-radius: var(--radius-md);
+            border: 2px solid #dee2e6;
+            overflow: hidden;
+            min-height: 300px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .preview-image {
+            max-width: 100%;
+            max-height: 400px;
+            object-fit: contain;
+            border-radius: 8px;
+        }
+
+        .image-info {
+            margin-top: 15px;
+            padding: 15px;
+            background: white;
+            border-radius: var(--radius-md);
+            border: 1px solid #dee2e6;
+        }
+
+        .info-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+        }
+
+        .info-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 5px 0;
+            border-bottom: 1px solid #f8f9fa;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: #495057;
+        }
+
+        .info-value {
+            color: #6c757d;
+        }
+
+        .color-analysis {
+            background: #f8f9fa;
+            border-radius: var(--radius-lg);
+            padding: 25px;
+            border: 2px solid #e9ecef;
+        }
+
+        .color-analysis h3 {
+            color: #495057;
+            margin-bottom: 15px;
+            font-size: 1.3em;
+        }
+
+        .analysis-options {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        .option-group {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .option-group label {
+            font-weight: 600;
+            color: #495057;
+        }
+
+        .option-group input,
+        .option-group select {
+            padding: 6px 10px;
+            border: 1px solid #dee2e6;
+            border-radius: 6px;
+            font-size: 14px;
+        }
+
+        .extract-btn {
+            padding: var(--spacing-md) 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s;
+            margin-bottom: 20px;
+        }
+
+        .extract-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .color-palette {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .palette-section {
+            background: white;
+            border-radius: var(--radius-md);
+            padding: var(--spacing-lg);
+            border: 1px solid #dee2e6;
+        }
+
+        .palette-title {
+            font-weight: bold;
+            color: #495057;
+            margin-bottom: 15px;
+            text-align: center;
+        }
+
+        .color-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(80px, 1fr));
+            gap: 10px;
+        }
+
+        .color-item {
+            position: relative;
+            border-radius: 8px;
+            overflow: hidden;
+            cursor: pointer;
+            transition: all 0.3s;
+            border: 2px solid transparent;
+        }
+
+        .color-item:hover {
+            transform: scale(1.05);
+            border-color: #667eea;
+        }
+
+        .color-swatch {
+            width: 100%;
+            height: 80px;
+            border: none;
+            cursor: pointer;
+        }
+
+        .color-info {
+            padding: 8px;
+            background: #f8f9fa;
+            text-align: center;
+            font-size: 11px;
+        }
+
+        .color-code {
+            font-family: 'Courier New', monospace;
+            font-weight: bold;
+            color: #495057;
+            margin-bottom: 2px;
+        }
+
+        .color-percentage {
+            color: #6c757d;
+            font-size: 10px;
+        }
+
+        .detailed-analysis {
+            background: #f8f9fa;
+            border-radius: var(--radius-lg);
+            padding: 25px;
+            margin-bottom: 30px;
+            border: 2px solid #e9ecef;
+        }
+
+        .analysis-tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            border-bottom: 2px solid #dee2e6;
+        }
+
+        .tab-btn {
+            padding: var(--spacing-md) 20px;
+            background: none;
+            border: none;
+            border-bottom: 3px solid transparent;
+            cursor: pointer;
+            font-weight: 600;
+            color: #6c757d;
+            transition: all 0.3s;
+        }
+
+        .tab-btn.active {
+            color: #667eea;
+            border-bottom-color: #667eea;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .color-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .stat-card {
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            text-align: center;
+            border: 1px solid #dee2e6;
+        }
+
+        .stat-number {
+            font-size: 1.5em;
+            font-weight: bold;
+            color: #667eea;
+            margin-bottom: 5px;
+        }
+
+        .stat-label {
+            color: #6c757d;
+            font-size: 0.9em;
+        }
+
+        .gradient-preview {
+            height: 40px;
+            border-radius: 8px;
+            margin: 15px 0;
+            border: 1px solid #dee2e6;
+        }
+
+        .export-section {
+            background: #f8f9fa;
+            border-radius: var(--radius-lg);
+            padding: 25px;
+            border: 2px solid #e9ecef;
+        }
+
+        .export-options {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+
+        button {
+            padding: var(--spacing-md) 20px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s;
+            font-size: 14px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-secondary {
+            background: #6c757d;
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            background: #5a6268;
+        }
+
+        .btn-success {
+            background: #28a745;
+            color: white;
+        }
+
+        .btn-success:hover {
+            background: #218838;
+        }
+
+        .status {
+            padding: 12px;
+            border-radius: 8px;
+            margin: 15px 0;
+            font-weight: 600;
+        }
+
+        .status.success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .status.error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        .status.info {
+            background: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
+
+        .footer {
+            text-align: center;
+            padding: var(--spacing-lg);
+            background: #f8f9fa;
+            color: #6c757d;
+            font-size: 0.9em;
+        }
+
+        @media (max-width: 768px) {
+            .analysis-section {
+                grid-template-columns: 1fr;
+                gap: 20px;
+            }
+            
+            .main-content {
+                padding: var(--spacing-lg);
+            }
+            
+            .header h1 {
+                font-size: 2em;
+            }
+            
+            .color-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            
+            .analysis-options {
+                flex-direction: column;
+                align-items: stretch;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="tool-container">
+        <!-- 工具头部 -->
+        <header class="tool-header">
+            <div class="tool-header-content">
+                <a href="../../index.html" class="back-btn">
+                    <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                        <path d="M10 4l-4 4 4 4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                    返回工具集
+                </a>
+                
+                <div class="tool-title">
+                    <h1>图片颜色提取器</h1>
+                    <p class="tool-subtitle">图片颜色提取器</p>
+                </div>
+                
+                <button class="theme-toggle" id="themeToggle" aria-label="切换主题">
+                    <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                        <circle cx="10" cy="10" r="4" stroke="currentColor" stroke-width="2"/>
+                        <path d="M10 2v2M10 16v2M18 10h-2M4 10H2M15.66 4.34l-1.41 1.41M5.75 14.25l-1.41 1.41M15.66 15.66l-1.41-1.41M5.75 5.75L4.34 4.34" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                    </svg>
+                </button>
+            </div>
+        </header>
+
+        <!-- 工具主内容 -->
+        <main class="tool-main">
+            <div class="tool-card">
+                <div class="tool-section">
+                    <h2>
+                        <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                            <rect x="3" y="3" width="14" height="14" rx="2" stroke="currentColor" stroke-width="2"/>
+                        </svg>
+                        工具功能
+                    </h2>
+                    
+                    
+            <div class="tool-card">
+                <div class="tool-section">
+                    <h2>
+                        <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                            <rect x="3" y="3" width="14" height="14" rx="2" stroke="currentColor" stroke-width="2"/>
+                        </svg>
+                        图片颜色提取器
+                    </h2>
+                    <div class="container">
+        <div class="header">
+            <h1>🎨 图片颜色提取器</h1>
+            <p>上传图片，提取其主色调或常用颜色，显示完整颜色板</p>
+        </div>
+
+        <div class="main-content">
+            <!-- 上传区域 -->
+            <div class="upload-section" id="uploadSection">
+                <div class="upload-icon">🖼️</div>
+                <div class="upload-text">拖拽图片到这里或点击选择</div>
+                <div class="upload-hint">支持 JPG、PNG、WebP 格式，推荐清晰度较高的图片</div>
+                <input type="file" id="fileInput" class="file-input" accept="image/*">
+                <button class="upload-btn" onclick="document.getElementById('fileInput').click()">📁 选择图片</button>
+            </div>
+
+            <!-- 分析区域 -->
+            <div class="analysis-section" id="analysisSection" style="display: none;">
+                <div class="image-preview">
+                    <h3>图片预览</h3>
+                    <div class="preview-container">
+                        <img id="previewImage" class="preview-image" alt="预览图片">
+                    </div>
+                    <div class="image-info" id="imageInfo">
+                        <div class="info-grid">
+                            <div class="info-item">
+                                <span class="info-label">文件名:</span>
+                                <span class="info-value" id="fileName">-</span>
+                            </div>
+                            <div class="info-item">
+                                <span class="info-label">尺寸:</span>
+                                <span class="info-value" id="imageDimensions">-</span>
+                            </div>
+                            <div class="info-item">
+                                <span class="info-label">大小:</span>
+                                <span class="info-value" id="fileSize">-</span>
+                            </div>
+                            <div class="info-item">
+                                <span class="info-label">格式:</span>
+                                <span class="info-value" id="fileFormat">-</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="color-analysis">
+                    <h3>颜色分析设置</h3>
+                    <div class="analysis-options">
+                        <div class="option-group">
+                            <label>提取数量:</label>
+                            <select id="colorCount">
+                                <option value="5">5种颜色</option>
+                                <option value="8" selected>8种颜色</option>
+                                <option value="12">12种颜色</option>
+                                <option value="16">16种颜色</option>
+                            </select>
+                        </div>
+                        <div class="option-group">
+                            <label>采样质量:</label>
+                            <select id="quality">
+                                <option value="1">高质量</option>
+                                <option value="5" selected>标准</option>
+                                <option value="10">快速</option>
+                            </select>
+                        </div>
+                        <div class="option-group">
+                            <label>忽略白色:</label>
+                            <input type="checkbox" id="ignoreWhite" checked>
+                        </div>
+                    </div>
+                    
+                    <button class="extract-btn" onclick="extractColors()">🎨 提取颜色</button>
+                    
+                    <div class="color-palette" id="colorPalette">
+                        <!-- 颜色板动态生成 -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- 详细分析 -->
+            <div class="detailed-analysis" id="detailedAnalysis" style="display: none;">
+                <h3>详细分析</h3>
+                <div class="analysis-tabs">
+                    <button class="tab-btn active" onclick="switchTab('dominant')">主要颜色</button>
+                    <button class="tab-btn" onclick="switchTab('histogram')">颜色分布</button>
+                    <button class="tab-btn" onclick="switchTab('harmony')">色彩和谐</button>
+                </div>
+
+                <div id="dominant" class="tab-content active">
+                    <div class="color-stats" id="colorStats">
+                        <!-- 统计信息动态生成 -->
+                    </div>
+                    <div id="dominantColors">
+                        <!-- 主要颜色详情 -->
+                    </div>
+                </div>
+
+                <div id="histogram" class="tab-content">
+                    <div class="gradient-preview" id="gradientPreview"></div>
+                    <div id="colorDistribution">
+                        <!-- 颜色分布图表 -->
+                    </div>
+                </div>
+
+                <div id="harmony" class="tab-content">
+                    <div id="harmonyAnalysis">
+                        <!-- 色彩和谐分析 -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- 导出区域 -->
+            <div class="export-section" id="exportSection" style="display: none;">
+                <h3>导出颜色板</h3>
+                <div class="export-options">
+                    <button class="btn-primary" onclick="exportPalette('css')">📄 导出 CSS</button>
+                    <button class="btn-primary" onclick="exportPalette('json')">📊 导出 JSON</button>
+                    <button class="btn-primary" onclick="exportPalette('ase')">🎨 导出 ASE</button>
+                    <button class="btn-success" onclick="copyColors()">📋 复制颜色码</button>
+                    <button class="btn-secondary" onclick="reset()">🔄 重新分析</button>
+                </div>
+            </div>
+
+            <div id="status" class="status" style="display: none;"></div>
+        </div>
+
+        <div class="footer">
+            <p>💡 支持多种颜色提取算法、色彩分析、颜色板导出</p>
+            <p>脚注：小苏趣研AI - 让图片颜色提取变得简单高效</p>
+        </div>
+    </div>
+
+    
+                </div>
+            </div>
+                    <!-- 结果显示区域 -->
+                    <div class="result-display" id="result">
+                        <pre id="resultContent">处理结果将在这里显示...</pre>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <!-- 工具页脚 -->
+        <footer class="tool-footer">
+            <p>由 <a href="../../index.html">AI工具集</a> 提供 | 原创工具</p>
+        </footer>
+    </div>
+
+    <!-- JavaScript -->
+    <script src="../../shared/js/utils.js"></script>
+    <script>
+        // 工具特定的JavaScript代码
+        class ToolApp {
+            constructor() {
+                this.init();
+            }
+
+            init() {
+                this.setupEventListeners();
+            }
+
+            setupEventListeners() {
+                document.getElementById('processBtn').addEventListener('click', () => this.process());
+                document.getElementById('clearBtn').addEventListener('click', () => this.clear());
+                document.getElementById('copyBtn').addEventListener('click', () => this.copyResult());
+                
+                // 实时处理（可选）
+                document.getElementById('input').addEventListener('input', 
+                    ToolUtils.debounce(() => this.process(), 300)
+                );
+            }
+
+            process() {
+                const input = document.getElementById('input').value;
+                const result = this.processInput(input);
+                this.displayResult(result);
+            }
+
+            processInput(input) {
+                
+        let currentImage = null;
+        let extractedColors = [];
+        let canvas = null;
+        let ctx = null;
+
+        function showStatus(message, type = 'info') {
+            const statusDiv = document.getElementById('status');
+            statusDiv.textContent = message;
+            statusDiv.className = `status ${type}`;
+            statusDiv.style.display = 'block';
+            
+            setTimeout(() => {
+                statusDiv.style.display = 'none';
+            }, 5000);
+        }
+
+        function setupEventListeners() {
+            const uploadSection = document.getElementById('uploadSection');
+            const fileInput = document.getElementById('fileInput');
+            
+            // 拖拽上传
+            uploadSection.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                uploadSection.classList.add('dragover');
+            });
+            
+            uploadSection.addEventListener('dragleave', (e) => {
+                e.preventDefault();
+                uploadSection.classList.remove('dragover');
+            });
+            
+            uploadSection.addEventListener('drop', (e) => {
+                e.preventDefault();
+                uploadSection.classList.remove('dragover');
+                
+                const files = e.dataTransfer.files;
+                if (files.length > 0) {
+                    handleImageFile(files[0]);
+                }
+            });
+            
+            // 文件选择
+            fileInput.addEventListener('change', (e) => {
+                if (e.target.files.length > 0) {
+                    handleImageFile(e.target.files[0]);
+                }
+            });
+        }
+
+        function handleImageFile(file) {
+            if (!file.type.startsWith('image/')) {
+                showStatus('请选择图片文件', 'error');
+                return;
+            }
+            
+            if (file.size > 10 * 1024 * 1024) {
+                showStatus('图片文件过大，请选择小于10MB的图片', 'error');
+                return;
+            }
+            
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const img = new Image();
+                img.onload = function() {
+                    currentImage = {
+                        file: file,
+                        element: img,
+                        width: img.width,
+                        height: img.height
+                    };
+                    
+                    displayImage(e.target.result);
+                    updateImageInfo(file, img);
+                    showAnalysisSection();
+                };
+                img.src = e.target.result;
+            };
+            reader.readAsDataURL(file);
+        }
+
+        function displayImage(src) {
+            const previewImage = document.getElementById('previewImage');
+            previewImage.src = src;
+        }
+
+        function updateImageInfo(file, img) {
+            document.getElementById('fileName').textContent = file.name;
+            document.getElementById('imageDimensions').textContent = `${img.width} × ${img.height}`;
+            document.getElementById('fileSize').textContent = formatFileSize(file.size);
+            document.getElementById('fileFormat').textContent = file.type.split('/')[1].toUpperCase();
+        }
+
+        function formatFileSize(bytes) {
+            if (bytes === 0) return '0 Bytes';
+            const k = 1024;
+            const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+        }
+
+        function showAnalysisSection() {
+            document.getElementById('analysisSection').style.display = 'grid';
+        }
+
+        function extractColors() {
+            if (!currentImage) {
+                showStatus('请先上传图片', 'error');
+                return;
+            }
+            
+            showStatus('正在分析图片颜色...', 'info');
+            
+            // 创建canvas用于颜色分析
+            if (!canvas) {
+                canvas = document.createElement('canvas');
+                ctx = canvas.getContext('2d');
+            }
+            
+            const img = currentImage.element;
+            
+            // 调整canvas大小（为了性能，可能需要缩放）
+            const maxSize = 400;
+            const scale = Math.min(maxSize / img.width, maxSize / img.height, 1);
+            
+            canvas.width = img.width * scale;
+            canvas.height = img.height * scale;
+            
+            // 绘制图片到canvas
+            ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+            
+            // 获取图片数据
+            const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+            
+            // 提取颜色
+            const colorCount = parseInt(document.getElementById('colorCount').value);
+            const quality = parseInt(document.getElementById('quality').value);
+            const ignoreWhite = document.getElementById('ignoreWhite').checked;
+            
+            const colors = analyzeColors(imageData, colorCount, quality, ignoreWhite);
+            extractedColors = colors;
+            
+            displayColorPalette(colors);
+            showDetailedAnalysis(colors);
+            showExportSection();
+            
+            showStatus('✅ 颜色提取完成！', 'success');
+        }
+
+        function analyzeColors(imageData, colorCount, quality, ignoreWhite) {
+            const data = imageData.data;
+            const colorMap = new Map();
+            const totalPixels = data.length / 4;
+            
+            // 采样像素
+            for (let i = 0; i < data.length; i += 4 * quality) {
+                const r = data[i];
+                const g = data[i + 1];
+                const b = data[i + 2];
+                const a = data[i + 3];
+                
+                // 跳过透明像素
+                if (a < 128) continue;
+                
+                // 可选：忽略白色和接近白色的颜色
+                if (ignoreWhite && r > 240 && g > 240 && b > 240) continue;
+                
+                const colorKey = `${r},${g},${b}`;
+                colorMap.set(colorKey, (colorMap.get(colorKey) || 0) + 1);
+            }
+            
+            // 将颜色按出现频率排序
+            const sortedColors = Array.from(colorMap.entries())
+                .sort((a, b) => b[1] - a[1])
+                .slice(0, colorCount * 3); // 取更多颜色用于聚类
+            
+            // 简单的颜色聚类
+            const clusteredColors = clusterColors(sortedColors, colorCount);
+            
+            // 计算每种颜色的百分比
+            const sampledPixels = Math.floor(totalPixels / quality);
+            return clusteredColors.map(([colorKey, count]) => {
+                const [r, g, b] = colorKey.split(',').map(Number);
+                const percentage = ((count / sampledPixels) * 100).toFixed(1);
+                
+                return {
+                    r, g, b,
+                    hex: rgbToHex(r, g, b),
+                    hsl: rgbToHsl(r, g, b),
+                    percentage: parseFloat(percentage),
+                    count
+                };
+            });
+        }
+
+        function clusterColors(colors, targetCount) {
+            if (colors.length <= targetCount) return colors;
+            
+            // 简化的K-means聚类算法
+            const clusters = [];
+            const step = Math.floor(colors.length / targetCount);
+            
+            for (let i = 0; i < targetCount; i++) {
+                const startIndex = i * step;
+                const endIndex = Math.min(startIndex + step, colors.length);
+                
+                let totalR = 0, totalG = 0, totalB = 0, totalCount = 0;
+                
+                for (let j = startIndex; j < endIndex; j++) {
+                    const [colorKey, count] = colors[j];
+                    const [r, g, b] = colorKey.split(',').map(Number);
+                    
+                    totalR += r * count;
+                    totalG += g * count;
+                    totalB += b * count;
+                    totalCount += count;
+                }
+                
+                if (totalCount > 0) {
+                    const avgR = Math.round(totalR / totalCount);
+                    const avgG = Math.round(totalG / totalCount);
+                    const avgB = Math.round(totalB / totalCount);
+                    
+                    clusters.push([`${avgR},${avgG},${avgB}`, totalCount]);
+                }
+            }
+            
+            return clusters;
+        }
+
+        function rgbToHex(r, g, b) {
+            return "#" + [r, g, b].map(x => {
+                const hex = x.toString(16);
+                return hex.length === 1 ? "0" + hex : hex;
+            }).join("");
+        }
+
+        function rgbToHsl(r, g, b) {
+            r /= 255;
+            g /= 255;
+            b /= 255;
+            
+            const max = Math.max(r, g, b);
+            const min = Math.min(r, g, b);
+            let h, s, l = (max + min) / 2;
+            
+            if (max === min) {
+                h = s = 0;
+            } else {
+                const d = max - min;
+                s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
+                
+                switch (max) {
+                    case r: h = (g - b) / d + (g < b ? 6 : 0); break;
+                    case g: h = (b - r) / d + 2; break;
+                    case b: h = (r - g) / d + 4; break;
+                }
+                h /= 6;
+            }
+            
+            return {
+                h: Math.round(h * 360),
+                s: Math.round(s * 100),
+                l: Math.round(l * 100)
+            };
+        }
+
+        function displayColorPalette(colors) {
+            const palette = document.getElementById('colorPalette');
+            palette.innerHTML = '';
+            
+            const section = document.createElement('div');
+            section.className = 'palette-section';
+            section.innerHTML = `
+                <div class="palette-title">提取的颜色（${colors.length}种）</div>
+                <div class="color-grid" id="mainColorGrid"></div>
+            `;
+            
+            const grid = section.querySelector('#mainColorGrid');
+            
+            colors.forEach((color, index) => {
+                const colorItem = document.createElement('div');
+                colorItem.className = 'color-item';
+                colorItem.innerHTML = `
+                    <div class="color-swatch" style="background-color: ${color.hex}"></div>
+                    <div class="color-info">
+                        <div class="color-code">${color.hex}</div>
+                        <div class="color-percentage">${color.percentage}%</div>
+                    </div>
+                `;
+                
+                colorItem.onclick = () => copyColorCode(color.hex);
+                grid.appendChild(colorItem);
+            });
+            
+            palette.appendChild(section);
+        }
+
+        function showDetailedAnalysis(colors) {
+            document.getElementById('detailedAnalysis').style.display = 'block';
+            
+            updateColorStats(colors);
+            updateDominantColors(colors);
+            updateGradientPreview(colors);
+            updateHarmonyAnalysis(colors);
+        }
+
+        function updateColorStats(colors) {
+            const statsDiv = document.getElementById('colorStats');
+            
+            const totalColors = colors.length;
+            const avgBrightness = colors.reduce((sum, color) => sum + color.hsl.l, 0) / totalColors;
+            const avgSaturation = colors.reduce((sum, color) => sum + color.hsl.s, 0) / totalColors;
+            const dominantColor = colors[0];
+            
+            statsDiv.innerHTML = `
+                <div class="stat-card">
+                    <div class="stat-number">${totalColors}</div>
+                    <div class="stat-label">提取颜色</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number">${Math.round(avgBrightness)}%</div>
+                    <div class="stat-label">平均亮度</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number">${Math.round(avgSaturation)}%</div>
+                    <div class="stat-label">平均饱和度</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number">${dominantColor.percentage}%</div>
+                    <div class="stat-label">主色占比</div>
+                </div>
+            `;
+        }
+
+        function updateDominantColors(colors) {
+            const dominantDiv = document.getElementById('dominantColors');
+            
+            let html = '<h4>主要颜色详情</h4>';
+            colors.slice(0, 5).forEach((color, index) => {
+                html += `
+                    <div style="display: flex; align-items: center; margin: 10px 0; padding: 10px; background: white; border-radius: 8px;">
+                        <div style="width: 40px; height: 40px; background: ${color.hex}; border-radius: 6px; margin-right: 15px;"></div>
+                        <div style="flex: 1;">
+                            <div style="font-weight: bold; margin-bottom: 4px;">${color.hex.toUpperCase()}</div>
+                            <div style="font-size: 0.9em; color: #666;">
+                                RGB(${color.r}, ${color.g}, ${color.b}) | 
+                                HSL(${color.hsl.h}°, ${color.hsl.s}%, ${color.hsl.l}%)
+                            </div>
+                        </div>
+                        <div style="text-align: right; color: #667eea; font-weight: bold;">
+                            ${color.percentage}%
+                        </div>
+                    </div>
+                `;
+            });
+            
+            dominantDiv.innerHTML = html;
+        }
+
+        function updateGradientPreview(colors) {
+            const gradientDiv = document.getElementById('gradientPreview');
+            const gradient = colors.map(color => color.hex).join(', ');
+            gradientDiv.style.background = `linear-gradient(to right, ${gradient})`;
+        }
+
+        function updateHarmonyAnalysis(colors) {
+            const harmonyDiv = document.getElementById('harmonyAnalysis');
+            
+            // 简单的色彩和谐分析
+            const hues = colors.map(color => color.hsl.h);
+            const hueDifferences = [];
+            
+            for (let i = 1; i < hues.length; i++) {
+                const diff = Math.abs(hues[i] - hues[0]);
+                hueDifferences.push(Math.min(diff, 360 - diff));
+            }
+            
+            const avgHueDiff = hueDifferences.reduce((sum, diff) => sum + diff, 0) / hueDifferences.length;
+            
+            let harmonyType = '单色调';
+            if (avgHueDiff > 120) harmonyType = '对比色';
+            else if (avgHueDiff > 60) harmonyType = '三角色';
+            else if (avgHueDiff > 30) harmonyType = '邻近色';
+            
+            harmonyDiv.innerHTML = `
+                <h4>色彩和谐分析</h4>
+                <div style="background: white; padding: 20px; border-radius: 8px; margin: 15px 0;">
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 15px;">
+                        <span><strong>和谐类型:</strong> ${harmonyType}</span>
+                        <span><strong>色相差异:</strong> ${Math.round(avgHueDiff)}°</span>
+                    </div>
+                    <div style="margin-bottom: 10px;"><strong>建议配色方案:</strong></div>
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(100px, 1fr)); gap: 10px;">
+                        ${generateSuggestedColors(colors[0]).map(color => 
+                            `<div style="text-align: center;">
+                                <div style="width: 100%; height: 40px; background: ${color}; border-radius: 6px; margin-bottom: 5px;"></div>
+                                <div style="font-size: 0.8em; font-family: monospace;">${color}</div>
+                            </div>`
+                        ).join('')}
+                    </div>
+                </div>
+            `;
+        }
+
+        function generateSuggestedColors(baseColor) {
+            const suggestions = [];
+            const hue = baseColor.hsl.h;
+            const saturation = baseColor.hsl.s;
+            const lightness = baseColor.hsl.l;
+            
+            // 邻近色
+            suggestions.push(hslToHex((hue + 30) % 360, saturation, lightness));
+            suggestions.push(hslToHex((hue - 30 + 360) % 360, saturation, lightness));
+            
+            // 对比色
+            suggestions.push(hslToHex((hue + 180) % 360, saturation, lightness));
+            
+            // 明暗变化
+            suggestions.push(hslToHex(hue, saturation, Math.min(lightness + 20, 100)));
+            suggestions.push(hslToHex(hue, saturation, Math.max(lightness - 20, 0)));
+            
+            return suggestions;
+        }
+
+        function hslToHex(h, s, l) {
+            l /= 100;
+            const a = s * Math.min(l, 1 - l) / 100;
+            const f = n => {
+                const k = (n + h / 30) % 12;
+                const color = l - a * Math.max(Math.min(k - 3, 9 - k, 1), -1);
+                return Math.round(255 * color).toString(16).padStart(2, '0');
+            };
+            return `#${f(0)}${f(8)}${f(4)}`;
+        }
+
+        function showExportSection() {
+            document.getElementById('exportSection').style.display = 'block';
+        }
+
+        function switchTab(tabName) {
+            // 移除所有活动状态
+            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+            
+            // 激活选中的标签
+            event.target.classList.add('active');
+            document.getElementById(tabName).classList.add('active');
+        }
+
+        function copyColorCode(hex) {
+            navigator.clipboard.writeText(hex).then(() => {
+                showStatus(`📋 颜色代码 ${hex} 已复制！`, 'success');
+            });
+        }
+
+        function copyColors() {
+            const colorCodes = extractedColors.map(color => color.hex).join('\n');
+            navigator.clipboard.writeText(colorCodes).then(() => {
+                showStatus('📋 所有颜色代码已复制！', 'success');
+            });
+        }
+
+        function exportPalette(format) {
+            if (extractedColors.length === 0) {
+                showStatus('请先提取颜色', 'error');
+                return;
+            }
+            
+            let content = '';
+            let filename = '';
+            let mimeType = 'text/plain';
+            
+            switch (format) {
+                case 'css':
+                    content = generateCSS();
+                    filename = 'color-palette.css';
+                    mimeType = 'text/css';
+                    break;
+                case 'json':
+                    content = generateJSON();
+                    filename = 'color-palette.json';
+                    mimeType = 'application/json';
+                    break;
+                case 'ase':
+                    content = generateASE();
+                    filename = 'color-palette.txt';
+                    break;
+            }
+            
+            downloadFile(content, filename, mimeType);
+            showStatus(`💾 ${format.toUpperCase()} 文件已下载！`, 'success');
+        }
+
+        function generateCSS() {
+            let css = '/* 颜色板 CSS 变量 */\n:root {\n';
+            extractedColors.forEach((color, index) => {
+                css += `  --color-${index + 1}: ${color.hex}; /* ${color.percentage}% */\n`;
+            });
+            css += '}\n\n/* 颜色类 */\n';
+            extractedColors.forEach((color, index) => {
+                css += `.color-${index + 1} { color: ${color.hex}; }\n`;
+                css += `.bg-color-${index + 1} { background-color: ${color.hex}; }\n`;
+            });
+            return css;
+        }
+
+        function generateJSON() {
+            const palette = {
+                name: "提取的颜色板",
+                source: currentImage.file.name,
+                extractedAt: new Date().toISOString(),
+                colors: extractedColors.map((color, index) => ({
+                    id: index + 1,
+                    name: `Color ${index + 1}`,
+                    hex: color.hex,
+                    rgb: { r: color.r, g: color.g, b: color.b },
+                    hsl: color.hsl,
+                    percentage: color.percentage
+                }))
+            };
+            return JSON.stringify(palette, null, 2);
+        }
+
+        function generateASE() {
+            let content = '# Adobe Swatch Exchange Format\n';
+            content += '# 颜色板\n\n';
+            extractedColors.forEach((color, index) => {
+                content += `Color ${index + 1}: ${color.hex}\n`;
+                content += `RGB: ${color.r}, ${color.g}, ${color.b}\n`;
+                content += `HSL: ${color.hsl.h}°, ${color.hsl.s}%, ${color.hsl.l}%\n`;
+                content += `Percentage: ${color.percentage}%\n\n`;
+            });
+            return content;
+        }
+
+        function downloadFile(content, filename, mimeType) {
+            const blob = new Blob([content], { type: mimeType });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = filename;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        }
+
+        function reset() {
+            currentImage = null;
+            extractedColors = [];
+            
+            document.getElementById('analysisSection').style.display = 'none';
+            document.getElementById('detailedAnalysis').style.display = 'none';
+            document.getElementById('exportSection').style.display = 'none';
+            document.getElementById('fileInput').value = '';
+            
+            showStatus('🔄 已重置，请选择新图片', 'info');
+        }
+
+        // 初始化
+        window.addEventListener('load', function() {
+            setupEventListeners();
+        });
+    
+                return input;
+            }
+
+            displayResult(result) {
+                document.getElementById('resultContent').textContent = result;
+            }
+
+            clear() {
+                document.getElementById('input').value = '';
+                document.getElementById('resultContent').textContent = '处理结果将在这里显示...';
+            }
+
+            copyResult() {
+                const result = document.getElementById('resultContent').textContent;
+                if (result && result !== '处理结果将在这里显示...') {
+                    ToolUtils.copyToClipboard(result);
+                } else {
+                    ToolUtils.showToast('没有可复制的内容', 'warning');
+                }
+            }
+        }
+
+        // 初始化应用
+        document.addEventListener('DOMContentLoaded', () => {
+            new ToolApp();
+        });
+    </script>
+</body>
+</html>

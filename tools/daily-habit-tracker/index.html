@@ -1,0 +1,809 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>每日习惯追踪器 - AI工具集</title>
+    <meta name="description" content="每日习惯追踪器">
+    
+    <!-- 样式文件 -->
+    <link rel="stylesheet" href="../../shared/css/common.css">
+    
+    <!-- 工具特定样式 -->
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: var(--spacing-lg);
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white;
+            text-align: center;
+            padding: 40px 20px;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            font-size: 1.1em;
+            opacity: 0.9;
+        }
+
+        .content {
+            padding: 40px;
+        }
+
+        .stats-section {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .stat-card {
+            background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+            padding: 25px;
+            border-radius: var(--radius-lg);
+            text-align: center;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+
+        .stat-number {
+            font-size: 2.5em;
+            font-weight: bold;
+            color: #667eea;
+            margin-bottom: 5px;
+        }
+
+        .stat-label {
+            color: var(--text-secondary);
+            font-weight: 500;
+        }
+
+        .add-habit-section {
+            background: #f8f9fa;
+            padding: 25px;
+            border-radius: var(--radius-lg);
+            margin-bottom: 30px;
+        }
+
+        .add-habit-form {
+            display: flex;
+            gap: 15px;
+            align-items: end;
+        }
+
+        .form-group {
+            flex: 1;
+        }
+
+        .form-label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+            color: var(--text-primary);
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: border-color 0.3s;
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .form-select {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 16px;
+            background: white;
+            cursor: pointer;
+        }
+
+        .add-btn {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 8px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: transform 0.3s ease;
+        }
+
+        .add-btn:hover {
+            transform: translateY(-2px);
+        }
+
+        .habits-section {
+            margin-bottom: 30px;
+        }
+
+        .section-title {
+            font-size: 1.5em;
+            margin-bottom: 20px;
+            color: var(--text-primary);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .habit-card {
+            background: white;
+            border: 2px solid #e9ecef;
+            border-radius: var(--radius-lg);
+            padding: 25px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.05);
+            transition: all 0.3s ease;
+        }
+
+        .habit-card:hover {
+            box-shadow: 0 8px 16px rgba(0,0,0,0.1);
+        }
+
+        .habit-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .habit-info {
+            flex: 1;
+        }
+
+        .habit-name {
+            font-size: 1.3em;
+            font-weight: bold;
+            color: var(--text-primary);
+            margin-bottom: 5px;
+        }
+
+        .habit-meta {
+            color: var(--text-secondary);
+            font-size: 0.9em;
+        }
+
+        .habit-actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        .check-btn {
+            background: #28a745;
+            color: white;
+            border: none;
+            padding: var(--spacing-md) 20px;
+            border-radius: 8px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .check-btn:hover {
+            background: #218838;
+            transform: translateY(-1px);
+        }
+
+        .check-btn.checked {
+            background: #6c757d;
+        }
+
+        .delete-btn {
+            background: #dc3545;
+            color: white;
+            border: none;
+            padding: var(--spacing-md) 15px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .delete-btn:hover {
+            background: #c82333;
+            transform: translateY(-1px);
+        }
+
+        .habit-progress {
+            margin-bottom: 15px;
+        }
+
+        .progress-bar {
+            background: #e9ecef;
+            border-radius: var(--radius-md);
+            height: 8px;
+            overflow: hidden;
+            margin-bottom: 10px;
+        }
+
+        .progress-fill {
+            background: linear-gradient(45deg, #28a745, #20c997);
+            height: 100%;
+            border-radius: var(--radius-md);
+            transition: width 0.3s ease;
+        }
+
+        .progress-text {
+            font-size: 0.9em;
+            color: var(--text-secondary);
+            text-align: center;
+        }
+
+        .habit-calendar {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 4px;
+            margin-top: 15px;
+        }
+
+        .calendar-day {
+            width: 30px;
+            height: 30px;
+            border-radius: 6px;
+            background: #f8f9fa;
+            border: 1px solid #e9ecef;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.8em;
+            color: var(--text-secondary);
+        }
+
+        .calendar-day.completed {
+            background: #28a745;
+            color: white;
+            border-color: #28a745;
+        }
+
+        .calendar-day.today {
+            border-color: #667eea;
+            border-width: 2px;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: var(--text-secondary);
+        }
+
+        .empty-state h3 {
+            margin-bottom: 15px;
+            color: var(--text-primary);
+        }
+
+        .footer {
+            background: #f8f9fa;
+            text-align: center;
+            padding: var(--spacing-lg);
+            color: var(--text-secondary);
+        }
+
+        @media (max-width: 768px) {
+            .add-habit-form {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            
+            .habit-header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 15px;
+            }
+            
+            .habit-actions {
+                width: 100%;
+                justify-content: space-between;
+            }
+            
+            .calendar-day {
+                width: 25px;
+                height: 25px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="tool-container">
+        <!-- 工具头部 -->
+        <header class="tool-header">
+            <div class="tool-header-content">
+                <a href="../../index.html" class="back-btn">
+                    <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                        <path d="M10 4l-4 4 4 4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                    返回工具集
+                </a>
+                
+                <div class="tool-title">
+                    <h1>每日习惯追踪器</h1>
+                    <p class="tool-subtitle">每日习惯追踪器</p>
+                </div>
+                
+                <button class="theme-toggle" id="themeToggle" aria-label="切换主题">
+                    <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                        <circle cx="10" cy="10" r="4" stroke="currentColor" stroke-width="2"/>
+                        <path d="M10 2v2M10 16v2M18 10h-2M4 10H2M15.66 4.34l-1.41 1.41M5.75 14.25l-1.41 1.41M15.66 15.66l-1.41-1.41M5.75 5.75L4.34 4.34" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                    </svg>
+                </button>
+            </div>
+        </header>
+
+        <!-- 工具主内容 -->
+        <main class="tool-main">
+            <div class="tool-card">
+                <div class="tool-section">
+                    <h2>
+                        <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                            <rect x="3" y="3" width="14" height="14" rx="2" stroke="currentColor" stroke-width="2"/>
+                        </svg>
+                        工具功能
+                    </h2>
+                    
+                    
+            <div class="tool-card">
+                <div class="tool-section">
+                    <h2>
+                        <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                            <rect x="3" y="3" width="14" height="14" rx="2" stroke="currentColor" stroke-width="2"/>
+                        </svg>
+                        每日习惯追踪器
+                    </h2>
+                    <div class="container">
+        <div class="header">
+            <h1>📅 每日习惯追踪器</h1>
+            <p>养成好习惯，记录每一天的进步，让坚持变得可视化</p>
+        </div>
+
+        <div class="content">
+            <div class="stats-section">
+                <div class="stat-card">
+                    <div class="stat-number" id="totalHabits">0</div>
+                    <div class="stat-label">总习惯数</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number" id="todayCompleted">0</div>
+                    <div class="stat-label">今日完成</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number" id="currentStreak">0</div>
+                    <div class="stat-label">连续天数</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number" id="completionRate">0%</div>
+                    <div class="stat-label">完成率</div>
+                </div>
+            </div>
+
+            <div class="add-habit-section">
+                <h2 class="section-title">➕ 添加新习惯</h2>
+                <div class="add-habit-form">
+                    <div class="form-group">
+                        <label class="form-label">习惯名称</label>
+                        <input type="text" class="form-input" id="habitName" placeholder="例如：每天阅读30分钟">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">分类</label>
+                        <select class="form-select" id="habitCategory">
+                            <option value="健康">🏃 健康</option>
+                            <option value="学习">📚 学习</option>
+                            <option value="工作">💼 工作</option>
+                            <option value="生活">🏠 生活</option>
+                            <option value="其他">📝 其他</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">目标频率</label>
+                        <select class="form-select" id="habitFrequency">
+                            <option value="daily">每天</option>
+                            <option value="weekly">每周</option>
+                            <option value="custom">自定义</option>
+                        </select>
+                    </div>
+                    <button class="add-btn" id="addHabitBtn">添加习惯</button>
+                </div>
+            </div>
+
+            <div class="habits-section">
+                <h2 class="section-title">📋 我的习惯</h2>
+                <div id="habitsList">
+                    <div class="empty-state">
+                        <h3>还没有添加任何习惯</h3>
+                        <p>开始添加你想要养成的好习惯吧！</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="footer">
+            <p>© 小苏趣研AI | 每日习惯追踪器</p>
+            <p style="margin-top: 10px; opacity: 0.8;">
+                <a href="#" target="_blank" style="color: #666; text-decoration: none;">小苏趣研AI</a> - 
+                科学的习惯养成工具，支持多种习惯类型和频率设置，通过可视化进度追踪帮助您建立持久的好习惯。
+            </p>
+        </div>
+    </div>
+
+    
+                </div>
+            </div>
+                    <!-- 结果显示区域 -->
+                    <div class="result-display" id="result">
+                        <pre id="resultContent">处理结果将在这里显示...</pre>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <!-- 工具页脚 -->
+        <footer class="tool-footer">
+            <p>由 <a href="../../index.html">AI工具集</a> 提供 | 原创工具</p>
+        </footer>
+    </div>
+
+    <!-- JavaScript -->
+    <script src="../../shared/js/utils.js"></script>
+    <script>
+        // 工具特定的JavaScript代码
+        class ToolApp {
+            constructor() {
+                this.init();
+            }
+
+            init() {
+                this.setupEventListeners();
+            }
+
+            setupEventListeners() {
+                document.getElementById('processBtn').addEventListener('click', () => this.process());
+                document.getElementById('clearBtn').addEventListener('click', () => this.clear());
+                document.getElementById('copyBtn').addEventListener('click', () => this.copyResult());
+                
+                // 实时处理（可选）
+                document.getElementById('input').addEventListener('input', 
+                    ToolUtils.debounce(() => this.process(), 300)
+                );
+            }
+
+            process() {
+                const input = document.getElementById('input').value;
+                const result = this.processInput(input);
+                this.displayResult(result);
+            }
+
+            processInput(input) {
+                
+        class HabitTracker {
+            constructor() {
+                this.habits = JSON.parse(localStorage.getItem('habits') || '[]');
+                this.habitName = document.getElementById('habitName');
+                this.habitCategory = document.getElementById('habitCategory');
+                this.habitFrequency = document.getElementById('habitFrequency');
+                this.addHabitBtn = document.getElementById('addHabitBtn');
+                this.habitsList = document.getElementById('habitsList');
+                
+                this.init();
+            }
+
+            init() {
+                this.setupEventListeners();
+                this.renderHabits();
+                this.updateStats();
+            }
+
+            setupEventListeners() {
+                this.addHabitBtn.addEventListener('click', () => {
+                    this.addHabit();
+                });
+
+                this.habitName.addEventListener('keypress', (e) => {
+                    if (e.key === 'Enter') {
+                        this.addHabit();
+                    }
+                });
+            }
+
+            addHabit() {
+                const name = this.habitName.value.trim();
+                if (!name) {
+                    alert('请输入习惯名称');
+                    return;
+                }
+
+                const habit = {
+                    id: Date.now(),
+                    name: name,
+                    category: this.habitCategory.value,
+                    frequency: this.habitFrequency.value,
+                    createdAt: new Date().toISOString(),
+                    completions: {}
+                };
+
+                this.habits.push(habit);
+                this.saveHabits();
+                this.renderHabits();
+                this.updateStats();
+
+                // 清空表单
+                this.habitName.value = '';
+                this.showMessage('习惯添加成功！');
+            }
+
+            deleteHabit(habitId) {
+                if (confirm('确定要删除这个习惯吗？')) {
+                    this.habits = this.habits.filter(habit => habit.id !== habitId);
+                    this.saveHabits();
+                    this.renderHabits();
+                    this.updateStats();
+                    this.showMessage('习惯已删除');
+                }
+            }
+
+            toggleHabit(habitId) {
+                const today = this.getTodayString();
+                const habit = this.habits.find(h => h.id === habitId);
+                
+                if (habit) {
+                    if (habit.completions[today]) {
+                        delete habit.completions[today];
+                        this.showMessage('取消打卡');
+                    } else {
+                        habit.completions[today] = true;
+                        this.showMessage('打卡成功！');
+                    }
+                    
+                    this.saveHabits();
+                    this.renderHabits();
+                    this.updateStats();
+                }
+            }
+
+            renderHabits() {
+                if (this.habits.length === 0) {
+                    this.habitsList.innerHTML = `
+                        <div class="empty-state">
+                            <h3>还没有添加任何习惯</h3>
+                            <p>开始添加你想要养成的好习惯吧！</p>
+                        </div>
+                    `;
+                    return;
+                }
+
+                this.habitsList.innerHTML = this.habits.map(habit => {
+                    const today = this.getTodayString();
+                    const isCompletedToday = habit.completions[today];
+                    const streak = this.calculateStreak(habit);
+                    const completionRate = this.calculateCompletionRate(habit);
+                    
+                    return `
+                        <div class="habit-card">
+                            <div class="habit-header">
+                                <div class="habit-info">
+                                    <div class="habit-name">${habit.name}</div>
+                                    <div class="habit-meta">
+                                        ${this.getCategoryIcon(habit.category)} ${habit.category} • 
+                                        ${this.getFrequencyText(habit.frequency)} • 
+                                        连续 ${streak} 天
+                                    </div>
+                                </div>
+                                <div class="habit-actions">
+                                    <button class="check-btn ${isCompletedToday ? 'checked' : ''}" 
+                                            onclick="habitTracker.toggleHabit(${habit.id})">
+                                        ${isCompletedToday ? '✓ 已完成' : '打卡'}
+                                    </button>
+                                    <button class="delete-btn" onclick="habitTracker.deleteHabit(${habit.id})">
+                                        🗑️
+                                    </button>
+                                </div>
+                            </div>
+                            
+                            <div class="habit-progress">
+                                <div class="progress-bar">
+                                    <div class="progress-fill" style="width: ${completionRate}%"></div>
+                                </div>
+                                <div class="progress-text">完成率: ${completionRate}%</div>
+                            </div>
+                            
+                            <div class="habit-calendar">
+                                ${this.renderCalendar(habit)}
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+            }
+
+            renderCalendar(habit) {
+                const today = new Date();
+                const calendar = [];
+                
+                // 显示最近30天
+                for (let i = 29; i >= 0; i--) {
+                    const date = new Date(today);
+                    date.setDate(date.getDate() - i);
+                    const dateString = this.getDateString(date);
+                    const isCompleted = habit.completions[dateString];
+                    const isToday = i === 0;
+                    
+                    calendar.push(`
+                        <div class="calendar-day ${isCompleted ? 'completed' : ''} ${isToday ? 'today' : ''}"
+                             title="${date.toLocaleDateString()}">
+                            ${date.getDate()}
+                        </div>
+                    `);
+                }
+                
+                return calendar.join('');
+            }
+
+            calculateStreak(habit) {
+                const today = new Date();
+                let streak = 0;
+                
+                for (let i = 0; i < 365; i++) {
+                    const date = new Date(today);
+                    date.setDate(date.getDate() - i);
+                    const dateString = this.getDateString(date);
+                    
+                    if (habit.completions[dateString]) {
+                        streak++;
+                    } else {
+                        break;
+                    }
+                }
+                
+                return streak;
+            }
+
+            calculateCompletionRate(habit) {
+                const createdDate = new Date(habit.createdAt);
+                const today = new Date();
+                const daysSinceCreated = Math.floor((today - createdDate) / (1000 * 60 * 60 * 24)) + 1;
+                const completedDays = Object.keys(habit.completions).length;
+                
+                return Math.round((completedDays / daysSinceCreated) * 100);
+            }
+
+            updateStats() {
+                const totalHabits = this.habits.length;
+                const today = this.getTodayString();
+                const todayCompleted = this.habits.filter(habit => habit.completions[today]).length;
+                
+                let totalStreak = 0;
+                let totalCompletionRate = 0;
+                
+                if (totalHabits > 0) {
+                    totalStreak = Math.round(this.habits.reduce((sum, habit) => 
+                        sum + this.calculateStreak(habit), 0) / totalHabits);
+                    
+                    totalCompletionRate = Math.round(this.habits.reduce((sum, habit) => 
+                        sum + this.calculateCompletionRate(habit), 0) / totalHabits);
+                }
+
+                document.getElementById('totalHabits').textContent = totalHabits;
+                document.getElementById('todayCompleted').textContent = todayCompleted;
+                document.getElementById('currentStreak').textContent = totalStreak;
+                document.getElementById('completionRate').textContent = totalCompletionRate + '%';
+            }
+
+            getCategoryIcon(category) {
+                const icons = {
+                    '健康': '🏃',
+                    '学习': '📚',
+                    '工作': '💼',
+                    '生活': '🏠',
+                    '其他': '📝'
+                };
+                return icons[category] || '📝';
+            }
+
+            getFrequencyText(frequency) {
+                const texts = {
+                    'daily': '每天',
+                    'weekly': '每周',
+                    'custom': '自定义'
+                };
+                return texts[frequency] || '每天';
+            }
+
+            getTodayString() {
+                return new Date().toISOString().split('T')[0];
+            }
+
+            getDateString(date) {
+                return date.toISOString().split('T')[0];
+            }
+
+            saveHabits() {
+                localStorage.setItem('habits', JSON.stringify(this.habits));
+            }
+
+            showMessage(message) {
+                const messageDiv = document.createElement('div');
+                messageDiv.textContent = message;
+                messageDiv.style.cssText = `
+                    position: fixed;
+                    top: 20px;
+                    right: 20px;
+                    background: #28a745;
+                    color: white;
+                    padding: 15px 20px;
+                    border-radius: 8px;
+                    z-index: 1000;
+                    font-weight: bold;
+                    box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+                `;
+                
+                document.body.appendChild(messageDiv);
+                
+                setTimeout(() => {
+                    messageDiv.remove();
+                }, 3000);
+            }
+        }
+
+        // 全局变量，供HTML中的onclick使用
+        let habitTracker;
+
+        // 初始化
+        document.addEventListener('DOMContentLoaded', () => {
+            habitTracker = new HabitTracker();
+        });
+    
+                return input;
+            }
+
+            displayResult(result) {
+                document.getElementById('resultContent').textContent = result;
+            }
+
+            clear() {
+                document.getElementById('input').value = '';
+                document.getElementById('resultContent').textContent = '处理结果将在这里显示...';
+            }
+
+            copyResult() {
+                const result = document.getElementById('resultContent').textContent;
+                if (result && result !== '处理结果将在这里显示...') {
+                    ToolUtils.copyToClipboard(result);
+                } else {
+                    ToolUtils.showToast('没有可复制的内容', 'warning');
+                }
+            }
+        }
+
+        // 初始化应用
+        document.addEventListener('DOMContentLoaded', () => {
+            new ToolApp();
+        });
+    </script>
+</body>
+</html>

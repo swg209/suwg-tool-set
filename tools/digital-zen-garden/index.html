@@ -1,0 +1,889 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>数字禅意花园 - Digital Zen Garden - AI工具集</title>
+    <meta name="description" content="数字禅意花园 - Digital Zen Garden">
+    
+    <!-- 样式文件 -->
+    <link rel="stylesheet" href="../../shared/css/common.css">
+    
+    <!-- 工具特定样式 -->
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Georgia', 'Times New Roman', serif;
+            background: linear-gradient(135deg, #2d3436 0%, #636e72 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: var(--spacing-lg);
+            color: #ddd;
+            overflow-x: hidden;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            max-width: 600px;
+        }
+
+        .title {
+            font-size: 2.5rem;
+            color: #f8f8f8;
+            margin-bottom: 10px;
+            font-weight: 300;
+            letter-spacing: 2px;
+        }
+
+        .subtitle {
+            font-size: 1.1rem;
+            color: #b2bec3;
+            margin-bottom: 20px;
+            font-style: italic;
+        }
+
+        .description {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            padding: var(--spacing-lg);
+            border-radius: var(--radius-lg);
+            font-size: 0.95rem;
+            line-height: 1.7;
+            color: #ddd;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+        }
+
+        .garden-container {
+            position: relative;
+            background: linear-gradient(145deg, #f5f3f0, #e8e4df);
+            border-radius: 20px;
+            box-shadow: 
+                inset 0 10px 30px rgba(0, 0, 0, 0.1),
+                0 20px 40px rgba(0, 0, 0, 0.3);
+            padding: var(--spacing-lg);
+            margin-bottom: 30px;
+        }
+
+        #zenCanvas {
+            border-radius: var(--radius-lg);
+            cursor: crosshair;
+            background: #f5f3f0;
+            box-shadow: 
+                inset 0 5px 15px rgba(0, 0, 0, 0.1),
+                inset 0 -5px 15px rgba(255, 255, 255, 0.3);
+            transition: all 0.3s ease;
+        }
+
+        #zenCanvas:hover {
+            box-shadow: 
+                inset 0 8px 20px rgba(0, 0, 0, 0.15),
+                inset 0 -8px 20px rgba(255, 255, 255, 0.4);
+        }
+
+        .controls {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+        }
+
+        .control-group {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: var(--radius-lg);
+            padding: 15px 20px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+        }
+
+        .control-label {
+            font-size: 0.9rem;
+            color: #b2bec3;
+            min-width: 60px;
+        }
+
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 25px;
+            font-size: 1rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            background: rgba(255, 255, 255, 0.15);
+            color: #f8f8f8;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            backdrop-filter: blur(10px);
+        }
+
+        .btn:hover {
+            background: rgba(255, 255, 255, 0.25);
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+        }
+
+        .btn.active {
+            background: linear-gradient(135deg, #00b894, #00a085);
+            border-color: #00b894;
+            color: white;
+        }
+
+        .range-slider {
+            -webkit-appearance: none;
+            width: 120px;
+            height: 6px;
+            border-radius: 3px;
+            background: rgba(255, 255, 255, 0.2);
+            outline: none;
+        }
+
+        .range-slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #00b894, #00a085);
+            cursor: pointer;
+            box-shadow: 0 4px 12px rgba(0, 184, 148, 0.4);
+        }
+
+        .range-slider::-moz-range-thumb {
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #00b894, #00a085);
+            cursor: pointer;
+            border: none;
+            box-shadow: 0 4px 12px rgba(0, 184, 148, 0.4);
+        }
+
+        .patterns {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+        }
+
+        .pattern-btn {
+            width: 60px;
+            height: 60px;
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            border-radius: var(--radius-lg);
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            color: #b2bec3;
+        }
+
+        .pattern-btn:hover {
+            border-color: #00b894;
+            background: rgba(0, 184, 148, 0.15);
+            transform: translateY(-3px);
+            box-shadow: 0 10px 25px rgba(0, 184, 148, 0.3);
+        }
+
+        .pattern-btn.active {
+            border-color: #00b894;
+            background: linear-gradient(135deg, #00b894, #00a085);
+            color: white;
+        }
+
+        .zen-info {
+            text-align: center;
+            max-width: 500px;
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: var(--radius-lg);
+            padding: 25px;
+            margin-bottom: 20px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+        }
+
+        .zen-quote {
+            font-size: 1.1rem;
+            font-style: italic;
+            color: #ddd;
+            margin-bottom: 15px;
+            line-height: 1.6;
+        }
+
+        .zen-author {
+            font-size: 0.9rem;
+            color: #b2bec3;
+        }
+
+        .footer {
+            text-align: center;
+            color: #b2bec3;
+            font-size: 0.9rem;
+            margin-top: auto;
+        }
+
+        .footer a {
+            color: #00b894;
+            text-decoration: none;
+            font-weight: 500;
+        }
+
+        .footer a:hover {
+            text-decoration: underline;
+        }
+
+        .floating-particle {
+            position: fixed;
+            width: 4px;
+            height: 4px;
+            background: rgba(0, 184, 148, 0.3);
+            border-radius: 50%;
+            pointer-events: none;
+            animation: float 6s infinite ease-in-out;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0px) rotate(0deg); opacity: 0; }
+            50% { transform: translateY(-20px) rotate(180deg); opacity: 1; }
+        }
+
+        @media (max-width: 768px) {
+            .title {
+                font-size: 2rem;
+            }
+
+            .controls {
+                flex-direction: column;
+                align-items: center;
+            }
+
+            .control-group {
+                flex-direction: column;
+                text-align: center;
+                gap: 10px;
+            }
+
+            .patterns {
+                justify-content: center;
+            }
+
+            #zenCanvas {
+                max-width: 100%;
+                height: auto;
+            }
+        }
+
+        .breathing-indicator {
+            position: fixed;
+            top: 50px;
+            right: 50px;
+            width: 60px;
+            height: 60px;
+            border: 2px solid rgba(0, 184, 148, 0.5);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.8rem;
+            color: #00b894;
+            animation: breathe 4s infinite ease-in-out;
+            backdrop-filter: blur(10px);
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        @keyframes breathe {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+        }
+
+        @media (max-width: 768px) {
+            .breathing-indicator {
+                top: 20px;
+                right: 20px;
+                width: 50px;
+                height: 50px;
+                font-size: 0.7rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="tool-container">
+        <!-- 工具头部 -->
+        <header class="tool-header">
+            <div class="tool-header-content">
+                <a href="../../index.html" class="back-btn">
+                    <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                        <path d="M10 4l-4 4 4 4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                    返回工具集
+                </a>
+                
+                <div class="tool-title">
+                    <h1>数字禅意花园 - Digital Zen Garden</h1>
+                    <p class="tool-subtitle">数字禅意花园 - Digital Zen Garden</p>
+                </div>
+                
+                <button class="theme-toggle" id="themeToggle" aria-label="切换主题">
+                    <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                        <circle cx="10" cy="10" r="4" stroke="currentColor" stroke-width="2"/>
+                        <path d="M10 2v2M10 16v2M18 10h-2M4 10H2M15.66 4.34l-1.41 1.41M5.75 14.25l-1.41 1.41M15.66 15.66l-1.41-1.41M5.75 5.75L4.34 4.34" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                    </svg>
+                </button>
+            </div>
+        </header>
+
+        <!-- 工具主内容 -->
+        <main class="tool-main">
+            <div class="tool-card">
+                <div class="tool-section">
+                    <h2>
+                        <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                            <rect x="3" y="3" width="14" height="14" rx="2" stroke="currentColor" stroke-width="2"/>
+                        </svg>
+                        工具功能
+                    </h2>
+                    
+                    
+            <div class="tool-card">
+                <div class="tool-section">
+                    <h2>
+                        <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                            <rect x="3" y="3" width="14" height="14" rx="2" stroke="currentColor" stroke-width="2"/>
+                        </svg>
+                        数字禅意花园 - Digital Zen Garden
+                    </h2>
+                    <div class="container">
+                        <div class="breathing-indicator">
+        呼吸
+    </div>
+
+    <div class="header">
+        <h1 class="title">🧘 数字禅意花园</h1>
+        <p class="subtitle">Digital Zen Garden</p>
+        <div class="description">
+            <strong>🌸 静心工具介绍：</strong><br>
+            在这个虚拟的沙地花园中，让心灵得到片刻宁静。用鼠标作为"耙子"在沙地上画出优美的涟漪和图案，专注于当下的创作过程。每一笔都是对内心的探索，每个图案都是冥想的印记。放慢节奏，感受数字世界中的禅意美学。
+        </div>
+    </div>
+
+    <div class="garden-container">
+        <canvas id="zenCanvas" width="600" height="400"></canvas>
+    </div>
+
+    <div class="controls">
+        <div class="control-group">
+            <span class="control-label">模式</span>
+            <button class="btn active" id="drawMode">画线</button>
+            <button class="btn" id="rippleMode">涟漪</button>
+        </div>
+
+        <div class="control-group">
+            <span class="control-label">大小</span>
+            <input type="range" class="range-slider" id="brushSize" min="5" max="30" value="15">
+        </div>
+
+        <div class="control-group">
+            <span class="control-label">透明度</span>
+            <input type="range" class="range-slider" id="opacity" min="0.1" max="1" step="0.1" value="0.6">
+        </div>
+
+        <div class="control-group">
+            <button class="btn" id="clearCanvas">清空画布</button>
+        </div>
+    </div>
+
+    <div class="patterns">
+        <button class="pattern-btn active" data-pattern="smooth" title="平滑线条">🌊</button>
+        <button class="pattern-btn" data-pattern="dots" title="点状纹理">⚫</button>
+        <button class="pattern-btn" data-pattern="spiral" title="螺旋图案">🌀</button>
+        <button class="pattern-btn" data-pattern="zen" title="禅意图案">☯</button>
+        <button class="pattern-btn" data-pattern="flower" title="花瓣图案">🌸</button>
+        <button class="pattern-btn" data-pattern="wave" title="波浪纹理">〰️</button>
+    </div>
+
+    <div class="zen-info">
+        <div class="zen-quote" id="zenQuote">
+            "心如止水，方能映照万物之美。"
+        </div>
+        <div class="zen-author">— 禅宗智慧</div>
+    </div>
+
+    <div class="footer">
+        <p>💡 <strong>使用提示：</strong>放慢节奏，专注于当下的创作过程，让心灵在数字花园中得到宁静</p>
+        <p style="margin-top: 10px;">
+            <a href="#" target="_blank">小苏趣研AI</a> - 让工作更智能，让生活更有趣
+        </p>
+    </div>
+
+    
+                    </div>
+                </div>
+            </div>
+                    <!-- 结果显示区域 -->
+                    <div class="result-display" id="result">
+                        <pre id="resultContent">处理结果将在这里显示...</pre>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <!-- 工具页脚 -->
+        <footer class="tool-footer">
+            <p>由 <a href="../../index.html">AI工具集</a> 提供 | 原创工具</p>
+        </footer>
+    </div>
+
+    <!-- JavaScript -->
+    <script src="../../shared/js/utils.js"></script>
+    <script>
+        // 工具特定的JavaScript代码
+        class ToolApp {
+            constructor() {
+                this.init();
+            }
+
+            init() {
+                this.setupEventListeners();
+            }
+
+            setupEventListeners() {
+                document.getElementById('processBtn').addEventListener('click', () => this.process());
+                document.getElementById('clearBtn').addEventListener('click', () => this.clear());
+                document.getElementById('copyBtn').addEventListener('click', () => this.copyResult());
+                
+                // 实时处理（可选）
+                document.getElementById('input').addEventListener('input', 
+                    ToolUtils.debounce(() => this.process(), 300)
+                );
+            }
+
+            process() {
+                const input = document.getElementById('input').value;
+                const result = this.processInput(input);
+                this.displayResult(result);
+            }
+
+            processInput(input) {
+                
+        class DigitalZenGarden {
+            constructor() {
+                this.canvas = document.getElementById('zenCanvas');
+                this.ctx = this.canvas.getContext('2d');
+                this.isDrawing = false;
+                this.mode = 'draw';
+                this.pattern = 'smooth';
+                this.brushSize = 15;
+                this.opacity = 0.6;
+                
+                this.lastX = 0;
+                this.lastY = 0;
+                this.particles = [];
+                
+                this.zenQuotes = [
+                    "心如止水，方能映照万物之美。",
+                    "一花一世界，一叶一菩提。",
+                    "静而后能安，安而后能虑，虑而后能得。",
+                    "行至水穷处，坐看云起时。",
+                    "采菊东篱下，悠然见南山。",
+                    "山重水复疑无路，柳暗花明又一村。",
+                    "宠辱不惊，闲看庭前花开花落。",
+                    "莫听穿林打叶声，何妨吟啸且徐行。"
+                ];
+                
+                this.init();
+                this.bindEvents();
+                this.createFloatingParticles();
+                this.startZenTimer();
+            }
+            
+            init() {
+                // 设置canvas样式
+                this.ctx.lineCap = 'round';
+                this.ctx.lineJoin = 'round';
+                this.ctx.globalCompositeOperation = 'multiply';
+                
+                // 创建沙地纹理背景
+                this.createSandTexture();
+                
+                // 响应式调整
+                this.resizeCanvas();
+                window.addEventListener('resize', () => this.resizeCanvas());
+            }
+            
+            createSandTexture() {
+                const imageData = this.ctx.createImageData(this.canvas.width, this.canvas.height);
+                const data = imageData.data;
+                
+                for (let i = 0; i < data.length; i += 4) {
+                    const noise = Math.random() * 10;
+                    data[i] = 245 + noise;     // R
+                    data[i + 1] = 243 + noise; // G
+                    data[i + 2] = 240 + noise; // B
+                    data[i + 3] = 255;         // A
+                }
+                
+                this.ctx.putImageData(imageData, 0, 0);
+            }
+            
+            resizeCanvas() {
+                const container = this.canvas.parentElement;
+                const maxWidth = Math.min(600, container.clientWidth - 40);
+                const ratio = 600 / 400;
+                
+                this.canvas.style.width = maxWidth + 'px';
+                this.canvas.style.height = (maxWidth / ratio) + 'px';
+            }
+            
+            bindEvents() {
+                // 模式切换
+                document.getElementById('drawMode').addEventListener('click', () => {
+                    this.setMode('draw');
+                });
+                
+                document.getElementById('rippleMode').addEventListener('click', () => {
+                    this.setMode('ripple');
+                });
+                
+                // 控制参数
+                document.getElementById('brushSize').addEventListener('input', (e) => {
+                    this.brushSize = parseInt(e.target.value);
+                });
+                
+                document.getElementById('opacity').addEventListener('input', (e) => {
+                    this.opacity = parseFloat(e.target.value);
+                });
+                
+                // 清空画布
+                document.getElementById('clearCanvas').addEventListener('click', () => {
+                    this.clearCanvas();
+                });
+                
+                // 图案选择
+                document.querySelectorAll('.pattern-btn').forEach(btn => {
+                    btn.addEventListener('click', (e) => {
+                        document.querySelectorAll('.pattern-btn').forEach(b => b.classList.remove('active'));
+                        e.target.classList.add('active');
+                        this.pattern = e.target.dataset.pattern;
+                    });
+                });
+                
+                // 画布事件
+                this.canvas.addEventListener('mousedown', this.startDrawing.bind(this));
+                this.canvas.addEventListener('mousemove', this.draw.bind(this));
+                this.canvas.addEventListener('mouseup', this.stopDrawing.bind(this));
+                this.canvas.addEventListener('mouseout', this.stopDrawing.bind(this));
+                
+                // 触摸事件
+                this.canvas.addEventListener('touchstart', this.handleTouch.bind(this));
+                this.canvas.addEventListener('touchmove', this.handleTouch.bind(this));
+                this.canvas.addEventListener('touchend', this.stopDrawing.bind(this));
+            }
+            
+            setMode(mode) {
+                this.mode = mode;
+                document.querySelectorAll('#drawMode, #rippleMode').forEach(btn => {
+                    btn.classList.remove('active');
+                });
+                document.getElementById(mode + 'Mode').classList.add('active');
+            }
+            
+            getMousePos(e) {
+                const rect = this.canvas.getBoundingClientRect();
+                const scaleX = this.canvas.width / rect.width;
+                const scaleY = this.canvas.height / rect.height;
+                
+                return {
+                    x: (e.clientX - rect.left) * scaleX,
+                    y: (e.clientY - rect.top) * scaleY
+                };
+            }
+            
+            startDrawing(e) {
+                this.isDrawing = true;
+                const pos = this.getMousePos(e);
+                this.lastX = pos.x;
+                this.lastY = pos.y;
+                
+                if (this.mode === 'ripple') {
+                    this.createRipple(pos.x, pos.y);
+                }
+            }
+            
+            draw(e) {
+                if (!this.isDrawing) return;
+                
+                const pos = this.getMousePos(e);
+                
+                if (this.mode === 'draw') {
+                    this.drawPattern(this.lastX, this.lastY, pos.x, pos.y);
+                } else if (this.mode === 'ripple') {
+                    this.createRipple(pos.x, pos.y);
+                }
+                
+                this.lastX = pos.x;
+                this.lastY = pos.y;
+            }
+            
+            stopDrawing() {
+                this.isDrawing = false;
+            }
+            
+            handleTouch(e) {
+                e.preventDefault();
+                const touch = e.touches[0];
+                const mouseEvent = new MouseEvent(e.type === 'touchstart' ? 'mousedown' : 
+                                                 e.type === 'touchmove' ? 'mousemove' : 'mouseup', {
+                    clientX: touch.clientX,
+                    clientY: touch.clientY
+                });
+                this.canvas.dispatchEvent(mouseEvent);
+            }
+            
+            drawPattern(x1, y1, x2, y2) {
+                this.ctx.globalAlpha = this.opacity;
+                this.ctx.strokeStyle = `rgba(139, 69, 19, ${this.opacity})`;
+                this.ctx.lineWidth = this.brushSize;
+                
+                switch (this.pattern) {
+                    case 'smooth':
+                        this.drawSmooth(x1, y1, x2, y2);
+                        break;
+                    case 'dots':
+                        this.drawDots(x2, y2);
+                        break;
+                    case 'spiral':
+                        this.drawSpiral(x2, y2);
+                        break;
+                    case 'zen':
+                        this.drawZenPattern(x2, y2);
+                        break;
+                    case 'flower':
+                        this.drawFlowerPattern(x2, y2);
+                        break;
+                    case 'wave':
+                        this.drawWavePattern(x1, y1, x2, y2);
+                        break;
+                }
+            }
+            
+            drawSmooth(x1, y1, x2, y2) {
+                this.ctx.beginPath();
+                this.ctx.moveTo(x1, y1);
+                this.ctx.lineTo(x2, y2);
+                this.ctx.stroke();
+            }
+            
+            drawDots(x, y) {
+                for (let i = 0; i < 5; i++) {
+                    const offsetX = (Math.random() - 0.5) * this.brushSize;
+                    const offsetY = (Math.random() - 0.5) * this.brushSize;
+                    
+                    this.ctx.beginPath();
+                    this.ctx.arc(x + offsetX, y + offsetY, Math.random() * 3 + 1, 0, Math.PI * 2);
+                    this.ctx.fill();
+                }
+            }
+            
+            drawSpiral(x, y) {
+                this.ctx.beginPath();
+                for (let i = 0; i < 20; i++) {
+                    const angle = i * 0.3;
+                    const radius = i * 0.8;
+                    const spiralX = x + Math.cos(angle) * radius;
+                    const spiralY = y + Math.sin(angle) * radius;
+                    
+                    if (i === 0) {
+                        this.ctx.moveTo(spiralX, spiralY);
+                    } else {
+                        this.ctx.lineTo(spiralX, spiralY);
+                    }
+                }
+                this.ctx.stroke();
+            }
+            
+            drawZenPattern(x, y) {
+                const size = this.brushSize;
+                
+                // 画阴阳图案
+                this.ctx.beginPath();
+                this.ctx.arc(x, y, size / 2, 0, Math.PI, false);
+                this.ctx.arc(x, y - size / 4, size / 4, 0, Math.PI * 2, false);
+                this.ctx.arc(x, y + size / 4, size / 4, 0, Math.PI * 2, true);
+                this.ctx.stroke();
+            }
+            
+            drawFlowerPattern(x, y) {
+                const petals = 6;
+                const size = this.brushSize / 2;
+                
+                for (let i = 0; i < petals; i++) {
+                    const angle = (i * Math.PI * 2) / petals;
+                    const petalX = x + Math.cos(angle) * size;
+                    const petalY = y + Math.sin(angle) * size;
+                    
+                    this.ctx.beginPath();
+                    this.ctx.arc(petalX, petalY, size / 3, 0, Math.PI * 2);
+                    this.ctx.stroke();
+                }
+                
+                // 花心
+                this.ctx.beginPath();
+                this.ctx.arc(x, y, size / 4, 0, Math.PI * 2);
+                this.ctx.stroke();
+            }
+            
+            drawWavePattern(x1, y1, x2, y2) {
+                const distance = Math.sqrt((x2 - x1) ** 2 + (y2 - y1) ** 2);
+                const steps = Math.floor(distance / 5);
+                
+                this.ctx.beginPath();
+                this.ctx.moveTo(x1, y1);
+                
+                for (let i = 0; i <= steps; i++) {
+                    const t = i / steps;
+                    const x = x1 + (x2 - x1) * t;
+                    const y = y1 + (y2 - y1) * t + Math.sin(t * Math.PI * 4) * 5;
+                    this.ctx.lineTo(x, y);
+                }
+                
+                this.ctx.stroke();
+            }
+            
+            createRipple(x, y) {
+                const ripple = {
+                    x: x,
+                    y: y,
+                    radius: 0,
+                    maxRadius: this.brushSize * 3,
+                    alpha: this.opacity
+                };
+                
+                this.animateRipple(ripple);
+            }
+            
+            animateRipple(ripple) {
+                const animate = () => {
+                    this.ctx.globalAlpha = ripple.alpha;
+                    this.ctx.strokeStyle = `rgba(139, 69, 19, ${ripple.alpha})`;
+                    this.ctx.lineWidth = 2;
+                    
+                    this.ctx.beginPath();
+                    this.ctx.arc(ripple.x, ripple.y, ripple.radius, 0, Math.PI * 2);
+                    this.ctx.stroke();
+                    
+                    ripple.radius += 2;
+                    ripple.alpha *= 0.95;
+                    
+                    if (ripple.radius < ripple.maxRadius && ripple.alpha > 0.1) {
+                        requestAnimationFrame(animate);
+                    }
+                };
+                
+                animate();
+            }
+            
+            clearCanvas() {
+                this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+                this.createSandTexture();
+                
+                // 显示新的禅语
+                this.showRandomQuote();
+            }
+            
+            createFloatingParticles() {
+                for (let i = 0; i < 20; i++) {
+                    setTimeout(() => {
+                        const particle = document.createElement('div');
+                        particle.className = 'floating-particle';
+                        particle.style.left = Math.random() * window.innerWidth + 'px';
+                        particle.style.top = window.innerHeight + 'px';
+                        particle.style.animationDelay = Math.random() * 6 + 's';
+                        
+                        document.body.appendChild(particle);
+                        
+                        setTimeout(() => {
+                            particle.remove();
+                        }, 6000);
+                    }, i * 300);
+                }
+                
+                setTimeout(() => this.createFloatingParticles(), 10000);
+            }
+            
+            startZenTimer() {
+                setInterval(() => {
+                    this.showRandomQuote();
+                }, 30000); // 每30秒更换一次禅语
+            }
+            
+            showRandomQuote() {
+                const quote = this.zenQuotes[Math.floor(Math.random() * this.zenQuotes.length)];
+                document.getElementById('zenQuote').textContent = quote;
+            }
+        }
+        
+        // 初始化禅意花园
+        document.addEventListener('DOMContentLoaded', () => {
+            new DigitalZenGarden();
+        });
+        
+        // 添加键盘快捷键
+        document.addEventListener('keydown', (e) => {
+            if (e.key === ' ') {
+                e.preventDefault();
+                document.getElementById('clearCanvas').click();
+            } else if (e.key === '1') {
+                document.getElementById('drawMode').click();
+            } else if (e.key === '2') {
+                document.getElementById('rippleMode').click();
+            }
+        });
+    
+                return input;
+            }
+
+            displayResult(result) {
+                document.getElementById('resultContent').textContent = result;
+            }
+
+            clear() {
+                document.getElementById('input').value = '';
+                document.getElementById('resultContent').textContent = '处理结果将在这里显示...';
+            }
+
+            copyResult() {
+                const result = document.getElementById('resultContent').textContent;
+                if (result && result !== '处理结果将在这里显示...') {
+                    ToolUtils.copyToClipboard(result);
+                } else {
+                    ToolUtils.showToast('没有可复制的内容', 'warning');
+                }
+            }
+        }
+
+        // 初始化应用
+        document.addEventListener('DOMContentLoaded', () => {
+            new ToolApp();
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,909 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>亮灯解谜游戏 - AI工具集</title>
+    <meta name="description" content="亮灯解谜游戏">
+    
+    <!-- 样式文件 -->
+    <link rel="stylesheet" href="../../shared/css/common.css">
+    
+    <!-- 工具特定样式 -->
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: var(--spacing-lg);
+            color: white;
+        }
+
+        .game-container {
+            max-width: 600px;
+            width: 100%;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+            overflow: hidden;
+            animation: slideIn 0.5s ease-out;
+        }
+
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .header {
+            background: linear-gradient(135deg, #f39c12 0%, #e67e22 100%);
+            color: white;
+            padding: 25px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .header p {
+            font-size: 1.1em;
+            opacity: 0.9;
+        }
+
+        .game-info {
+            display: flex;
+            justify-content: space-around;
+            padding: var(--spacing-lg);
+            background: rgba(255, 255, 255, 0.05);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .info-item {
+            text-align: center;
+            padding: var(--spacing-md);
+        }
+
+        .info-label {
+            font-size: 0.9em;
+            color: rgba(255, 255, 255, 0.7);
+            margin-bottom: 5px;
+        }
+
+        .info-value {
+            font-size: 1.5em;
+            font-weight: bold;
+            color: #f39c12;
+        }
+
+        .game-board {
+            padding: 30px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 400px;
+            background: rgba(0, 0, 0, 0.2);
+        }
+
+        .light-grid {
+            display: grid;
+            gap: 8px;
+            background: rgba(255, 255, 255, 0.1);
+            padding: var(--spacing-lg);
+            border-radius: var(--radius-lg);
+            border: 2px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .light {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            border: 3px solid rgba(255, 255, 255, 0.3);
+            position: relative;
+            background: radial-gradient(circle at 30% 30%, rgba(255, 255, 255, 0.3), transparent);
+        }
+
+        .light.on {
+            background: radial-gradient(circle at 30% 30%, #ffeb3b, #fbc02d);
+            border-color: var(--bg-card)176;
+            box-shadow: 
+                0 0 20px #ffeb3b,
+                0 0 40px #ffeb3b,
+                inset 0 0 20px rgba(255, 255, 255, 0.3);
+            transform: scale(1.1);
+        }
+
+        .light.off {
+            background: radial-gradient(circle at 30% 30%, #37474f, #263238);
+            border-color: #546e7a;
+        }
+
+        .light:hover {
+            transform: scale(1.15);
+            border-color: #f39c12;
+        }
+
+        .light.on:hover {
+            box-shadow: 
+                0 0 25px #ffeb3b,
+                0 0 50px #ffeb3b,
+                inset 0 0 25px rgba(255, 255, 255, 0.4);
+        }
+
+        .light::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 12px;
+            height: 12px;
+            background: rgba(255, 255, 255, 0.8);
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+
+        .light.on::before {
+            opacity: 1;
+        }
+
+        .controls {
+            padding: 25px;
+            text-align: center;
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        .difficulty-selector {
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .difficulty-btn {
+            padding: 8px 16px;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            border-radius: 20px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-weight: 600;
+        }
+
+        .difficulty-btn.active {
+            border-color: #f39c12;
+            background: #f39c12;
+            color: #2c3e50;
+        }
+
+        .difficulty-btn:hover:not(.active) {
+            border-color: rgba(255, 255, 255, 0.5);
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        .game-btn {
+            padding: 12px 25px;
+            background: linear-gradient(135deg, #f39c12 0%, #e67e22 100%);
+            color: white;
+            border: none;
+            border-radius: 25px;
+            font-size: 1em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin: 0 10px;
+            box-shadow: 0 4px 15px rgba(243, 156, 18, 0.3);
+        }
+
+        .game-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(243, 156, 18, 0.4);
+        }
+
+        .game-btn:disabled {
+            background: #7f8c8d;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        .win-message {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) scale(0);
+            background: linear-gradient(135deg, #27ae60 0%, #2ecc71 100%);
+            color: white;
+            padding: 30px 40px;
+            border-radius: 20px;
+            text-align: center;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+            z-index: 1000;
+            transition: all 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+        }
+
+        .win-message.show {
+            transform: translate(-50%, -50%) scale(1);
+        }
+
+        .win-message h2 {
+            font-size: 2em;
+            margin-bottom: 15px;
+        }
+
+        .win-message p {
+            font-size: 1.1em;
+            margin-bottom: 20px;
+        }
+
+        .hint-system {
+            padding: var(--spacing-lg);
+            background: rgba(255, 255, 255, 0.05);
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .hint-btn {
+            background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
+            color: white;
+            border: none;
+            border-radius: 20px;
+            padding: var(--spacing-md) 20px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s;
+            margin-right: 10px;
+        }
+
+        .hint-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(52, 152, 219, 0.4);
+        }
+
+        .hint-text {
+            margin-top: 15px;
+            padding: 15px;
+            background: rgba(52, 152, 219, 0.2);
+            border-radius: var(--radius-md);
+            border-left: 4px solid #3498db;
+            color: rgba(255, 255, 255, 0.9);
+            display: none;
+        }
+
+        .hint-text.show {
+            display: block;
+            animation: fadeIn 0.5s ease-out;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 999;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s;
+        }
+
+        .overlay.show {
+            opacity: 1;
+            pointer-events: all;
+        }
+
+        .stats {
+            padding: var(--spacing-lg);
+            background: rgba(255, 255, 255, 0.05);
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 15px;
+        }
+
+        .stat-item {
+            text-align: center;
+            padding: 15px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: var(--radius-md);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .stat-number {
+            font-size: 1.5em;
+            font-weight: bold;
+            color: #f39c12;
+            margin-bottom: 5px;
+        }
+
+        .stat-label {
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 0.9em;
+        }
+
+        .footer {
+            text-align: center;
+            padding: var(--spacing-lg);
+            background: rgba(255, 255, 255, 0.05);
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 0.9em;
+        }
+
+        @media (max-width: 768px) {
+            .game-container {
+                margin: var(--spacing-md);
+                border-radius: var(--radius-lg);
+            }
+            
+            .header {
+                padding: var(--spacing-lg);
+            }
+            
+            .header h1 {
+                font-size: 2em;
+            }
+            
+            .light {
+                width: 50px;
+                height: 50px;
+            }
+            
+            .game-board {
+                padding: var(--spacing-lg);
+            }
+            
+            .light-grid {
+                gap: 6px;
+                padding: 15px;
+            }
+            
+            .game-info {
+                padding: 15px;
+            }
+            
+            .difficulty-selector {
+                flex-direction: column;
+                align-items: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="tool-container">
+        <!-- 工具头部 -->
+        <header class="tool-header">
+            <div class="tool-header-content">
+                <a href="../../index.html" class="back-btn">
+                    <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                        <path d="M10 4l-4 4 4 4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                    返回工具集
+                </a>
+                
+                <div class="tool-title">
+                    <h1>亮灯解谜游戏</h1>
+                    <p class="tool-subtitle">亮灯解谜游戏</p>
+                </div>
+                
+                <button class="theme-toggle" id="themeToggle" aria-label="切换主题">
+                    <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                        <circle cx="10" cy="10" r="4" stroke="currentColor" stroke-width="2"/>
+                        <path d="M10 2v2M10 16v2M18 10h-2M4 10H2M15.66 4.34l-1.41 1.41M5.75 14.25l-1.41 1.41M15.66 15.66l-1.41-1.41M5.75 5.75L4.34 4.34" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                    </svg>
+                </button>
+            </div>
+        </header>
+
+        <!-- 工具主内容 -->
+        <main class="tool-main">
+            <div class="tool-card">
+                <div class="tool-section">
+                    <h2>
+                        <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                            <rect x="3" y="3" width="14" height="14" rx="2" stroke="currentColor" stroke-width="2"/>
+                        </svg>
+                        工具功能
+                    </h2>
+                    
+                    
+            <div class="tool-card">
+                <div class="tool-section">
+                    <h2>
+                        <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                            <rect x="3" y="3" width="14" height="14" rx="2" stroke="currentColor" stroke-width="2"/>
+                        </svg>
+                        亮灯解谜游戏
+                    </h2>
+                    <div class="container">
+                        <div class="game-container">
+        <div class="header">
+            <h1>💡 亮灯解谜</h1>
+            <p>点击灯光切换它及相邻灯的状态，目标是熄灭所有灯</p>
+        </div>
+
+        <div class="game-info">
+            <div class="info-item">
+                <div class="info-label">步数</div>
+                <div class="info-value" id="moves">0</div>
+            </div>
+            <div class="info-item">
+                <div class="info-label">剩余</div>
+                <div class="info-value" id="remaining">0</div>
+            </div>
+            <div class="info-item">
+                <div class="info-label">最佳</div>
+                <div class="info-value" id="bestScore">-</div>
+            </div>
+        </div>
+
+        <div class="game-board">
+            <div class="light-grid" id="lightGrid">
+                <!-- 灯光网格动态生成 -->
+            </div>
+        </div>
+
+        <div class="controls">
+            <div class="difficulty-selector">
+                <button class="difficulty-btn" onclick="setDifficulty(3)">3×3</button>
+                <button class="difficulty-btn active" onclick="setDifficulty(4)">4×4</button>
+                <button class="difficulty-btn" onclick="setDifficulty(5)">5×5</button>
+                <button class="difficulty-btn" onclick="setDifficulty(6)">6×6</button>
+            </div>
+
+            <button class="game-btn" onclick="newGame()">🎮 新游戏</button>
+            <button class="game-btn" onclick="resetGame()">🔄 重置</button>
+            <button class="game-btn" onclick="shufflePattern()">🎲 随机模式</button>
+        </div>
+
+        <div class="hint-system">
+            <button class="hint-btn" onclick="showHint()">💡 提示</button>
+            <button class="hint-btn" onclick="showSolution()">🎯 解答</button>
+            <div class="hint-text" id="hintText"></div>
+        </div>
+
+        <div class="stats">
+            <div class="stat-item">
+                <div class="stat-number" id="gamesPlayed">0</div>
+                <div class="stat-label">游戏次数</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-number" id="gamesWon">0</div>
+                <div class="stat-label">完成次数</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-number" id="winRate">0%</div>
+                <div class="stat-label">胜率</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-number" id="avgMoves">0</div>
+                <div class="stat-label">平均步数</div>
+            </div>
+        </div>
+
+        <div class="footer">
+            <p>💡 每次点击会切换该灯及上下左右相邻灯的状态</p>
+            <p>脚注：小苏趣研AI - 让逻辑思维训练变得有趣</p>
+        </div>
+    </div>
+
+    <!-- 胜利消息 -->
+    <div class="overlay" id="overlay"></div>
+    <div class="win-message" id="winMessage">
+        <h2>🎉 恭喜完成！</h2>
+        <p id="winText">你用 <span id="finalMoves">0</span> 步完成了挑战！</p>
+        <button class="game-btn" onclick="hideWinMessage()">继续游戏</button>
+        <button class="game-btn" onclick="newGame(); hideWinMessage()">下一关</button>
+    </div>
+
+    
+                    </div>
+                </div>
+            </div>
+                    <!-- 结果显示区域 -->
+                    <div class="result-display" id="result">
+                        <pre id="resultContent">处理结果将在这里显示...</pre>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <!-- 工具页脚 -->
+        <footer class="tool-footer">
+            <p>由 <a href="../../index.html">AI工具集</a> 提供 | 原创工具</p>
+        </footer>
+    </div>
+
+    <!-- JavaScript -->
+    <script src="../../shared/js/utils.js"></script>
+    <script>
+        // 工具特定的JavaScript代码
+        class ToolApp {
+            constructor() {
+                this.init();
+            }
+
+            init() {
+                this.setupEventListeners();
+            }
+
+            setupEventListeners() {
+                document.getElementById('processBtn').addEventListener('click', () => this.process());
+                document.getElementById('clearBtn').addEventListener('click', () => this.clear());
+                document.getElementById('copyBtn').addEventListener('click', () => this.copyResult());
+                
+                // 实时处理（可选）
+                document.getElementById('input').addEventListener('input', 
+                    ToolUtils.debounce(() => this.process(), 300)
+                );
+            }
+
+            process() {
+                const input = document.getElementById('input').value;
+                const result = this.processInput(input);
+                this.displayResult(result);
+            }
+
+            processInput(input) {
+                
+        // 游戏状态
+        let gameState = {
+            gridSize: 4,
+            lights: [],
+            moves: 0,
+            gameActive: true,
+            initialState: []
+        };
+
+        // 统计数据
+        let stats = {
+            gamesPlayed: 0,
+            gamesWon: 0,
+            totalMoves: 0,
+            bestScores: {}
+        };
+
+        // 初始化游戏
+        function init() {
+            loadStats();
+            createGrid();
+            newGame();
+            updateStatsDisplay();
+        }
+
+        // 设置难度
+        function setDifficulty(size) {
+            gameState.gridSize = size;
+            
+            // 更新按钮状态
+            document.querySelectorAll('.difficulty-btn').forEach(btn => btn.classList.remove('active'));
+            event.target.classList.add('active');
+            
+            createGrid();
+            newGame();
+        }
+
+        // 创建灯光网格
+        function createGrid() {
+            const grid = document.getElementById('lightGrid');
+            grid.innerHTML = '';
+            grid.style.gridTemplateColumns = `repeat(${gameState.gridSize}, 1fr)`;
+            
+            gameState.lights = Array(gameState.gridSize).fill().map(() => Array(gameState.gridSize).fill(false));
+            
+            for (let row = 0; row < gameState.gridSize; row++) {
+                for (let col = 0; col < gameState.gridSize; col++) {
+                    const light = document.createElement('div');
+                    light.className = 'light off';
+                    light.addEventListener('click', () => clickLight(row, col));
+                    grid.appendChild(light);
+                }
+            }
+        }
+
+        // 新游戏
+        function newGame() {
+            stats.gamesPlayed++;
+            gameState.moves = 0;
+            gameState.gameActive = true;
+            
+            // 生成可解的随机模式
+            generateSolvablePattern();
+            updateDisplay();
+            saveStats();
+            updateStatsDisplay();
+        }
+
+        // 生成可解的随机模式
+        function generateSolvablePattern() {
+            // 先全部关闭
+            for (let row = 0; row < gameState.gridSize; row++) {
+                for (let col = 0; col < gameState.gridSize; col++) {
+                    gameState.lights[row][col] = false;
+                }
+            }
+            
+            // 随机执行一些操作来生成模式
+            const numMoves = Math.floor(Math.random() * 10) + 5;
+            for (let i = 0; i < numMoves; i++) {
+                const row = Math.floor(Math.random() * gameState.gridSize);
+                const col = Math.floor(Math.random() * gameState.gridSize);
+                toggleLights(row, col, false);
+            }
+            
+            // 保存初始状态用于重置
+            gameState.initialState = gameState.lights.map(row => [...row]);
+        }
+
+        // 点击灯光
+        function clickLight(row, col) {
+            if (!gameState.gameActive) return;
+            
+            gameState.moves++;
+            toggleLights(row, col, true);
+            updateDisplay();
+            
+            if (checkWin()) {
+                gameWon();
+            }
+        }
+
+        // 切换灯光状态
+        function toggleLights(row, col, updateStats = false) {
+            const directions = [
+                [0, 0],   // 自己
+                [-1, 0],  // 上
+                [1, 0],   // 下
+                [0, -1],  // 左
+                [0, 1]    // 右
+            ];
+            
+            directions.forEach(([dr, dc]) => {
+                const newRow = row + dr;
+                const newCol = col + dc;
+                
+                if (newRow >= 0 && newRow < gameState.gridSize && 
+                    newCol >= 0 && newCol < gameState.gridSize) {
+                    gameState.lights[newRow][newCol] = !gameState.lights[newRow][newCol];
+                }
+            });
+        }
+
+        // 更新显示
+        function updateDisplay() {
+            const lights = document.querySelectorAll('.light');
+            let remaining = 0;
+            
+            lights.forEach((light, index) => {
+                const row = Math.floor(index / gameState.gridSize);
+                const col = index % gameState.gridSize;
+                const isOn = gameState.lights[row][col];
+                
+                light.className = `light ${isOn ? 'on' : 'off'}`;
+                if (isOn) remaining++;
+            });
+            
+            document.getElementById('moves').textContent = gameState.moves;
+            document.getElementById('remaining').textContent = remaining;
+        }
+
+        // 检查胜利
+        function checkWin() {
+            for (let row = 0; row < gameState.gridSize; row++) {
+                for (let col = 0; col < gameState.gridSize; col++) {
+                    if (gameState.lights[row][col]) {
+                        return false;
+                    }
+                }
+            }
+            return true;
+        }
+
+        // 游戏胜利
+        function gameWon() {
+            gameState.gameActive = false;
+            stats.gamesWon++;
+            stats.totalMoves += gameState.moves;
+            
+            // 更新最佳成绩
+            const sizeKey = `${gameState.gridSize}x${gameState.gridSize}`;
+            if (!stats.bestScores[sizeKey] || gameState.moves < stats.bestScores[sizeKey]) {
+                stats.bestScores[sizeKey] = gameState.moves;
+            }
+            
+            saveStats();
+            updateStatsDisplay();
+            showWinMessage();
+        }
+
+        // 显示胜利消息
+        function showWinMessage() {
+            document.getElementById('finalMoves').textContent = gameState.moves;
+            document.getElementById('overlay').classList.add('show');
+            document.getElementById('winMessage').classList.add('show');
+        }
+
+        // 隐藏胜利消息
+        function hideWinMessage() {
+            document.getElementById('overlay').classList.remove('show');
+            document.getElementById('winMessage').classList.remove('show');
+        }
+
+        // 重置游戏
+        function resetGame() {
+            gameState.moves = 0;
+            gameState.gameActive = true;
+            gameState.lights = gameState.initialState.map(row => [...row]);
+            updateDisplay();
+        }
+
+        // 随机模式
+        function shufflePattern() {
+            for (let i = 0; i < 20; i++) {
+                const row = Math.floor(Math.random() * gameState.gridSize);
+                const col = Math.floor(Math.random() * gameState.gridSize);
+                toggleLights(row, col, false);
+            }
+            
+            gameState.moves = 0;
+            gameState.gameActive = true;
+            gameState.initialState = gameState.lights.map(row => [...row]);
+            updateDisplay();
+        }
+
+        // 显示提示
+        function showHint() {
+            const hintText = document.getElementById('hintText');
+            
+            const hints = [
+                "尝试从角落开始，角落的灯只有3个邻居",
+                "观察哪些灯被点亮，思考需要哪些操作来关闭它们",
+                "每个位置最多只需要点击一次，重复点击会抵消",
+                "边缘的灯比中心的灯更容易控制",
+                "如果一个灯只被一个位置影响，那个位置必须点击",
+                "尝试想象每次点击的影响范围"
+            ];
+            
+            const randomHint = hints[Math.floor(Math.random() * hints.length)];
+            hintText.textContent = randomHint;
+            hintText.classList.add('show');
+            
+            setTimeout(() => {
+                hintText.classList.remove('show');
+            }, 5000);
+        }
+
+        // 显示解答（简化版本）
+        function showSolution() {
+            const hintText = document.getElementById('hintText');
+            hintText.textContent = "解答提示：这是一个线性代数问题，每个位置是否需要点击可以通过高斯消元法计算得出。对于简单模式，尝试系统性地从一个角开始解决。";
+            hintText.classList.add('show');
+            
+            setTimeout(() => {
+                hintText.classList.remove('show');
+            }, 8000);
+        }
+
+        // 更新统计显示
+        function updateStatsDisplay() {
+            document.getElementById('gamesPlayed').textContent = stats.gamesPlayed;
+            document.getElementById('gamesWon').textContent = stats.gamesWon;
+            
+            const winRate = stats.gamesPlayed > 0 ? Math.round((stats.gamesWon / stats.gamesPlayed) * 100) : 0;
+            document.getElementById('winRate').textContent = winRate + '%';
+            
+            const avgMoves = stats.gamesWon > 0 ? Math.round(stats.totalMoves / stats.gamesWon) : 0;
+            document.getElementById('avgMoves').textContent = avgMoves;
+            
+            const sizeKey = `${gameState.gridSize}x${gameState.gridSize}`;
+            const bestScore = stats.bestScores[sizeKey] || '-';
+            document.getElementById('bestScore').textContent = bestScore;
+        }
+
+        // 保存统计数据
+        function saveStats() {
+            try {
+                localStorage.setItem('light_up_stats', JSON.stringify(stats));
+            } catch (error) {
+                console.error('保存统计数据失败:', error);
+            }
+        }
+
+        // 加载统计数据
+        function loadStats() {
+            try {
+                const saved = localStorage.getItem('light_up_stats');
+                if (saved) {
+                    stats = { ...stats, ...JSON.parse(saved) };
+                }
+            } catch (error) {
+                console.error('加载统计数据失败:', error);
+                stats = {
+                    gamesPlayed: 0,
+                    gamesWon: 0,
+                    totalMoves: 0,
+                    bestScores: {}
+                };
+            }
+        }
+
+        // 键盘快捷键
+        document.addEventListener('keydown', (e) => {
+            switch(e.key) {
+                case 'n':
+                case 'N':
+                    newGame();
+                    break;
+                case 'r':
+                case 'R':
+                    resetGame();
+                    break;
+                case 'h':
+                case 'H':
+                    showHint();
+                    break;
+                case 's':
+                case 'S':
+                    shufflePattern();
+                    break;
+                case 'Escape':
+                    hideWinMessage();
+                    break;
+            }
+        });
+
+        // 点击遮罩层关闭胜利消息
+        document.getElementById('overlay').addEventListener('click', hideWinMessage);
+
+        // 初始化游戏
+        window.addEventListener('load', init);
+    
+                return input;
+            }
+
+            displayResult(result) {
+                document.getElementById('resultContent').textContent = result;
+            }
+
+            clear() {
+                document.getElementById('input').value = '';
+                document.getElementById('resultContent').textContent = '处理结果将在这里显示...';
+            }
+
+            copyResult() {
+                const result = document.getElementById('resultContent').textContent;
+                if (result && result !== '处理结果将在这里显示...') {
+                    ToolUtils.copyToClipboard(result);
+                } else {
+                    ToolUtils.showToast('没有可复制的内容', 'warning');
+                }
+            }
+        }
+
+        // 初始化应用
+        document.addEventListener('DOMContentLoaded', () => {
+            new ToolApp();
+        });
+    </script>
+</body>
+</html>

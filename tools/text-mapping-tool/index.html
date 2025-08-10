@@ -1,0 +1,624 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>文本映射工具 - AI工具集</title>
+    <meta name="description" content="文本映射工具">
+    
+    <!-- 样式文件 -->
+    <link rel="stylesheet" href="../../shared/css/common.css">
+    
+    <!-- 工具特定样式 -->
+    <style>
+        * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+    body {
+      font-family: 'PingFang SC', 'Microsoft YaHei', sans-serif;
+      line-height: 1.6;
+      color: var(--text-primary);
+      background-color: #f5f7fa;
+      padding: var(--spacing-lg);
+    }
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      background-color: var(--bg-card);
+      border-radius: 8px;
+      box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
+      padding: 30px;
+    }
+    h1 {
+      text-align: center;
+      margin-bottom: 25px;
+      color: #2c3e50;
+    }
+    .description {
+      text-align: center;
+      margin-bottom: 25px;
+      color: #7f8c8d;
+    }
+    .input-group {
+      display: flex;
+      gap: 20px;
+      margin-bottom: 20px;
+    }
+    .text-area-container {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+    }
+    .text-area-label {
+      font-weight: bold;
+      margin-bottom: 8px;
+      color: #2c3e50;
+    }
+    .text-area-description {
+      font-size: 0.9em;
+      margin-bottom: 8px;
+      color: #7f8c8d;
+    }
+    textarea {
+      width: 100%;
+      height: 300px;
+      padding: 12px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      resize: none;
+      font-family: monospace;
+      font-size: 14px;
+    }
+    .button-group {
+      display: flex;
+      justify-content: center;
+      gap: 15px;
+      margin: var(--spacing-lg) 0;
+    }
+    button {
+      padding: var(--spacing-md) 20px;
+      background-color: #3498db;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 16px;
+      transition: background-color 0.3s;
+    }
+    button:hover {
+      background-color: #2980b9;
+    }
+    button.clear {
+      background-color: #e74c3c;
+    }
+    button.clear:hover {
+      background-color: #c0392b;
+    }
+    .output-container {
+      margin-top: 30px;
+    }
+    .output-label {
+      font-weight: bold;
+      margin-bottom: 8px;
+      color: #2c3e50;
+    }
+    #output {
+      width: 100%;
+      height: 200px;
+      padding: 12px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      background-color: #f9f9f9;
+      font-family: monospace;
+      font-size: 14px;
+      overflow-y: auto;
+      white-space: pre-wrap;
+    }
+    .separator {
+      margin: var(--spacing-lg) 0;
+      border-top: 1px solid #eee;
+    }
+    .examples {
+      margin-top: 30px;
+    }
+    .example {
+      background-color: #f8f9fa;
+      border: 1px solid #e9ecef;
+      border-radius: 4px;
+      padding: 15px;
+      margin-bottom: 15px;
+    }
+    .example-title {
+      font-weight: bold;
+      margin-bottom: 10px;
+      color: #2c3e50;
+    }
+    .example-content {
+      display: flex;
+      gap: 15px;
+    }
+    .example-box {
+      flex: 1;
+      background-color: var(--bg-card);
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      padding: var(--spacing-md);
+      font-family: monospace;
+      font-size: 14px;
+      white-space: pre-wrap;
+    }
+    .options {
+      margin: var(--spacing-lg) 0;
+      padding: 15px;
+      background-color: #f8f9fa;
+      border-radius: 4px;
+    }
+    .option-group {
+      display: flex;
+      gap: 20px;
+      margin-bottom: 10px;
+    }
+    .option {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+    .option label {
+      font-size: 14px;
+    }
+    .help-icon {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      background-color: #95a5a6;
+      color: white;
+      font-size: 12px;
+      cursor: help;
+      margin-left: 5px;
+    }
+    .tooltip {
+      position: relative;
+      display: inline-block;
+    }
+    .tooltip .tooltip-text {
+      visibility: hidden;
+      width: 200px;
+      background-color: #34495e;
+      color: var(--bg-card);
+      text-align: center;
+      border-radius: 4px;
+      padding: 5px;
+      position: absolute;
+      z-index: 1;
+      bottom: 125%;
+      left: 50%;
+      transform: translateX(-50%);
+      opacity: 0;
+      transition: opacity 0.3s;
+      font-size: 12px;
+    }
+    .tooltip:hover .tooltip-text {
+      visibility: visible;
+      opacity: 1;
+    }
+        
+        @media (max-width: 768px) {
+            .container {
+                padding: var(--spacing-md);
+                margin: var(--spacing-sm);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="tool-container">
+        <!-- 工具头部 -->
+        <header class="tool-header">
+            <div class="tool-header-content">
+                <a href="../../index.html" class="back-btn">
+                    <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                        <path d="M10 4l-4 4 4 4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                    返回工具集
+                </a>
+                
+                <div class="tool-title">
+                    <h1>文本映射工具</h1>
+                    <p class="tool-subtitle">文本映射工具</p>
+                </div>
+                
+                <button class="theme-toggle" id="themeToggle" aria-label="切换主题">
+                    <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                        <circle cx="10" cy="10" r="4" stroke="currentColor" stroke-width="2"/>
+                        <path d="M10 2v2M10 16v2M18 10h-2M4 10H2M15.66 4.34l-1.41 1.41M5.75 14.25l-1.41 1.41M15.66 15.66l-1.41-1.41M5.75 5.75L4.34 4.34" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                    </svg>
+                </button>
+            </div>
+        </header>
+
+        <!-- 工具主内容 -->
+        <main class="tool-main">
+            <div class="tool-card">
+                <div class="tool-section">
+                    <h2>
+                        <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                            <rect x="3" y="3" width="14" height="14" rx="2" stroke="currentColor" stroke-width="2"/>
+                        </svg>
+                        工具功能
+                    </h2>
+                    
+                    
+            <div class="tool-card">
+                <div class="tool-section">
+                    <h2>
+                        <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                            <rect x="3" y="3" width="14" height="14" rx="2" stroke="currentColor" stroke-width="2"/>
+                        </svg>
+                        文本映射工具
+                    </h2>
+                    <div class="container">
+    <h1>文本映射工具</h1>
+    <p class="description">将文本A中的映射关系（key-value），应用到文本B中，生成填充后的文本</p>
+    
+    <div class="input-group">
+      <div class="text-area-container">
+        <div class="text-area-label">文本A (映射源)
+          <span class="tooltip">
+            <span class="help-icon">?</span>
+            <span class="tooltip-text">输入包含键值对的文本，每行一对，格式为"key:value"或"key=value"</span>
+          </span>
+        </div>
+        <p class="text-area-description">每行一对键值对，支持"key:value"或"key=value"格式</p>
+        <textarea id="textA" placeholder="名字:张三
+年龄:25
+职业:工程师"></textarea>
+      </div>
+      
+      <div class="text-area-container">
+        <div class="text-area-label">文本B (目标文本)
+          <span class="tooltip">
+            <span class="help-icon">?</span>
+            <span class="tooltip-text">输入包含占位符的文本，占位符格式为${key}</span>
+          </span>
+        </div>
+        <p class="text-area-description">包含${key}格式占位符的文本</p>
+        <textarea id="textB" placeholder="姓名：${名字}
+今年${年龄}岁
+从事${职业}工作"></textarea>
+      </div>
+    </div>
+    
+    <div class="options">
+      <div class="option-group">
+        <div class="option">
+          <input type="checkbox" id="preserveUnmapped" checked>
+          <label for="preserveUnmapped">保留未映射的占位符</label>
+          <span class="tooltip">
+            <span class="help-icon">?</span>
+            <span class="tooltip-text">勾选时，未找到对应值的占位符将保持原样；不勾选时，未找到的占位符将被替换为空字符串</span>
+          </span>
+        </div>
+        <div class="option">
+          <input type="checkbox" id="trimValues" checked>
+          <label for="trimValues">去除值的首尾空格</label>
+        </div>
+      </div>
+      <div class="option-group">
+        <div class="option">
+          <label for="placeholderFormat">占位符格式：</label>
+          <select id="placeholderFormat">
+            <option value="${key}">${key}</option>
+            <option value="{{key}}">{{key}}</option>
+            <option value="{key}">{key}</option>
+            <option value="%key%">%key%</option>
+          </select>
+        </div>
+        <div class="option">
+          <label for="keyValueSeparator">键值分隔符：</label>
+          <select id="keyValueSeparator">
+            <option value="auto">自动检测</option>
+            <option value=":">冒号 (:)</option>
+            <option value="=">等号 (=)</option>
+          </select>
+        </div>
+      </div>
+    </div>
+    
+    <div class="button-group">
+      <button id="processBtn">处理映射</button>
+      <button id="clearBtn" class="clear">清空所有</button>
+    </div>
+    
+    <div class="output-container">
+      <div class="output-label">处理结果</div>
+      <div id="output"></div>
+    </div>
+    
+    <div class="separator"></div>
+    
+    <div class="examples">
+      <h3>示例</h3>
+      
+      <div class="example">
+        <div class="example-title">个人信息模板</div>
+        <div class="example-content">
+          <div class="example-box">名字:李明
+年龄:28
+职业:医生
+城市:上海</div>
+          <div class="example-box">姓名：${名字}
+年龄：${年龄}岁
+职业：${职业}
+所在地：${城市}</div>
+          <div class="example-box">姓名：李明
+年龄：28岁
+职业：医生
+所在地：上海</div>
+        </div>
+      </div>
+      
+      <div class="example">
+        <div class="example-title">邮件模板</div>
+        <div class="example-content">
+          <div class="example-box">user=王小明
+company=ABC科技
+date=2023年5月10日</div>
+          <div class="example-box">尊敬的${user}：
+
+感谢您在${date}提交的申请。
+我们已收到您来自${company}的请求，
+将在3个工作日内处理。
+
+此致
+客服团队</div>
+          <div class="example-box">尊敬的王小明：
+
+感谢您在2023年5月10日提交的申请。
+我们已收到您来自ABC科技的请求，
+将在3个工作日内处理。
+
+此致
+客服团队</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  
+                </div>
+            </div>
+                    <!-- 结果显示区域 -->
+                    <div class="result-display" id="result">
+                        <pre id="resultContent">处理结果将在这里显示...</pre>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <!-- 工具页脚 -->
+        <footer class="tool-footer">
+            <p>由 <a href="../../index.html">AI工具集</a> 提供 | 原创工具</p>
+        </footer>
+    </div>
+
+    <!-- JavaScript -->
+    <script src="../../shared/js/utils.js"></script>
+    <script>
+        // 工具特定的JavaScript代码
+        class ToolApp {
+            constructor() {
+                this.init();
+            }
+
+            init() {
+                this.setupEventListeners();
+            }
+
+            setupEventListeners() {
+                document.getElementById('processBtn').addEventListener('click', () => this.process());
+                document.getElementById('clearBtn').addEventListener('click', () => this.clear());
+                document.getElementById('copyBtn').addEventListener('click', () => this.copyResult());
+                
+                // 实时处理（可选）
+                document.getElementById('input').addEventListener('input', 
+                    ToolUtils.debounce(() => this.process(), 300)
+                );
+            }
+
+            process() {
+                const input = document.getElementById('input').value;
+                const result = this.processInput(input);
+                this.displayResult(result);
+            }
+
+            processInput(input) {
+                
+    document.addEventListener('DOMContentLoaded', () => {
+      const textA = document.getElementById('textA');
+      const textB = document.getElementById('textB');
+      const output = document.getElementById('output');
+      const processBtn = document.getElementById('processBtn');
+      const clearBtn = document.getElementById('clearBtn');
+      const preserveUnmapped = document.getElementById('preserveUnmapped');
+      const trimValues = document.getElementById('trimValues');
+      const placeholderFormat = document.getElementById('placeholderFormat');
+      const keyValueSeparator = document.getElementById('keyValueSeparator');
+      
+      // 处理映射按钮点击事件
+      processBtn.addEventListener('click', () => {
+        const sourceText = textA.value;
+        const targetText = textB.value;
+        
+        if (!sourceText.trim() || !targetText.trim()) {
+          output.textContent = '错误：请确保两个文本框都不为空';
+          return;
+        }
+        
+        try {
+          const result = processMapping(
+            sourceText, 
+            targetText, 
+            preserveUnmapped.checked, 
+            trimValues.checked,
+            placeholderFormat.value,
+            keyValueSeparator.value
+          );
+          output.textContent = result;
+        } catch (error) {
+          output.textContent = `处理错误：${error.message}`;
+        }
+      });
+      
+      // 清空按钮点击事件
+      clearBtn.addEventListener('click', () => {
+        textA.value = '';
+        textB.value = '';
+        output.textContent = '';
+      });
+      
+      // 处理映射的主函数
+      function processMapping(sourceText, targetText, preserveUnmapped, trimValues, placeholderFormatStr, keyValueSeparatorOption) {
+        // 解析键值对
+        const keyValueMap = parseKeyValuePairs(sourceText, keyValueSeparatorOption, trimValues);
+        
+        // 创建一个正则表达式模式，根据选择的占位符格式
+        let placeholderPattern;
+        const formatTemplate = placeholderFormatStr.replace(/key/g, '([\\w\\u4e00-\\u9fa5]+)');
+        // 转义特殊字符
+        const escapedFormat = formatTemplate
+          .replace(/\$/g, '\\
+                return input;
+            }
+
+            displayResult(result) {
+                document.getElementById('resultContent').textContent = result;
+            }
+
+            clear() {
+                document.getElementById('input').value = '';
+                document.getElementById('resultContent').textContent = '处理结果将在这里显示...';
+            }
+
+            copyResult() {
+                const result = document.getElementById('resultContent').textContent;
+                if (result && result !== '处理结果将在这里显示...') {
+                    ToolUtils.copyToClipboard(result);
+                } else {
+                    ToolUtils.showToast('没有可复制的内容', 'warning');
+                }
+            }
+        }
+
+        // 初始化应用
+        document.addEventListener('DOMContentLoaded', () => {
+            new ToolApp();
+        });
+    </script>
+</body>
+</html>
+)
+          .replace(/\{/g, '\\{')
+          .replace(/\}/g, '\\}')
+          .replace(/\%/g, '\\%');
+        
+        placeholderPattern = new RegExp(escapedFormat, 'g');
+        
+        // 替换占位符
+        const result = targetText.replace(placeholderPattern, (match, key) => {
+          if (keyValueMap.has(key)) {
+            return keyValueMap.get(key);
+          } else {
+            return preserveUnmapped ? match : '';
+          }
+        });
+        
+        return result;
+      }
+      
+      // 解析键值对
+      function parseKeyValuePairs(text, separatorOption, trimValues) {
+        const lines = text.split('\n');
+        const keyValueMap = new Map();
+        
+        // 自动检测分隔符
+        let separator = ':';
+        if (separatorOption === 'auto') {
+          // 统计分隔符
+          let colonCount = 0;
+          let equalsCount = 0;
+          
+          for (const line of lines) {
+            if (line.includes(':')) colonCount++;
+            if (line.includes('=')) equalsCount++;
+          }
+          
+          separator = colonCount >= equalsCount ? ':' : '=';
+        } else {
+          separator = separatorOption;
+        }
+        
+        for (const line of lines) {
+          if (!line.trim()) continue;
+          
+          const separatorIndex = line.indexOf(separator);
+          if (separatorIndex === -1) continue;
+          
+          const key = line.substring(0, separatorIndex);
+          const value = line.substring(separatorIndex + 1);
+          
+          keyValueMap.set(
+            trimValues ? key.trim() : key,
+            trimValues ? value.trim() : value
+          );
+        }
+        
+        return keyValueMap;
+      }
+      
+      // 初始化示例点击事件
+      const examples = document.querySelectorAll('.example');
+      examples.forEach(example => {
+        example.addEventListener('click', () => {
+          const boxes = example.querySelectorAll('.example-box');
+          if (boxes.length >= 2) {
+            textA.value = boxes[0].textContent;
+            textB.value = boxes[1].textContent;
+          }
+        });
+      });
+    });
+  
+                return input;
+            }
+
+            displayResult(result) {
+                document.getElementById('resultContent').textContent = result;
+            }
+
+            clear() {
+                document.getElementById('input').value = '';
+                document.getElementById('resultContent').textContent = '处理结果将在这里显示...';
+            }
+
+            copyResult() {
+                const result = document.getElementById('resultContent').textContent;
+                if (result && result !== '处理结果将在这里显示...') {
+                    ToolUtils.copyToClipboard(result);
+                } else {
+                    ToolUtils.showToast('没有可复制的内容', 'warning');
+                }
+            }
+        }
+
+        // 初始化应用
+        document.addEventListener('DOMContentLoaded', () => {
+            new ToolApp();
+        });
+    </script>
+</body>
+</html>

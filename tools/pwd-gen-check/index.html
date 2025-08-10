@@ -1,0 +1,585 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>密码生成器与强度检查器 - AI工具集</title>
+    <meta name="description" content="密码生成器与强度检查器">
+    
+    <!-- 样式文件 -->
+    <link rel="stylesheet" href="../../shared/css/common.css">
+    
+    <!-- 工具特定样式 -->
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background-color: var(--bg-secondary);
+            color: var(--text-primary);
+            line-height: 1.6;
+            padding: var(--spacing-lg);
+        }
+        
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background-color: var(--bg-card);
+            border-radius: var(--radius-md);
+            box-shadow: var(--shadow-md);
+            padding: 30px;
+        }
+        
+        h1 {
+            text-align: center;
+            margin-bottom: 30px;
+            color: #2c3e50;
+        }
+        
+        .tabs {
+            display: flex;
+            margin-bottom: 20px;
+            border-bottom: 1px solid #ddd;
+        }
+        
+        .tab {
+            padding: var(--spacing-md) 20px;
+            cursor: pointer;
+            background-color: #f1f1f1;
+            border-radius: var(--radius-sm) 5px 0 0;
+            margin-right: 5px;
+            transition: all 0.3s ease;
+        }
+        
+        .tab.active {
+            background-color: #3498db;
+            color: white;
+        }
+        
+        .tab-content {
+            display: none;
+            padding: var(--spacing-lg) 0;
+        }
+        
+        .tab-content.active {
+            display: block;
+        }
+        
+        .form-group {
+            margin-bottom: 15px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        
+        input[type="text"],
+        input[type="number"],
+        input[type="password"] {
+            width: 100%;
+            padding: var(--spacing-md);
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 16px;
+        }
+        
+        input[type="checkbox"] {
+            margin-right: 5px;
+        }
+        
+        button {
+            background-color: #3498db;
+            color: white;
+            border: none;
+            padding: var(--spacing-md) 15px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s ease;
+        }
+        
+        button:hover {
+            background-color: #2980b9;
+        }
+        
+        .result {
+            margin-top: 20px;
+            padding: 15px;
+            background-color: #f9f9f9;
+            border-radius: 4px;
+            border-left: 4px solid #3498db;
+        }
+        
+        .password-display {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 10px;
+        }
+        
+        .copy-btn {
+            background-color: #2ecc71;
+            margin-left: 10px;
+            padding: 5px 10px;
+            font-size: 14px;
+        }
+        
+        .copy-btn:hover {
+            background-color: #27ae60;
+        }
+        
+        .strength-meter {
+            height: 10px;
+            background-color: #eee;
+            border-radius: var(--radius-sm);
+            margin-top: 10px;
+            overflow: hidden;
+        }
+        
+        .strength-meter-fill {
+            height: 100%;
+            width: 0;
+            transition: width 0.3s ease, background-color 0.3s ease;
+        }
+        
+        .strength-text {
+            margin-top: 5px;
+            font-weight: bold;
+        }
+        
+        .weak {
+            background-color: #e74c3c;
+        }
+        
+        .medium {
+            background-color: #f39c12;
+        }
+        
+        .strong {
+            background-color: #2ecc71;
+        }
+        
+        .very-strong {
+            background-color: #27ae60;
+        }
+        
+        .options-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+        }
+        
+        .footer {
+            margin-top: 30px;
+            text-align: center;
+            font-size: 14px;
+            color: #7f8c8d;
+        }
+        
+        @media (max-width: 768px) {
+            .container {
+                padding: var(--spacing-md);
+                margin: var(--spacing-sm);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="tool-container">
+        <!-- 工具头部 -->
+        <header class="tool-header">
+            <div class="tool-header-content">
+                <a href="../../index.html" class="back-btn">
+                    <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                        <path d="M10 4l-4 4 4 4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                    返回工具集
+                </a>
+                
+                <div class="tool-title">
+                    <h1>密码生成器与强度检查器</h1>
+                    <p class="tool-subtitle">密码生成器与强度检查器</p>
+                </div>
+                
+                <button class="theme-toggle" id="themeToggle" aria-label="切换主题">
+                    <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                        <circle cx="10" cy="10" r="4" stroke="currentColor" stroke-width="2"/>
+                        <path d="M10 2v2M10 16v2M18 10h-2M4 10H2M15.66 4.34l-1.41 1.41M5.75 14.25l-1.41 1.41M15.66 15.66l-1.41-1.41M5.75 5.75L4.34 4.34" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                    </svg>
+                </button>
+            </div>
+        </header>
+
+        <!-- 工具主内容 -->
+        <main class="tool-main">
+            <div class="tool-card">
+                <div class="tool-section">
+                    <h2>
+                        <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                            <rect x="3" y="3" width="14" height="14" rx="2" stroke="currentColor" stroke-width="2"/>
+                        </svg>
+                        工具功能
+                    </h2>
+                    
+                    
+            <div class="tool-card">
+                <div class="tool-section">
+                    <h2>
+                        <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                            <rect x="3" y="3" width="14" height="14" rx="2" stroke="currentColor" stroke-width="2"/>
+                        </svg>
+                        密码生成器与强度检查器
+                    </h2>
+                    <div class="container">
+        <h1>密码工具箱</h1>
+        
+        <div class="tabs">
+            <div class="tab active" data-tab="generator">密码生成器</div>
+            <div class="tab" data-tab="checker">密码强度检查器</div>
+        </div>
+        
+        <div class="tab-content active" id="generator">
+            <div class="form-group">
+                <label for="password-length">密码长度:</label>
+                <input type="number" id="password-length" min="4" max="64" value="12">
+            </div>
+            
+            <div class="form-group">
+                <label>包含字符:</label>
+                <div class="options-grid">
+                    <div>
+                        <input type="checkbox" id="include-uppercase" checked>
+                        <label for="include-uppercase">大写字母 (A-Z)</label>
+                    </div>
+                    <div>
+                        <input type="checkbox" id="include-lowercase" checked>
+                        <label for="include-lowercase">小写字母 (a-z)</label>
+                    </div>
+                    <div>
+                        <input type="checkbox" id="include-numbers" checked>
+                        <label for="include-numbers">数字 (0-9)</label>
+                    </div>
+                    <div>
+                        <input type="checkbox" id="include-symbols" checked>
+                        <label for="include-symbols">特殊符号 (!@#$%^&*)</label>
+                    </div>
+                </div>
+            </div>
+            
+            <button id="generate-btn">生成密码</button>
+            
+            <div class="result" id="generator-result" style="display: none;">
+                <div class="password-display">
+                    <input type="text" id="generated-password" readonly>
+                    <button class="copy-btn" id="copy-btn">复制</button>
+                </div>
+                <div class="strength-meter">
+                    <div class="strength-meter-fill" id="generator-strength-fill"></div>
+                </div>
+                <div class="strength-text" id="generator-strength-text"></div>
+            </div>
+        </div>
+        
+        <div class="tab-content" id="checker">
+            <div class="form-group">
+                <label for="check-password">输入密码进行检查:</label>
+                <input type="password" id="check-password">
+            </div>
+            
+            <button id="check-btn">检查强度</button>
+            
+            <div class="result" id="checker-result" style="display: none;">
+                <div class="strength-meter">
+                    <div class="strength-meter-fill" id="checker-strength-fill"></div>
+                </div>
+                <div class="strength-text" id="checker-strength-text"></div>
+                <div id="strength-details"></div>
+            </div>
+        </div>
+        
+        <div class="footer">
+            <p>© 小苏趣研AI 密码工具箱 | 安全地在本地生成和检查密码</p>
+        </div>
+    </div>
+
+    
+                </div>
+            </div>
+                    <!-- 结果显示区域 -->
+                    <div class="result-display" id="result">
+                        <pre id="resultContent">处理结果将在这里显示...</pre>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <!-- 工具页脚 -->
+        <footer class="tool-footer">
+            <p>由 <a href="../../index.html">AI工具集</a> 提供 | 原创工具</p>
+        </footer>
+    </div>
+
+    <!-- JavaScript -->
+    <script src="../../shared/js/utils.js"></script>
+    <script>
+        // 工具特定的JavaScript代码
+        class ToolApp {
+            constructor() {
+                this.init();
+            }
+
+            init() {
+                this.setupEventListeners();
+            }
+
+            setupEventListeners() {
+                document.getElementById('processBtn').addEventListener('click', () => this.process());
+                document.getElementById('clearBtn').addEventListener('click', () => this.clear());
+                document.getElementById('copyBtn').addEventListener('click', () => this.copyResult());
+                
+                // 实时处理（可选）
+                document.getElementById('input').addEventListener('input', 
+                    ToolUtils.debounce(() => this.process(), 300)
+                );
+            }
+
+            process() {
+                const input = document.getElementById('input').value;
+                const result = this.processInput(input);
+                this.displayResult(result);
+            }
+
+            processInput(input) {
+                
+        // 选项卡切换功能
+        document.querySelectorAll('.tab').forEach(tab => {
+            tab.addEventListener('click', () => {
+                document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+                document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+                
+                tab.classList.add('active');
+                document.getElementById(tab.dataset.tab).classList.add('active');
+            });
+        });
+        
+        // 密码生成功能
+        document.getElementById('generate-btn').addEventListener('click', generatePassword);
+        document.getElementById('copy-btn').addEventListener('click', copyPassword);
+        
+        // 密码检查功能
+        document.getElementById('check-btn').addEventListener('click', checkPassword);
+        document.getElementById('check-password').addEventListener('input', () => {
+            const result = document.getElementById('checker-result');
+            if (result.style.display !== 'none') {
+                checkPassword();
+            }
+        });
+        
+        // 生成密码函数
+        function generatePassword() {
+            const length = parseInt(document.getElementById('password-length').value);
+            const includeUppercase = document.getElementById('include-uppercase').checked;
+            const includeLowercase = document.getElementById('include-lowercase').checked;
+            const includeNumbers = document.getElementById('include-numbers').checked;
+            const includeSymbols = document.getElementById('include-symbols').checked;
+            
+            // 确保至少选择了一种字符类型
+            if (!includeUppercase && !includeLowercase && !includeNumbers && !includeSymbols) {
+                alert('请至少选择一种字符类型！');
+                return;
+            }
+            
+            // 定义字符集
+            const charsets = {
+                uppercase: 'ABCDEFGHIJKLMNOPQRSTUVWXYZ',
+                lowercase: 'abcdefghijklmnopqrstuvwxyz',
+                numbers: '0123456789',
+                symbols: '!@#$%^&*()_+~`|}{[]\\:;?><,./-='
+            };
+            
+            // 创建完整字符集
+            let fullCharset = '';
+            if (includeUppercase) fullCharset += charsets.uppercase;
+            if (includeLowercase) fullCharset += charsets.lowercase;
+            if (includeNumbers) fullCharset += charsets.numbers;
+            if (includeSymbols) fullCharset += charsets.symbols;
+            
+            // 确保每种选中的字符类型至少出现一次
+            let password = '';
+            let remainingLength = length;
+            
+            // 为每种选中的字符类型添加至少一个字符
+            if (includeUppercase && remainingLength > 0) {
+                password += charsets.uppercase.charAt(Math.floor(Math.random() * charsets.uppercase.length));
+                remainingLength--;
+            }
+            
+            if (includeLowercase && remainingLength > 0) {
+                password += charsets.lowercase.charAt(Math.floor(Math.random() * charsets.lowercase.length));
+                remainingLength--;
+            }
+            
+            if (includeNumbers && remainingLength > 0) {
+                password += charsets.numbers.charAt(Math.floor(Math.random() * charsets.numbers.length));
+                remainingLength--;
+            }
+            
+            if (includeSymbols && remainingLength > 0) {
+                password += charsets.symbols.charAt(Math.floor(Math.random() * charsets.symbols.length));
+                remainingLength--;
+            }
+            
+            // 填充剩余长度
+            for (let i = 0; i < remainingLength; i++) {
+                const randomIndex = Math.floor(Math.random() * fullCharset.length);
+                password += fullCharset[randomIndex];
+            }
+            
+            // 打乱密码字符顺序
+            password = shuffleString(password);
+            
+            // 显示生成的密码
+            document.getElementById('generated-password').value = password;
+            document.getElementById('generator-result').style.display = 'block';
+            
+            // 检查生成的密码强度
+            const strength = checkPasswordStrength(password);
+            updateStrengthMeter('generator', strength);
+        }
+        
+        // 打乱字符串中字符的顺序
+        function shuffleString(string) {
+            const array = string.split('');
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
+            }
+            return array.join('');
+        }
+        
+        // 复制密码到剪贴板
+        function copyPassword() {
+            const passwordField = document.getElementById('generated-password');
+            passwordField.select();
+            document.execCommand('copy');
+            
+            const copyBtn = document.getElementById('copy-btn');
+            const originalText = copyBtn.textContent;
+            copyBtn.textContent = '已复制！';
+            setTimeout(() => {
+                copyBtn.textContent = originalText;
+            }, 1500);
+        }
+        
+        // 检查密码强度
+        function checkPassword() {
+            const password = document.getElementById('check-password').value;
+            if (!password) {
+                document.getElementById('checker-result').style.display = 'none';
+                return;
+            }
+            
+            const strength = checkPasswordStrength(password);
+            document.getElementById('checker-result').style.display = 'block';
+            updateStrengthMeter('checker', strength);
+            
+            // 显示详细信息
+            const details = document.getElementById('strength-details');
+            details.innerHTML = `
+                <p>密码长度: ${password.length} ${password.length >= 12 ? '✓' : '✗'}</p>
+                <p>包含大写字母: ${/[A-Z]/.test(password) ? '✓' : '✗'}</p>
+                <p>包含小写字母: ${/[a-z]/.test(password) ? '✓' : '✗'}</p>
+                <p>包含数字: ${/[0-9]/.test(password) ? '✓' : '✗'}</p>
+                <p>包含特殊符号: ${/[^A-Za-z0-9]/.test(password) ? '✓' : '✗'}</p>
+            `;
+        }
+        
+        // 检查密码强度并返回评分（0-100）
+        function checkPasswordStrength(password) {
+            if (!password) return 0;
+            
+            let score = 0;
+            
+            // 长度评分（最多40分）
+            const lengthScore = Math.min(password.length * 2, 40);
+            score += lengthScore;
+            
+            // 字符多样性评分（最多60分）
+            if (/[A-Z]/.test(password)) score += 10; // 大写字母
+            if (/[a-z]/.test(password)) score += 10; // 小写字母
+            if (/[0-9]/.test(password)) score += 10; // 数字
+            if (/[^A-Za-z0-9]/.test(password)) score += 15; // 特殊符号
+            
+            // 额外的复杂性评分
+            const uniqueChars = new Set(password).size;
+            const uniqueRatio = uniqueChars / password.length;
+            score += Math.round(uniqueRatio * 15); // 字符唯一性（最多15分）
+            
+            return Math.min(score, 100); // 确保分数不超过100
+        }
+        
+        // 更新强度指示器
+        function updateStrengthMeter(prefix, score) {
+            const fill = document.getElementById(`${prefix}-strength-fill`);
+            const text = document.getElementById(`${prefix}-strength-text`);
+            
+            // 设置填充宽度
+            fill.style.width = `${score}%`;
+            
+            // 移除所有类
+            fill.classList.remove('weak', 'medium', 'strong', 'very-strong');
+            
+            // 根据分数设置类和文本
+            let strengthText = '';
+            if (score < 40) {
+                fill.classList.add('weak');
+                strengthText = '弱 - 不安全';
+            } else if (score < 60) {
+                fill.classList.add('medium');
+                strengthText = '中等 - 可以改进';
+            } else if (score < 80) {
+                fill.classList.add('strong');
+                strengthText = '强 - 安全';
+            } else {
+                fill.classList.add('very-strong');
+                strengthText = '非常强 - 极其安全';
+            }
+            
+            text.textContent = `密码强度: ${strengthText} (${score}/100)`;
+        }
+    
+                return input;
+            }
+
+            displayResult(result) {
+                document.getElementById('resultContent').textContent = result;
+            }
+
+            clear() {
+                document.getElementById('input').value = '';
+                document.getElementById('resultContent').textContent = '处理结果将在这里显示...';
+            }
+
+            copyResult() {
+                const result = document.getElementById('resultContent').textContent;
+                if (result && result !== '处理结果将在这里显示...') {
+                    ToolUtils.copyToClipboard(result);
+                } else {
+                    ToolUtils.showToast('没有可复制的内容', 'warning');
+                }
+            }
+        }
+
+        // 初始化应用
+        document.addEventListener('DOMContentLoaded', () => {
+            new ToolApp();
+        });
+    </script>
+</body>
+</html>

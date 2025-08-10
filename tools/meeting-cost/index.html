@@ -1,0 +1,590 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>会议成本计算器 - Meeting Cost Calculator - AI工具集</title>
+    <meta name="description" content="会议成本计算器 - Meeting Cost Calculator">
+    
+    <!-- 样式文件 -->
+    <link rel="stylesheet" href="../../shared/css/common.css">
+    
+    <!-- 工具特定样式 -->
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: var(--spacing-lg);
+            color: var(--text-primary);
+        }
+
+        .container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            padding: 40px;
+            max-width: 500px;
+            width: 100%;
+            text-align: center;
+        }
+
+        .header {
+            margin-bottom: 30px;
+        }
+
+        .title {
+            font-size: 2.2rem;
+            color: #4a5568;
+            margin-bottom: 10px;
+            font-weight: 700;
+        }
+
+        .subtitle {
+            color: #718096;
+            font-size: 1rem;
+            margin-bottom: 20px;
+        }
+
+        .description {
+            background: #f7fafc;
+            border-left: 4px solid #667eea;
+            padding: 15px;
+            margin-bottom: 30px;
+            text-align: left;
+            border-radius: 0 8px 8px 0;
+            font-size: 0.9rem;
+            color: #4a5568;
+            line-height: 1.6;
+        }
+
+        .input-group {
+            margin-bottom: 20px;
+            text-align: left;
+        }
+
+        .input-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #4a5568;
+        }
+
+        .input-group input {
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid #e2e8f0;
+            border-radius: var(--radius-md);
+            font-size: 1rem;
+            transition: border-color 0.3s ease;
+        }
+
+        .input-group input:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .timer-display {
+            background: linear-gradient(135deg, #4c51bf, #667eea);
+            color: white;
+            padding: 30px;
+            border-radius: var(--radius-lg);
+            margin: 30px 0;
+            box-shadow: 0 10px 25px rgba(76, 81, 191, 0.3);
+        }
+
+        .timer {
+            font-size: 3rem;
+            font-weight: bold;
+            margin-bottom: 10px;
+            font-family: 'Courier New', monospace;
+        }
+
+        .cost {
+            font-size: 2.5rem;
+            font-weight: bold;
+            color: #ffd700;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+        }
+
+        .cost-label {
+            font-size: 1rem;
+            margin-bottom: 10px;
+            opacity: 0.9;
+        }
+
+        .controls {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            margin-top: 30px;
+        }
+
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: var(--radius-md);
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            min-width: 100px;
+        }
+
+        .btn-start {
+            background: linear-gradient(135deg, #48bb78, #38a169);
+            color: white;
+        }
+
+        .btn-start:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(72, 187, 120, 0.4);
+        }
+
+        .btn-pause {
+            background: linear-gradient(135deg, #ed8936, #dd6b20);
+            color: white;
+        }
+
+        .btn-pause:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(237, 137, 54, 0.4);
+        }
+
+        .btn-reset {
+            background: linear-gradient(135deg, #e53e3e, #c53030);
+            color: white;
+        }
+
+        .btn-reset:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(229, 62, 62, 0.4);
+        }
+
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .stats {
+            margin-top: 30px;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        .stat-item {
+            background: #f7fafc;
+            padding: var(--spacing-lg);
+            border-radius: var(--radius-md);
+            border: 1px solid #e2e8f0;
+        }
+
+        .stat-value {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #4c51bf;
+            margin-bottom: 5px;
+        }
+
+        .stat-label {
+            font-size: 0.9rem;
+            color: #718096;
+        }
+
+        .footer {
+            margin-top: 40px;
+            padding-top: 20px;
+            border-top: 1px solid #e2e8f0;
+            color: #718096;
+            font-size: 0.9rem;
+        }
+
+        .footer a {
+            color: #667eea;
+            text-decoration: none;
+            font-weight: 600;
+        }
+
+        .footer a:hover {
+            text-decoration: underline;
+        }
+
+        @media (max-width: 480px) {
+            .container {
+                padding: var(--spacing-lg);
+            }
+
+            .title {
+                font-size: 1.8rem;
+            }
+
+            .timer {
+                font-size: 2.5rem;
+            }
+
+            .cost {
+                font-size: 2rem;
+            }
+
+            .controls {
+                flex-direction: column;
+            }
+
+            .stats {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="tool-container">
+        <!-- 工具头部 -->
+        <header class="tool-header">
+            <div class="tool-header-content">
+                <a href="../../index.html" class="back-btn">
+                    <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                        <path d="M10 4l-4 4 4 4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                    返回工具集
+                </a>
+                
+                <div class="tool-title">
+                    <h1>会议成本计算器 - Meeting Cost Calculator</h1>
+                    <p class="tool-subtitle">会议成本计算器 - Meeting Cost Calculator</p>
+                </div>
+                
+                <button class="theme-toggle" id="themeToggle" aria-label="切换主题">
+                    <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                        <circle cx="10" cy="10" r="4" stroke="currentColor" stroke-width="2"/>
+                        <path d="M10 2v2M10 16v2M18 10h-2M4 10H2M15.66 4.34l-1.41 1.41M5.75 14.25l-1.41 1.41M15.66 15.66l-1.41-1.41M5.75 5.75L4.34 4.34" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                    </svg>
+                </button>
+            </div>
+        </header>
+
+        <!-- 工具主内容 -->
+        <main class="tool-main">
+            <div class="tool-card">
+                <div class="tool-section">
+                    <h2>
+                        <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                            <rect x="3" y="3" width="14" height="14" rx="2" stroke="currentColor" stroke-width="2"/>
+                        </svg>
+                        工具功能
+                    </h2>
+                    
+                    
+            <div class="tool-card">
+                <div class="tool-section">
+                    <h2>
+                        <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                            <rect x="3" y="3" width="14" height="14" rx="2" stroke="currentColor" stroke-width="2"/>
+                        </svg>
+                        会议成本计算器 - Meeting Cost Calculator
+                    </h2>
+                    <div class="container">
+        <div class="header">
+            <h1 class="title">💰 会议成本计算器</h1>
+            <p class="subtitle">Meeting Cost Calculator</p>
+        </div>
+
+        <div class="description">
+            <strong>💡 工具介绍：</strong><br>
+            这是一个实时会议成本计算器，帮助您了解会议的真实成本。输入参会人数和平均时薪，开始计时后将实时显示会议已经"花掉"的金额。通过可视化的成本展示，倡导更加高效的会议文化，让每一分钟都更有价值！
+        </div>
+
+        <div class="input-group">
+            <label for="participants">👥 参会人数</label>
+            <input type="number" id="participants" min="1" max="1000" value="5" placeholder="请输入参会人数">
+        </div>
+
+        <div class="input-group">
+            <label for="hourlyRate">💵 平均时薪 (元/小时)</label>
+            <input type="number" id="hourlyRate" min="0" step="0.01" value="100" placeholder="请输入平均时薪">
+        </div>
+
+        <div class="timer-display">
+            <div class="timer" id="timer">00:00:00</div>
+            <div class="cost-label">累计成本</div>
+            <div class="cost" id="cost">¥ 0.00</div>
+        </div>
+
+        <div class="controls">
+            <button class="btn btn-start" id="startBtn">开始会议</button>
+            <button class="btn btn-pause" id="pauseBtn" disabled>暂停</button>
+            <button class="btn btn-reset" id="resetBtn">重置</button>
+        </div>
+
+        <div class="stats">
+            <div class="stat-item">
+                <div class="stat-value" id="perMinuteCost">¥ 0.00</div>
+                <div class="stat-label">每分钟成本</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-value" id="perSecondCost">¥ 0.00</div>
+                <div class="stat-label">每秒钟成本</div>
+            </div>
+        </div>
+
+        <div class="footer">
+            <p>💡 <strong>小贴士：</strong>高效会议从时间成本意识开始</p>
+            <p style="margin-top: 10px;">
+                <a href="#" target="_blank">小苏趣研AI</a> - 让工作更智能，让生活更有趣
+            </p>
+        </div>
+    </div>
+
+    
+                </div>
+            </div>
+                    <!-- 结果显示区域 -->
+                    <div class="result-display" id="result">
+                        <pre id="resultContent">处理结果将在这里显示...</pre>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <!-- 工具页脚 -->
+        <footer class="tool-footer">
+            <p>由 <a href="../../index.html">AI工具集</a> 提供 | 原创工具</p>
+        </footer>
+    </div>
+
+    <!-- JavaScript -->
+    <script src="../../shared/js/utils.js"></script>
+    <script>
+        // 工具特定的JavaScript代码
+        class ToolApp {
+            constructor() {
+                this.init();
+            }
+
+            init() {
+                this.setupEventListeners();
+            }
+
+            setupEventListeners() {
+                document.getElementById('processBtn').addEventListener('click', () => this.process());
+                document.getElementById('clearBtn').addEventListener('click', () => this.clear());
+                document.getElementById('copyBtn').addEventListener('click', () => this.copyResult());
+                
+                // 实时处理（可选）
+                document.getElementById('input').addEventListener('input', 
+                    ToolUtils.debounce(() => this.process(), 300)
+                );
+            }
+
+            process() {
+                const input = document.getElementById('input').value;
+                const result = this.processInput(input);
+                this.displayResult(result);
+            }
+
+            processInput(input) {
+                
+        class MeetingCostCalculator {
+            constructor() {
+                this.startTime = null;
+                this.elapsedTime = 0;
+                this.isRunning = false;
+                this.isPaused = false;
+                this.intervalId = null;
+                
+                this.participantsInput = document.getElementById('participants');
+                this.hourlyRateInput = document.getElementById('hourlyRate');
+                this.timerDisplay = document.getElementById('timer');
+                this.costDisplay = document.getElementById('cost');
+                this.perMinuteCostDisplay = document.getElementById('perMinuteCost');
+                this.perSecondCostDisplay = document.getElementById('perSecondCost');
+                this.startBtn = document.getElementById('startBtn');
+                this.pauseBtn = document.getElementById('pauseBtn');
+                this.resetBtn = document.getElementById('resetBtn');
+                
+                this.bindEvents();
+                this.updateCostRates();
+            }
+            
+            bindEvents() {
+                this.startBtn.addEventListener('click', () => this.start());
+                this.pauseBtn.addEventListener('click', () => this.pause());
+                this.resetBtn.addEventListener('click', () => this.reset());
+                
+                this.participantsInput.addEventListener('input', () => this.updateCostRates());
+                this.hourlyRateInput.addEventListener('input', () => this.updateCostRates());
+            }
+            
+            start() {
+                if (!this.validateInputs()) {
+                    alert('请输入有效的参会人数和时薪');
+                    return;
+                }
+                
+                if (!this.isRunning) {
+                    this.startTime = Date.now() - this.elapsedTime;
+                    this.isRunning = true;
+                    this.isPaused = false;
+                    
+                    this.startBtn.textContent = '会议进行中...';
+                    this.startBtn.disabled = true;
+                    this.pauseBtn.disabled = false;
+                    
+                    this.intervalId = setInterval(() => this.updateDisplay(), 100);
+                } else if (this.isPaused) {
+                    this.startTime = Date.now() - this.elapsedTime;
+                    this.isPaused = false;
+                    
+                    this.startBtn.textContent = '会议进行中...';
+                    this.startBtn.disabled = true;
+                    this.pauseBtn.disabled = false;
+                    this.pauseBtn.textContent = '暂停';
+                    
+                    this.intervalId = setInterval(() => this.updateDisplay(), 100);
+                }
+            }
+            
+            pause() {
+                if (this.isRunning && !this.isPaused) {
+                    this.isPaused = true;
+                    clearInterval(this.intervalId);
+                    
+                    this.startBtn.textContent = '继续会议';
+                    this.startBtn.disabled = false;
+                    this.pauseBtn.textContent = '已暂停';
+                    this.pauseBtn.disabled = true;
+                }
+            }
+            
+            reset() {
+                this.isRunning = false;
+                this.isPaused = false;
+                this.elapsedTime = 0;
+                this.startTime = null;
+                
+                if (this.intervalId) {
+                    clearInterval(this.intervalId);
+                }
+                
+                this.startBtn.textContent = '开始会议';
+                this.startBtn.disabled = false;
+                this.pauseBtn.textContent = '暂停';
+                this.pauseBtn.disabled = true;
+                
+                this.updateDisplay();
+            }
+            
+            validateInputs() {
+                const participants = parseInt(this.participantsInput.value);
+                const hourlyRate = parseFloat(this.hourlyRateInput.value);
+                
+                return participants > 0 && hourlyRate >= 0;
+            }
+            
+            updateDisplay() {
+                if (this.isRunning && !this.isPaused) {
+                    this.elapsedTime = Date.now() - this.startTime;
+                }
+                
+                const timeString = this.formatTime(this.elapsedTime);
+                const totalCost = this.calculateTotalCost();
+                
+                this.timerDisplay.textContent = timeString;
+                this.costDisplay.textContent = `¥ ${totalCost.toFixed(2)}`;
+            }
+            
+            formatTime(milliseconds) {
+                const totalSeconds = Math.floor(milliseconds / 1000);
+                const hours = Math.floor(totalSeconds / 3600);
+                const minutes = Math.floor((totalSeconds % 3600) / 60);
+                const seconds = totalSeconds % 60;
+                
+                return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+            }
+            
+            calculateTotalCost() {
+                const participants = parseInt(this.participantsInput.value) || 0;
+                const hourlyRate = parseFloat(this.hourlyRateInput.value) || 0;
+                const hours = this.elapsedTime / (1000 * 60 * 60);
+                
+                return participants * hourlyRate * hours;
+            }
+            
+            updateCostRates() {
+                const participants = parseInt(this.participantsInput.value) || 0;
+                const hourlyRate = parseFloat(this.hourlyRateInput.value) || 0;
+                
+                const perMinuteCost = (participants * hourlyRate) / 60;
+                const perSecondCost = (participants * hourlyRate) / 3600;
+                
+                this.perMinuteCostDisplay.textContent = `¥ ${perMinuteCost.toFixed(2)}`;
+                this.perSecondCostDisplay.textContent = `¥ ${perSecondCost.toFixed(3)}`;
+            }
+        }
+        
+        // 初始化计算器
+        document.addEventListener('DOMContentLoaded', () => {
+            new MeetingCostCalculator();
+        });
+        
+        // 添加一些视觉效果
+        document.addEventListener('DOMContentLoaded', () => {
+            const costDisplay = document.getElementById('cost');
+            let lastCost = 0;
+            
+            setInterval(() => {
+                const currentCostText = costDisplay.textContent;
+                const currentCost = parseFloat(currentCostText.replace('¥ ', '').replace(',', ''));
+                
+                if (currentCost > lastCost) {
+                    costDisplay.style.transform = 'scale(1.05)';
+                    setTimeout(() => {
+                        costDisplay.style.transform = 'scale(1)';
+                    }, 200);
+                }
+                
+                lastCost = currentCost;
+            }, 1000);
+        });
+    
+                return input;
+            }
+
+            displayResult(result) {
+                document.getElementById('resultContent').textContent = result;
+            }
+
+            clear() {
+                document.getElementById('input').value = '';
+                document.getElementById('resultContent').textContent = '处理结果将在这里显示...';
+            }
+
+            copyResult() {
+                const result = document.getElementById('resultContent').textContent;
+                if (result && result !== '处理结果将在这里显示...') {
+                    ToolUtils.copyToClipboard(result);
+                } else {
+                    ToolUtils.showToast('没有可复制的内容', 'warning');
+                }
+            }
+        }
+
+        // 初始化应用
+        document.addEventListener('DOMContentLoaded', () => {
+            new ToolApp();
+        });
+    </script>
+</body>
+</html>

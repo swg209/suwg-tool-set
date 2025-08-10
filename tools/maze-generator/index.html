@@ -1,0 +1,1052 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>迷宫生成器 - AI工具集</title>
+    <meta name="description" content="迷宫生成器">
+    
+    <!-- 样式文件 -->
+    <link rel="stylesheet" href="../../shared/css/common.css">
+    
+    <!-- 工具特定样式 -->
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: var(--spacing-lg);
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .header p {
+            font-size: 1.1em;
+            opacity: 0.9;
+        }
+
+        .controls {
+            padding: 25px;
+            background: #f8f9fa;
+            border-bottom: 2px solid #e9ecef;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .control-group {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            background: white;
+            padding: 12px 16px;
+            border-radius: var(--radius-md);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        .control-group label {
+            font-weight: 600;
+            color: #495057;
+            min-width: 60px;
+        }
+
+        .control-group input,
+        .control-group select {
+            padding: 6px 10px;
+            border: 1px solid #dee2e6;
+            border-radius: 6px;
+            font-size: 14px;
+        }
+
+        .btn {
+            padding: 12px 20px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s;
+            font-size: 14px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-secondary {
+            background: #6c757d;
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            background: #5a6268;
+        }
+
+        .btn-success {
+            background: #28a745;
+            color: white;
+        }
+
+        .btn-success:hover {
+            background: #218838;
+        }
+
+        .btn-warning {
+            background: #ffc107;
+            color: #212529;
+        }
+
+        .btn-warning:hover {
+            background: #e0a800;
+        }
+
+        .maze-container {
+            padding: 30px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 500px;
+            background: #f0f8ff;
+        }
+
+        .maze-canvas {
+            border: 3px solid var(--text-primary);
+            border-radius: 8px;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+            background: white;
+        }
+
+        .maze-info {
+            padding: var(--spacing-lg);
+            background: #f8f9fa;
+            border-top: 2px solid #e9ecef;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+        }
+
+        .info-card {
+            background: white;
+            padding: var(--spacing-lg);
+            border-radius: 12px;
+            text-align: center;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        .info-title {
+            font-weight: bold;
+            color: #495057;
+            margin-bottom: 10px;
+        }
+
+        .info-value {
+            font-size: 1.5em;
+            font-weight: bold;
+            color: #667eea;
+        }
+
+        .algorithm-info {
+            padding: var(--spacing-lg);
+            background: #e3f2fd;
+            border-left: 4px solid #2196f3;
+            margin: var(--spacing-lg);
+            border-radius: 0 8px 8px 0;
+        }
+
+        .algorithm-info h4 {
+            color: #1976d2;
+            margin-bottom: 10px;
+        }
+
+        .algorithm-info p {
+            color: #424242;
+            line-height: 1.6;
+        }
+
+        .legend {
+            padding: var(--spacing-lg);
+            background: #f8f9fa;
+            border-top: 2px solid #e9ecef;
+        }
+
+        .legend h3 {
+            color: #495057;
+            margin-bottom: 15px;
+            text-align: center;
+        }
+
+        .legend-items {
+            display: flex;
+            justify-content: center;
+            gap: 30px;
+            flex-wrap: wrap;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .legend-color {
+            width: 20px;
+            height: 20px;
+            border-radius: 4px;
+            border: 1px solid var(--text-primary);
+        }
+
+        .legend-text {
+            font-weight: 600;
+            color: #495057;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background: #e9ecef;
+            border-radius: 4px;
+            overflow: hidden;
+            margin: 15px 0;
+            display: none;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 4px;
+            transition: width 0.3s;
+            width: 0%;
+        }
+
+        .progress-text {
+            text-align: center;
+            color: #495057;
+            font-weight: 600;
+            margin-top: 10px;
+        }
+
+        .footer {
+            text-align: center;
+            padding: var(--spacing-lg);
+            background: #f8f9fa;
+            color: #6c757d;
+            font-size: 0.9em;
+        }
+
+        @media (max-width: 768px) {
+            .header {
+                padding: var(--spacing-lg);
+            }
+            
+            .header h1 {
+                font-size: 2em;
+            }
+            
+            .controls {
+                padding: var(--spacing-lg);
+                gap: 15px;
+            }
+            
+            .control-group {
+                flex-direction: column;
+                align-items: stretch;
+                text-align: center;
+            }
+            
+            .maze-container {
+                padding: var(--spacing-lg);
+            }
+            
+            .legend-items {
+                gap: 15px;
+            }
+            
+            .info-card {
+                padding: 15px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="tool-container">
+        <!-- 工具头部 -->
+        <header class="tool-header">
+            <div class="tool-header-content">
+                <a href="../../index.html" class="back-btn">
+                    <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                        <path d="M10 4l-4 4 4 4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                    返回工具集
+                </a>
+                
+                <div class="tool-title">
+                    <h1>迷宫生成器</h1>
+                    <p class="tool-subtitle">迷宫生成器</p>
+                </div>
+                
+                <button class="theme-toggle" id="themeToggle" aria-label="切换主题">
+                    <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                        <circle cx="10" cy="10" r="4" stroke="currentColor" stroke-width="2"/>
+                        <path d="M10 2v2M10 16v2M18 10h-2M4 10H2M15.66 4.34l-1.41 1.41M5.75 14.25l-1.41 1.41M15.66 15.66l-1.41-1.41M5.75 5.75L4.34 4.34" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                    </svg>
+                </button>
+            </div>
+        </header>
+
+        <!-- 工具主内容 -->
+        <main class="tool-main">
+            <div class="tool-card">
+                <div class="tool-section">
+                    <h2>
+                        <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                            <rect x="3" y="3" width="14" height="14" rx="2" stroke="currentColor" stroke-width="2"/>
+                        </svg>
+                        工具功能
+                    </h2>
+                    
+                    
+            <div class="tool-card">
+                <div class="tool-section">
+                    <h2>
+                        <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                            <rect x="3" y="3" width="14" height="14" rx="2" stroke="currentColor" stroke-width="2"/>
+                        </svg>
+                        迷宫生成器
+                    </h2>
+                    <div class="container">
+        <div class="header">
+            <h1>🏰 迷宫生成器</h1>
+            <p>生成简单的方形迷宫，并可选择显示解决方案路径</p>
+        </div>
+
+        <div class="controls">
+            <div class="control-group">
+                <label>宽度:</label>
+                <input type="number" id="mazeWidth" min="10" max="50" value="25">
+            </div>
+            
+            <div class="control-group">
+                <label>高度:</label>
+                <input type="number" id="mazeHeight" min="10" max="50" value="25">
+            </div>
+            
+            <div class="control-group">
+                <label>算法:</label>
+                <select id="algorithm">
+                    <option value="dfs">深度优先搜索</option>
+                    <option value="prim">Prim算法</option>
+                    <option value="kruskal">Kruskal算法</option>
+                    <option value="recursive">递归分割</option>
+                </select>
+            </div>
+            
+            <button class="btn btn-primary" onclick="generateMaze()">🎯 生成迷宫</button>
+            <button class="btn btn-success" onclick="solveMaze()" id="solveBtn" style="display: none;">🧭 显示路径</button>
+            <button class="btn btn-warning" onclick="clearSolution()" id="clearBtn" style="display: none;">🧹 清除路径</button>
+            <button class="btn btn-secondary" onclick="downloadMaze()">💾 下载图片</button>
+        </div>
+
+        <div class="progress-bar" id="progressBar">
+            <div class="progress-fill" id="progressFill"></div>
+        </div>
+        <div class="progress-text" id="progressText"></div>
+
+        <div class="maze-container">
+            <canvas id="mazeCanvas" class="maze-canvas" width="600" height="600"></canvas>
+        </div>
+
+        <div class="algorithm-info" id="algorithmInfo">
+            <h4>深度优先搜索 (DFS)</h4>
+            <p>从起始点开始，随机选择方向深入探索，直到无路可走时回溯到上一个位置，继续探索其他方向。这种算法生成的迷宫通常有很长的通道和较少的分支。</p>
+        </div>
+
+        <div class="maze-info">
+            <div class="info-card">
+                <div class="info-title">迷宫大小</div>
+                <div class="info-value" id="mazeSize">25 × 25</div>
+            </div>
+            <div class="info-card">
+                <div class="info-title">总通道数</div>
+                <div class="info-value" id="pathCount">0</div>
+            </div>
+            <div class="info-card">
+                <div class="info-title">生成时间</div>
+                <div class="info-value" id="generationTime">0ms</div>
+            </div>
+            <div class="info-card">
+                <div class="info-title">解答步数</div>
+                <div class="info-value" id="solutionSteps">-</div>
+            </div>
+        </div>
+
+        <div class="legend">
+            <h3>🗺️ 图例</h3>
+            <div class="legend-items">
+                <div class="legend-item">
+                    <div class="legend-color" style="background: #2c3e50;"></div>
+                    <span class="legend-text">墙壁</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color" style="background: white;"></div>
+                    <span class="legend-text">通道</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color" style="background: #27ae60;"></div>
+                    <span class="legend-text">起点</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color" style="background: #e74c3c;"></div>
+                    <span class="legend-text">终点</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color" style="background: #f39c12;"></div>
+                    <span class="legend-text">解答路径</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="footer">
+            <p>💡 支持多种迷宫生成算法，可以显示最短路径解答</p>
+            <p>脚注：小苏趣研AI - 让迷宫生成变得简单有趣</p>
+        </div>
+    </div>
+
+    
+                </div>
+            </div>
+                    <!-- 结果显示区域 -->
+                    <div class="result-display" id="result">
+                        <pre id="resultContent">处理结果将在这里显示...</pre>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <!-- 工具页脚 -->
+        <footer class="tool-footer">
+            <p>由 <a href="../../index.html">AI工具集</a> 提供 | 原创工具</p>
+        </footer>
+    </div>
+
+    <!-- JavaScript -->
+    <script src="../../shared/js/utils.js"></script>
+    <script>
+        // 工具特定的JavaScript代码
+        class ToolApp {
+            constructor() {
+                this.init();
+            }
+
+            init() {
+                this.setupEventListeners();
+            }
+
+            setupEventListeners() {
+                document.getElementById('processBtn').addEventListener('click', () => this.process());
+                document.getElementById('clearBtn').addEventListener('click', () => this.clear());
+                document.getElementById('copyBtn').addEventListener('click', () => this.copyResult());
+                
+                // 实时处理（可选）
+                document.getElementById('input').addEventListener('input', 
+                    ToolUtils.debounce(() => this.process(), 300)
+                );
+            }
+
+            process() {
+                const input = document.getElementById('input').value;
+                const result = this.processInput(input);
+                this.displayResult(result);
+            }
+
+            processInput(input) {
+                
+        // 迷宫状态
+        let maze = null;
+        let solution = null;
+        let canvas, ctx;
+        let cellSize = 12;
+
+        // 算法描述
+        const algorithmDescriptions = {
+            dfs: {
+                title: "深度优先搜索 (DFS)",
+                description: "从起始点开始，随机选择方向深入探索，直到无路可走时回溯到上一个位置，继续探索其他方向。这种算法生成的迷宫通常有很长的通道和较少的分支。"
+            },
+            prim: {
+                title: "Prim算法",
+                description: "基于最小生成树的算法。从一个起始点开始，逐步添加与当前迷宫相邻的墙壁，然后随机选择一面墙移除，形成通道。生成的迷宫通常分支较多，结构相对平衡。"
+            },
+            kruskal: {
+                title: "Kruskal算法",
+                description: "另一种基于最小生成树的算法。将所有单元格看作独立的集合，随机选择墙壁，如果墙壁两侧属于不同集合则移除墙壁并合并集合。生成较为随机的迷宫结构。"
+            },
+            recursive: {
+                title: "递归分割",
+                description: "递归地将迷宫区域分割成更小的区域，每次分割时留下一个通道。这种算法生成的迷宫具有明显的房间结构，通道相对较宽。"
+            }
+        };
+
+        // 初始化
+        function init() {
+            canvas = document.getElementById('mazeCanvas');
+            ctx = canvas.getContext('2d');
+            
+            // 监听算法选择变化
+            document.getElementById('algorithm').addEventListener('change', updateAlgorithmInfo);
+            
+            // 监听尺寸变化
+            document.getElementById('mazeWidth').addEventListener('change', updateCanvasSize);
+            document.getElementById('mazeHeight').addEventListener('change', updateCanvasSize);
+            
+            updateAlgorithmInfo();
+            updateCanvasSize();
+        }
+
+        // 更新算法信息
+        function updateAlgorithmInfo() {
+            const algorithm = document.getElementById('algorithm').value;
+            const info = algorithmDescriptions[algorithm];
+            const infoDiv = document.getElementById('algorithmInfo');
+            
+            infoDiv.innerHTML = `
+                <h4>${info.title}</h4>
+                <p>${info.description}</p>
+            `;
+        }
+
+        // 更新画布大小
+        function updateCanvasSize() {
+            const width = parseInt(document.getElementById('mazeWidth').value);
+            const height = parseInt(document.getElementById('mazeHeight').value);
+            
+            // 根据迷宫大小调整单元格大小和画布大小
+            const maxCanvasSize = 600;
+            const maxCellSize = Math.min(
+                Math.floor(maxCanvasSize / width),
+                Math.floor(maxCanvasSize / height)
+            );
+            
+            cellSize = Math.max(4, Math.min(maxCellSize, 20));
+            
+            canvas.width = width * cellSize;
+            canvas.height = height * cellSize;
+            
+            document.getElementById('mazeSize').textContent = `${width} × ${height}`;
+        }
+
+        // 生成迷宫
+        async function generateMaze() {
+            const width = parseInt(document.getElementById('mazeWidth').value);
+            const height = parseInt(document.getElementById('mazeHeight').value);
+            const algorithm = document.getElementById('algorithm').value;
+            
+            if (width < 5 || height < 5 || width > 100 || height > 100) {
+                alert('迷宫大小应在 5-100 之间');
+                return;
+            }
+            
+            showProgress('生成迷宫中...', 0);
+            const startTime = performance.now();
+            
+            try {
+                maze = await generateMazeByAlgorithm(width, height, algorithm);
+                solution = null;
+                
+                const endTime = performance.now();
+                const generationTime = Math.round(endTime - startTime);
+                
+                document.getElementById('generationTime').textContent = generationTime + 'ms';
+                document.getElementById('pathCount').textContent = countPaths();
+                document.getElementById('solutionSteps').textContent = '-';
+                
+                drawMaze();
+                
+                document.getElementById('solveBtn').style.display = 'inline-block';
+                document.getElementById('clearBtn').style.display = 'none';
+                
+                hideProgress();
+                
+            } catch (error) {
+                console.error('生成迷宫失败:', error);
+                alert('生成迷宫失败，请重试');
+                hideProgress();
+            }
+        }
+
+        // 根据算法生成迷宫
+        async function generateMazeByAlgorithm(width, height, algorithm) {
+            switch (algorithm) {
+                case 'dfs':
+                    return await generateMazeDFS(width, height);
+                case 'prim':
+                    return await generateMazePrim(width, height);
+                case 'kruskal':
+                    return await generateMazeKruskal(width, height);
+                case 'recursive':
+                    return await generateMazeRecursive(width, height);
+                default:
+                    throw new Error('未知算法');
+            }
+        }
+
+        // 深度优先搜索生成迷宫
+        async function generateMazeDFS(width, height) {
+            const maze = Array(height).fill().map(() => Array(width).fill(1));
+            const stack = [];
+            const directions = [[0, 2], [2, 0], [0, -2], [-2, 0]];
+            
+            let currentX = 1, currentY = 1;
+            maze[currentY][currentX] = 0;
+            stack.push([currentX, currentY]);
+            
+            let steps = 0;
+            const totalSteps = Math.floor((width * height) / 4);
+            
+            while (stack.length > 0) {
+                const neighbors = [];
+                
+                for (const [dx, dy] of directions) {
+                    const newX = currentX + dx;
+                    const newY = currentY + dy;
+                    
+                    if (newX > 0 && newX < width - 1 && newY > 0 && newY < height - 1 && maze[newY][newX] === 1) {
+                        neighbors.push([newX, newY, currentX + dx/2, currentY + dy/2]);
+                    }
+                }
+                
+                if (neighbors.length > 0) {
+                    const [newX, newY, wallX, wallY] = neighbors[Math.floor(Math.random() * neighbors.length)];
+                    maze[newY][newX] = 0;
+                    maze[wallY][wallX] = 0;
+                    stack.push([newX, newY]);
+                    currentX = newX;
+                    currentY = newY;
+                } else {
+                    [currentX, currentY] = stack.pop();
+                }
+                
+                steps++;
+                if (steps % 10 === 0) {
+                    updateProgress(Math.min((steps / totalSteps) * 100, 95));
+                    await new Promise(resolve => setTimeout(resolve, 1));
+                }
+            }
+            
+            return maze;
+        }
+
+        // Prim算法生成迷宫
+        async function generateMazePrim(width, height) {
+            const maze = Array(height).fill().map(() => Array(width).fill(1));
+            const walls = [];
+            
+            // 从中心开始
+            const startX = 1, startY = 1;
+            maze[startY][startX] = 0;
+            
+            // 添加起始点的墙壁
+            addWalls(startX, startY, walls, maze, width, height);
+            
+            let steps = 0;
+            const totalSteps = walls.length;
+            
+            while (walls.length > 0) {
+                const randomIndex = Math.floor(Math.random() * walls.length);
+                const [x, y, px, py] = walls[randomIndex];
+                walls.splice(randomIndex, 1);
+                
+                if (maze[y][x] === 1) {
+                    maze[y][x] = 0;
+                    maze[py][px] = 0;
+                    addWalls(x, y, walls, maze, width, height);
+                }
+                
+                steps++;
+                if (steps % 5 === 0) {
+                    updateProgress(Math.min((steps / totalSteps) * 100, 95));
+                    await new Promise(resolve => setTimeout(resolve, 1));
+                }
+            }
+            
+            return maze;
+        }
+
+        // 添加墙壁到列表
+        function addWalls(x, y, walls, maze, width, height) {
+            const directions = [[0, 2], [2, 0], [0, -2], [-2, 0]];
+            
+            for (const [dx, dy] of directions) {
+                const newX = x + dx;
+                const newY = y + dy;
+                const wallX = x + dx/2;
+                const wallY = y + dy/2;
+                
+                if (newX > 0 && newX < width - 1 && newY > 0 && newY < height - 1 && maze[newY][newX] === 1) {
+                    walls.push([newX, newY, wallX, wallY]);
+                }
+            }
+        }
+
+        // Kruskal算法生成迷宫
+        async function generateMazeKruskal(width, height) {
+            const maze = Array(height).fill().map(() => Array(width).fill(1));
+            const sets = new Map();
+            const edges = [];
+            
+            // 初始化单元格和边
+            let setId = 0;
+            for (let y = 1; y < height; y += 2) {
+                for (let x = 1; x < width; x += 2) {
+                    maze[y][x] = 0;
+                    sets.set(`${x},${y}`, setId++);
+                    
+                    // 添加边
+                    if (x < width - 2) edges.push([x, y, x + 2, y]);
+                    if (y < height - 2) edges.push([x, y, x, y + 2]);
+                }
+            }
+            
+            // 随机打乱边
+            for (let i = edges.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [edges[i], edges[j]] = [edges[j], edges[i]];
+            }
+            
+            let steps = 0;
+            const totalSteps = edges.length;
+            
+            for (const [x1, y1, x2, y2] of edges) {
+                const set1 = sets.get(`${x1},${y1}`);
+                const set2 = sets.get(`${x2},${y2}`);
+                
+                if (set1 !== set2) {
+                    // 合并集合
+                    for (const [key, value] of sets) {
+                        if (value === set2) {
+                            sets.set(key, set1);
+                        }
+                    }
+                    
+                    // 移除墙壁
+                    maze[Math.floor((y1 + y2) / 2)][Math.floor((x1 + x2) / 2)] = 0;
+                }
+                
+                steps++;
+                if (steps % 10 === 0) {
+                    updateProgress(Math.min((steps / totalSteps) * 100, 95));
+                    await new Promise(resolve => setTimeout(resolve, 1));
+                }
+            }
+            
+            return maze;
+        }
+
+        // 递归分割算法生成迷宫
+        async function generateMazeRecursive(width, height) {
+            const maze = Array(height).fill().map(() => Array(width).fill(0));
+            
+            // 创建边界墙
+            for (let x = 0; x < width; x++) {
+                maze[0][x] = 1;
+                maze[height - 1][x] = 1;
+            }
+            for (let y = 0; y < height; y++) {
+                maze[y][0] = 1;
+                maze[y][width - 1] = 1;
+            }
+            
+            await recursiveDivision(maze, 1, 1, width - 2, height - 2);
+            return maze;
+        }
+
+        // 递归分割辅助函数
+        async function recursiveDivision(maze, x, y, width, height) {
+            if (width < 2 || height < 2) return;
+            
+            const horizontal = width < height ? true : (height < width ? false : Math.random() < 0.5);
+            
+            if (horizontal) {
+                const wallY = y + Math.floor(Math.random() * Math.floor(height / 2)) * 2;
+                const gapX = x + Math.floor(Math.random() * Math.ceil(width / 2)) * 2;
+                
+                for (let i = x; i < x + width; i++) {
+                    if (i !== gapX) maze[wallY][i] = 1;
+                }
+                
+                await recursiveDivision(maze, x, y, width, wallY - y);
+                await recursiveDivision(maze, x, wallY + 1, width, y + height - wallY - 1);
+            } else {
+                const wallX = x + Math.floor(Math.random() * Math.floor(width / 2)) * 2;
+                const gapY = y + Math.floor(Math.random() * Math.ceil(height / 2)) * 2;
+                
+                for (let i = y; i < y + height; i++) {
+                    if (i !== gapY) maze[i][wallX] = 1;
+                }
+                
+                await recursiveDivision(maze, x, y, wallX - x, height);
+                await recursiveDivision(maze, wallX + 1, y, x + width - wallX - 1, height);
+            }
+            
+            await new Promise(resolve => setTimeout(resolve, 1));
+        }
+
+        // 绘制迷宫
+        function drawMaze() {
+            if (!maze) return;
+            
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            const height = maze.length;
+            const width = maze[0].length;
+            
+            for (let y = 0; y < height; y++) {
+                for (let x = 0; x < width; x++) {
+                    if (maze[y][x] === 1) {
+                        ctx.fillStyle = '#2c3e50';
+                    } else {
+                        ctx.fillStyle = 'white';
+                    }
+                    
+                    ctx.fillRect(x * cellSize, y * cellSize, cellSize, cellSize);
+                }
+            }
+            
+            // 绘制起点和终点
+            drawStartEnd();
+            
+            // 绘制解答路径
+            if (solution) {
+                drawSolution();
+            }
+        }
+
+        // 绘制起点和终点
+        function drawStartEnd() {
+            if (!maze) return;
+            
+            const height = maze.length;
+            const width = maze[0].length;
+            
+            // 起点 (左上角第一个通道)
+            ctx.fillStyle = '#27ae60';
+            ctx.fillRect(cellSize, cellSize, cellSize, cellSize);
+            
+            // 终点 (右下角最后一个通道)
+            ctx.fillStyle = '#e74c3c';
+            ctx.fillRect((width - 2) * cellSize, (height - 2) * cellSize, cellSize, cellSize);
+        }
+
+        // 解答迷宫
+        async function solveMaze() {
+            if (!maze) return;
+            
+            showProgress('求解迷宫中...', 0);
+            
+            const startTime = performance.now();
+            solution = findPath(maze, 1, 1, maze[0].length - 2, maze.length - 2);
+            const endTime = performance.now();
+            
+            if (solution) {
+                document.getElementById('solutionSteps').textContent = solution.length;
+                drawMaze();
+                document.getElementById('clearBtn').style.display = 'inline-block';
+            } else {
+                alert('无法找到解答路径！');
+            }
+            
+            hideProgress();
+        }
+
+        // 使用A*算法寻找路径
+        function findPath(maze, startX, startY, endX, endY) {
+            const height = maze.length;
+            const width = maze[0].length;
+            
+            const openSet = [{x: startX, y: startY, g: 0, h: 0, f: 0, parent: null}];
+            const closedSet = new Set();
+            const directions = [[0, 1], [1, 0], [0, -1], [-1, 0]];
+            
+            while (openSet.length > 0) {
+                // 找到f值最小的节点
+                let current = openSet[0];
+                let currentIndex = 0;
+                
+                for (let i = 1; i < openSet.length; i++) {
+                    if (openSet[i].f < current.f) {
+                        current = openSet[i];
+                        currentIndex = i;
+                    }
+                }
+                
+                openSet.splice(currentIndex, 1);
+                closedSet.add(`${current.x},${current.y}`);
+                
+                // 检查是否到达终点
+                if (current.x === endX && current.y === endY) {
+                    const path = [];
+                    let node = current;
+                    while (node) {
+                        path.unshift({x: node.x, y: node.y});
+                        node = node.parent;
+                    }
+                    return path;
+                }
+                
+                // 检查相邻节点
+                for (const [dx, dy] of directions) {
+                    const newX = current.x + dx;
+                    const newY = current.y + dy;
+                    
+                    if (newX < 0 || newX >= width || newY < 0 || newY >= height ||
+                        maze[newY][newX] === 1 || closedSet.has(`${newX},${newY}`)) {
+                        continue;
+                    }
+                    
+                    const g = current.g + 1;
+                    const h = Math.abs(newX - endX) + Math.abs(newY - endY);
+                    const f = g + h;
+                    
+                    // 检查是否已在开放集中
+                    const existingIndex = openSet.findIndex(node => node.x === newX && node.y === newY);
+                    
+                    if (existingIndex === -1) {
+                        openSet.push({x: newX, y: newY, g, h, f, parent: current});
+                    } else if (g < openSet[existingIndex].g) {
+                        openSet[existingIndex] = {x: newX, y: newY, g, h, f, parent: current};
+                    }
+                }
+            }
+            
+            return null; // 没有找到路径
+        }
+
+        // 绘制解答路径
+        function drawSolution() {
+            if (!solution) return;
+            
+            ctx.fillStyle = '#f39c12';
+            for (const point of solution) {
+                ctx.fillRect(point.x * cellSize, point.y * cellSize, cellSize, cellSize);
+            }
+            
+            // 重新绘制起点和终点
+            drawStartEnd();
+        }
+
+        // 清除解答路径
+        function clearSolution() {
+            solution = null;
+            drawMaze();
+            document.getElementById('clearBtn').style.display = 'none';
+            document.getElementById('solutionSteps').textContent = '-';
+        }
+
+        // 计算通道数量
+        function countPaths() {
+            if (!maze) return 0;
+            
+            let count = 0;
+            for (let y = 0; y < maze.length; y++) {
+                for (let x = 0; x < maze[0].length; x++) {
+                    if (maze[y][x] === 0) count++;
+                }
+            }
+            return count;
+        }
+
+        // 显示进度
+        function showProgress(text, progress) {
+            document.getElementById('progressBar').style.display = 'block';
+            document.getElementById('progressText').textContent = text;
+            updateProgress(progress);
+        }
+
+        // 更新进度
+        function updateProgress(progress) {
+            document.getElementById('progressFill').style.width = progress + '%';
+        }
+
+        // 隐藏进度
+        function hideProgress() {
+            document.getElementById('progressBar').style.display = 'none';
+            document.getElementById('progressText').textContent = '';
+        }
+
+        // 下载迷宫图片
+        function downloadMaze() {
+            if (!maze) {
+                alert('请先生成迷宫');
+                return;
+            }
+            
+            const link = document.createElement('a');
+            link.download = `maze_${maze[0].length}x${maze.length}_${new Date().getTime()}.png`;
+            link.href = canvas.toDataURL();
+            link.click();
+        }
+
+        // 初始化应用
+        window.addEventListener('load', init);
+    
+                return input;
+            }
+
+            displayResult(result) {
+                document.getElementById('resultContent').textContent = result;
+            }
+
+            clear() {
+                document.getElementById('input').value = '';
+                document.getElementById('resultContent').textContent = '处理结果将在这里显示...';
+            }
+
+            copyResult() {
+                const result = document.getElementById('resultContent').textContent;
+                if (result && result !== '处理结果将在这里显示...') {
+                    ToolUtils.copyToClipboard(result);
+                } else {
+                    ToolUtils.showToast('没有可复制的内容', 'warning');
+                }
+            }
+        }
+
+        // 初始化应用
+        document.addEventListener('DOMContentLoaded', () => {
+            new ToolApp();
+        });
+    </script>
+</body>
+</html>

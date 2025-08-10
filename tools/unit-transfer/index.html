@@ -1,0 +1,470 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>单位转换器 - AI工具集</title>
+    <meta name="description" content="单位转换器">
+    
+    <!-- 样式文件 -->
+    <link rel="stylesheet" href="../../shared/css/common.css">
+    
+    <!-- 工具特定样式 -->
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            background-color: #f0f2f5;
+            color: var(--text-primary);
+            display: flex;
+            flex-direction: column; /* 调整为纵向排列以容纳脚注 */
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            padding: var(--spacing-lg);
+        }
+
+        .container {
+            width: 100%;
+            max-width: 600px;
+            background-color: var(--bg-card);
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+
+        h1 {
+            text-align: center;
+            color: #1a73e8;
+            margin-bottom: 30px;
+        }
+
+        .converter-section {
+            margin-bottom: 30px;
+        }
+        
+        .converter-section:last-child {
+            margin-bottom: 10px;
+        }
+
+        h2 {
+            border-bottom: 2px solid #1a73e8;
+            padding-bottom: 10px;
+            margin-bottom: 20px;
+            color: #3c4043;
+            font-size: 1.5em;
+        }
+
+        .converter {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 15px;
+        }
+
+        .input-group,
+        .output-group {
+            display: flex;
+            flex-direction: column;
+            flex: 2;
+            gap: 8px; /* 增加控件内部上下间距 */
+        }
+
+        .input-group label {
+            margin-bottom: 5px;
+            color: #5f6368;
+            font-size: 0.9em;
+        }
+
+        .input-group input,
+        .input-group select,
+        .output-group select {
+            padding: 12px;
+            font-size: 1em;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            transition: border-color 0.2s, box-shadow 0.2s;
+            box-sizing: border-box; /* 统一盒模型 */
+            height: 50px; /* 统一高度 */
+        }
+
+        .input-group input:focus,
+        .input-group select:focus,
+        .output-group select:focus {
+            outline: none;
+            border-color: #1a73e8;
+            box-shadow: 0 0 0 2px rgba(26, 115, 232, 0.2);
+        }
+
+        .result {
+            font-size: 1.2em;
+            font-weight: bold;
+            color: #1a73e8;
+            background-color: #e8f0fe;
+            border-radius: 8px;
+            text-align: center;
+            box-sizing: border-box; /* 统一盒模型 */
+            height: 50px; /* 统一高度 */
+            border: 1px solid transparent; /* 匹配边框宽度以对齐 */
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 12px;
+        }
+        
+        .swap-btn {
+            background: none;
+            border: 1px solid #ccc;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            font-size: 1.5em;
+            cursor: pointer;
+            color: #1a73e8;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            transition: background-color 0.2s, transform 0.2s;
+            flex-shrink: 0; /* 防止按钮被压缩 */
+        }
+        
+        .swap-btn:hover {
+            background-color: #f0f2f5;
+            transform: rotate(180deg);
+        }
+
+        .swap-btn:focus {
+            outline: none;
+            box-shadow: 0 0 0 2px rgba(26, 115, 232, 0.2);
+        }
+        
+        .output-group {
+            /* 此规则已合并到 .input-group, .output-group 中 */
+        }
+
+        .footer {
+            text-align: center;
+            padding-top: 20px;
+            color: #888;
+            font-size: 0.9em;
+        }
+
+        @media (max-width: 600px) {
+            .converter {
+                flex-direction: column;
+                align-items: stretch;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="tool-container">
+        <!-- 工具头部 -->
+        <header class="tool-header">
+            <div class="tool-header-content">
+                <a href="../../index.html" class="back-btn">
+                    <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                        <path d="M10 4l-4 4 4 4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                    返回工具集
+                </a>
+                
+                <div class="tool-title">
+                    <h1>单位转换器</h1>
+                    <p class="tool-subtitle">单位转换器</p>
+                </div>
+                
+                <button class="theme-toggle" id="themeToggle" aria-label="切换主题">
+                    <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                        <circle cx="10" cy="10" r="4" stroke="currentColor" stroke-width="2"/>
+                        <path d="M10 2v2M10 16v2M18 10h-2M4 10H2M15.66 4.34l-1.41 1.41M5.75 14.25l-1.41 1.41M15.66 15.66l-1.41-1.41M5.75 5.75L4.34 4.34" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                    </svg>
+                </button>
+            </div>
+        </header>
+
+        <!-- 工具主内容 -->
+        <main class="tool-main">
+            <div class="tool-card">
+                <div class="tool-section">
+                    <h2>
+                        <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                            <rect x="3" y="3" width="14" height="14" rx="2" stroke="currentColor" stroke-width="2"/>
+                        </svg>
+                        工具功能
+                    </h2>
+                    
+                    
+            <div class="tool-card">
+                <div class="tool-section">
+                    <h2>
+                        <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                            <rect x="3" y="3" width="14" height="14" rx="2" stroke="currentColor" stroke-width="2"/>
+                        </svg>
+                        单位转换器
+                    </h2>
+                    <div class="container">
+    <h1>单位转换器</h1>
+
+    <!-- 长度转换 -->
+    <div class="converter-section">
+        <h2>长度 (Length)</h2>
+        <div class="converter" id="length-converter">
+            <div class="input-group">
+                <input type="number" value="1" id="length-input" oninput="convert('length')">
+                <select id="length-from" onchange="convert('length')">
+                    <option value="meter">米 (m)</option>
+                    <option value="kilometer">公里 (km)</option>
+                    <option value="centimeter">厘米 (cm)</option>
+                    <option value="millimeter">毫米 (mm)</option>
+                    <option value="mile">英里 (mile)</option>
+                    <option value="yard">码 (yd)</option>
+                    <option value="foot">英尺 (ft)</option>
+                    <option value="inch">英寸 (in)</option>
+                </select>
+            </div>
+            <button class="swap-btn" onclick="swapUnits('length')" title="对调单位">⇄</button>
+            <div class="output-group">
+                 <div class="result" id="length-result"></div>
+                 <select id="length-to" onchange="convert('length')">
+                    <option value="meter">米 (m)</option>
+                    <option value="kilometer" selected>公里 (km)</option>
+                    <option value="centimeter">厘米 (cm)</option>
+                    <option value="millimeter">毫米 (mm)</option>
+                    <option value="mile">英里 (mile)</option>
+                    <option value="yard">码 (yd)</option>
+                    <option value="foot">英尺 (ft)</option>
+                    <option value="inch">英寸 (in)</option>
+                </select>
+            </div>
+        </div>
+    </div>
+
+    <!-- 重量转换 -->
+    <div class="converter-section">
+        <h2>重量 (Weight)</h2>
+        <div class="converter" id="weight-converter">
+            <div class="input-group">
+                <input type="number" value="1" id="weight-input" oninput="convert('weight')">
+                <select id="weight-from" onchange="convert('weight')">
+                    <option value="gram">克 (g)</option>
+                    <option value="kilogram">千克 (kg)</option>
+                    <option value="tonne">吨 (t)</option>
+                    <option value="milligram">毫克 (mg)</option>
+                    <option value="pound">磅 (lb)</option>
+                    <option value="ounce">盎司 (oz)</option>
+                </select>
+            </div>
+            <button class="swap-btn" onclick="swapUnits('weight')" title="对调单位">⇄</button>
+            <div class="output-group">
+                <div class="result" id="weight-result"></div>
+                 <select id="weight-to" onchange="convert('weight')">
+                    <option value="gram">克 (g)</option>
+                    <option value="kilogram" selected>千克 (kg)</option>
+                    <option value="tonne">吨 (t)</option>
+                    <option value="milligram">毫克 (mg)</option>
+                    <option value="pound">磅 (lb)</option>
+                    <option value="ounce">盎司 (oz)</option>
+                </select>
+            </div>
+        </div>
+    </div>
+
+    <!-- 体积转换 -->
+    <div class="converter-section">
+        <h2>体积 (Volume)</h2>
+        <div class="converter" id="volume-converter">
+            <div class="input-group">
+                <input type="number" value="1" id="volume-input" oninput="convert('volume')">
+                <select id="volume-from" onchange="convert('volume')">
+                    <option value="liter">升 (L)</option>
+                    <option value="milliliter">毫升 (mL)</option>
+                    <option value="cubic-meter">立方米 (m³)</option>
+                    <option value="gallon-us">加仑(美) (gal)</option>
+                    <option value="pint-us">品脱(美) (pt)</option>
+                </select>
+            </div>
+            <button class="swap-btn" onclick="swapUnits('volume')" title="对调单位">⇄</button>
+            <div class="output-group">
+                <div class="result" id="volume-result"></div>
+                <select id="volume-to" onchange="convert('volume')">
+                    <option value="liter">升 (L)</option>
+                    <option value="milliliter" selected>毫升 (mL)</option>
+                    <option value="cubic-meter">立方米 (m³)</option>
+                    <option value="gallon-us">加仑(美) (gal)</option>
+                    <option value="pint-us">品脱(美) (pt)</option>
+                </select>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<div class="footer">
+    <p>© 小苏趣研AI 单位转换器 | 所有计算均在本地完成，安全可靠</p>
+</div>
+
+
+                </div>
+            </div>
+                    <!-- 结果显示区域 -->
+                    <div class="result-display" id="result">
+                        <pre id="resultContent">处理结果将在这里显示...</pre>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <!-- 工具页脚 -->
+        <footer class="tool-footer">
+            <p>由 <a href="../../index.html">AI工具集</a> 提供 | 原创工具</p>
+        </footer>
+    </div>
+
+    <!-- JavaScript -->
+    <script src="../../shared/js/utils.js"></script>
+    <script>
+        // 工具特定的JavaScript代码
+        class ToolApp {
+            constructor() {
+                this.init();
+            }
+
+            init() {
+                this.setupEventListeners();
+            }
+
+            setupEventListeners() {
+                document.getElementById('processBtn').addEventListener('click', () => this.process());
+                document.getElementById('clearBtn').addEventListener('click', () => this.clear());
+                document.getElementById('copyBtn').addEventListener('click', () => this.copyResult());
+                
+                // 实时处理（可选）
+                document.getElementById('input').addEventListener('input', 
+                    ToolUtils.debounce(() => this.process(), 300)
+                );
+            }
+
+            process() {
+                const input = document.getElementById('input').value;
+                const result = this.processInput(input);
+                this.displayResult(result);
+            }
+
+            processInput(input) {
+                
+    const factors = {
+        length: {
+            meter: 1,
+            kilometer: 1000,
+            centimeter: 0.01,
+            millimeter: 0.001,
+            mile: 1609.34,
+            yard: 0.9144,
+            foot: 0.3048,
+            inch: 0.0254
+        },
+        weight: {
+            gram: 1,
+            kilogram: 1000,
+            tonne: 1000000,
+            milligram: 0.001,
+            pound: 453.592,
+            ounce: 28.3495
+        },
+        volume: {
+            liter: 1,
+            milliliter: 0.001,
+            'cubic-meter': 1000,
+            'gallon-us': 3.78541,
+            'pint-us': 0.473176
+        }
+    };
+
+    function swapUnits(type) {
+        const fromEl = document.getElementById(`${type}-from`);
+        const toEl = document.getElementById(`${type}-to`);
+        const inputEl = document.getElementById(`${type}-input`);
+        const resultEl = document.getElementById(`${type}-result`);
+
+        // 交换单位
+        const tempUnit = fromEl.value;
+        fromEl.value = toEl.value;
+        toEl.value = tempUnit;
+
+        // 将之前的结果作为新的输入值
+        const resultValue = resultEl.textContent;
+        if (resultValue && !isNaN(parseFloat(resultValue))) {
+             inputEl.value = resultValue;
+        }
+
+        // 重新计算
+        convert(type);
+    }
+
+    function convert(type) {
+        const inputEl = document.getElementById(`${type}-input`);
+        const fromEl = document.getElementById(`${type}-from`);
+        const toEl = document.getElementById(`${type}-to`);
+        const resultEl = document.getElementById(`${type}-result`);
+
+        const inputValue = parseFloat(inputEl.value);
+        if (isNaN(inputValue)) {
+            resultEl.textContent = '';
+            return;
+        }
+
+        const fromUnit = fromEl.value;
+        const toUnit = toEl.value;
+
+        const fromFactor = factors[type][fromUnit];
+        const toFactor = factors[type][toUnit];
+
+        // 先转换为基础单位(米/克/升)，再转换到目标单位
+        const result = inputValue * fromFactor / toFactor;
+        
+        // 格式化输出，最多保留6位小数，并移除末尾多余的0
+        resultEl.textContent = parseFloat(result.toFixed(6));
+    }
+
+    // 页面加载后执行一次，以显示初始值
+    window.onload = function() {
+        convert('length');
+        convert('weight');
+        convert('volume');
+        
+        // 修复部分浏览器下 "to" 下拉框默认值问题
+        document.getElementById('length-to').value = 'kilometer';
+        document.getElementById('weight-to').value = 'kilogram';
+        document.getElementById('volume-to').value = 'milliliter';
+    };
+
+                return input;
+            }
+
+            displayResult(result) {
+                document.getElementById('resultContent').textContent = result;
+            }
+
+            clear() {
+                document.getElementById('input').value = '';
+                document.getElementById('resultContent').textContent = '处理结果将在这里显示...';
+            }
+
+            copyResult() {
+                const result = document.getElementById('resultContent').textContent;
+                if (result && result !== '处理结果将在这里显示...') {
+                    ToolUtils.copyToClipboard(result);
+                } else {
+                    ToolUtils.showToast('没有可复制的内容', 'warning');
+                }
+            }
+        }
+
+        // 初始化应用
+        document.addEventListener('DOMContentLoaded', () => {
+            new ToolApp();
+        });
+    </script>
+</body>
+</html>

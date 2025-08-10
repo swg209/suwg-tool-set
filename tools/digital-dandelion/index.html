@@ -1,0 +1,807 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>数字蒲公英 - Digital Dandelion - AI工具集</title>
+    <meta name="description" content="数字蒲公英 - Digital Dandelion">
+    
+    <!-- 样式文件 -->
+    <link rel="stylesheet" href="../../shared/css/common.css">
+    
+    <!-- 工具特定样式 -->
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: var(--spacing-lg);
+            color: var(--text-primary);
+            overflow-x: hidden;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+            position: relative;
+        }
+
+        .header {
+            background: linear-gradient(45deg, #ff6b6b, #4ecdc4);
+            color: white;
+            text-align: center;
+            padding: 40px 20px;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .header p {
+            font-size: 1.1em;
+            opacity: 0.9;
+        }
+
+        .content {
+            padding: 60px 40px;
+            text-align: center;
+            position: relative;
+            min-height: 600px;
+        }
+
+        .dandelion-container {
+            position: relative;
+            width: 200px;
+            height: 300px;
+            margin: 0 auto 40px;
+        }
+
+        .dandelion-stem {
+            position: absolute;
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 4px;
+            height: 150px;
+            background: linear-gradient(to top, #4caf50, #81c784);
+            border-radius: 2px;
+        }
+
+        .dandelion-head {
+            position: absolute;
+            top: 50px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            background: radial-gradient(circle, var(--bg-card)9c4 0%, #ffeb3b 50%, #ffc107 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 5px 20px rgba(255, 193, 7, 0.3);
+        }
+
+        .seed {
+            position: absolute;
+            width: 3px;
+            height: 15px;
+            background: linear-gradient(to top, #8bc34a, #c8e6c9);
+            border-radius: 50% 50% 50% 50% / 60% 60% 40% 40%;
+            transform-origin: bottom center;
+        }
+
+        .seed::before {
+            content: '';
+            position: absolute;
+            top: -8px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 12px;
+            height: 12px;
+            background: radial-gradient(circle, rgba(255,255,255,0.8) 0%, rgba(255,255,255,0.2) 70%, transparent 100%);
+            border-radius: 50%;
+            animation: float 3s ease-in-out infinite;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateX(-50%) translateY(0px); }
+            50% { transform: translateX(-50%) translateY(-3px); }
+        }
+
+        .input-section {
+            margin: 40px 0;
+            opacity: 1;
+            transition: opacity 0.5s ease;
+        }
+
+        .input-section.blown {
+            opacity: 0.3;
+        }
+
+        .worry-input {
+            width: 100%;
+            max-width: 500px;
+            padding: var(--spacing-lg);
+            border: 2px solid #e0e0e0;
+            border-radius: var(--radius-lg);
+            font-size: 16px;
+            line-height: 1.6;
+            resize: vertical;
+            min-height: 120px;
+            margin-bottom: 30px;
+            background: #fafafa;
+            transition: all 0.3s ease;
+        }
+
+        .worry-input:focus {
+            outline: none;
+            border-color: #4ecdc4;
+            background: white;
+            box-shadow: 0 5px 15px rgba(78, 205, 196, 0.2);
+        }
+
+        .worry-input::placeholder {
+            color: var(--text-muted);
+            font-style: italic;
+        }
+
+        .blow-button {
+            background: linear-gradient(45deg, #ff6b6b, #4ecdc4);
+            color: white;
+            border: none;
+            padding: var(--spacing-lg) 40px;
+            font-size: 18px;
+            font-weight: bold;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .blow-button:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 15px 35px rgba(0,0,0,0.2);
+        }
+
+        .blow-button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .blow-button::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 0;
+            height: 0;
+            background: rgba(255,255,255,0.2);
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+            transition: all 0.5s ease;
+        }
+
+        .blow-button:hover::before {
+            width: 300px;
+            height: 300px;
+        }
+
+        .flying-seed {
+            position: absolute;
+            width: 4px;
+            height: 20px;
+            background: linear-gradient(to top, #8bc34a, #c8e6c9);
+            border-radius: 50% 50% 50% 50% / 60% 60% 40% 40%;
+            pointer-events: none;
+            z-index: 100;
+        }
+
+        .flying-seed::before {
+            content: '';
+            position: absolute;
+            top: -10px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 15px;
+            height: 15px;
+            background: radial-gradient(circle, rgba(255,255,255,0.9) 0%, rgba(255,255,255,0.3) 70%, transparent 100%);
+            border-radius: 50%;
+        }
+
+        .message-area {
+            margin-top: 40px;
+            padding: 30px;
+            background: linear-gradient(135deg, #e8f5e8, #f1f8e9);
+            border-radius: var(--radius-lg);
+            border-left: 5px solid #4caf50;
+            opacity: 0;
+            transform: translateY(20px);
+            transition: all 0.5s ease;
+        }
+
+        .message-area.show {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .message-title {
+            font-size: 1.4em;
+            font-weight: bold;
+            color: #2e7d32;
+            margin-bottom: 15px;
+        }
+
+        .message-text {
+            color: #388e3c;
+            line-height: 1.6;
+            font-size: 1.1em;
+        }
+
+        .inspirational-quotes {
+            margin-top: 30px;
+            padding: 25px;
+            background: #f8f9fa;
+            border-radius: var(--radius-lg);
+        }
+
+        .quote {
+            font-style: italic;
+            color: var(--text-secondary);
+            font-size: 1.1em;
+            line-height: 1.6;
+            margin-bottom: 10px;
+        }
+
+        .quote-author {
+            color: var(--text-muted);
+            font-size: 0.9em;
+            text-align: right;
+        }
+
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 20px;
+            margin: 40px 0;
+        }
+
+        .stat-item {
+            background: white;
+            padding: 25px;
+            border-radius: var(--radius-lg);
+            text-align: center;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            border-top: 4px solid #4ecdc4;
+        }
+
+        .stat-value {
+            font-size: 2.5em;
+            font-weight: bold;
+            color: #4ecdc4;
+            display: block;
+        }
+
+        .stat-label {
+            color: var(--text-secondary);
+            margin-top: 8px;
+            font-size: 0.9em;
+        }
+
+        .footer {
+            text-align: center;
+            padding: var(--spacing-lg);
+            color: var(--text-secondary);
+            font-size: 0.9em;
+            border-top: 1px solid #eee;
+        }
+
+        .wind-effect {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            top: 0;
+            left: 0;
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .wind-effect.active {
+            opacity: 1;
+        }
+
+        .wind-particle {
+            position: absolute;
+            width: 2px;
+            height: 10px;
+            background: rgba(255,255,255,0.6);
+            border-radius: 50%;
+            animation: windBlow 2s ease-out forwards;
+        }
+
+        @keyframes windBlow {
+            0% {
+                transform: translateX(0) translateY(0) scale(1);
+                opacity: 1;
+            }
+            100% {
+                transform: translateX(200px) translateY(-100px) scale(0);
+                opacity: 0;
+            }
+        }
+
+        @keyframes seedFly {
+            0% {
+                transform: translateX(0) translateY(0) rotate(0deg);
+                opacity: 1;
+            }
+            100% {
+                transform: translateX(var(--end-x, 300px)) translateY(var(--end-y, -200px)) rotate(var(--rotation, 360deg));
+                opacity: 0;
+            }
+        }
+
+        .reset-button {
+            background: #ddd;
+            color: var(--text-secondary);
+            border: none;
+            padding: 12px 25px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 14px;
+            margin-left: 15px;
+            transition: all 0.3s ease;
+        }
+
+        .reset-button:hover {
+            background: #ccc;
+            transform: translateY(-2px);
+        }
+
+        @media (max-width: 768px) {
+            .content {
+                padding: 40px 20px;
+            }
+            
+            .dandelion-container {
+                width: 150px;
+                height: 250px;
+            }
+            
+            .dandelion-head {
+                width: 90px;
+                height: 90px;
+            }
+            
+            .worry-input {
+                padding: 15px;
+                font-size: 14px;
+            }
+            
+            .blow-button {
+                padding: 15px 30px;
+                font-size: 16px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="tool-container">
+        <!-- 工具头部 -->
+        <header class="tool-header">
+            <div class="tool-header-content">
+                <a href="../../index.html" class="back-btn">
+                    <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                        <path d="M10 4l-4 4 4 4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                    返回工具集
+                </a>
+                
+                <div class="tool-title">
+                    <h1>数字蒲公英 - Digital Dandelion</h1>
+                    <p class="tool-subtitle">数字蒲公英 - Digital Dandelion</p>
+                </div>
+                
+                <button class="theme-toggle" id="themeToggle" aria-label="切换主题">
+                    <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                        <circle cx="10" cy="10" r="4" stroke="currentColor" stroke-width="2"/>
+                        <path d="M10 2v2M10 16v2M18 10h-2M4 10H2M15.66 4.34l-1.41 1.41M5.75 14.25l-1.41 1.41M15.66 15.66l-1.41-1.41M5.75 5.75L4.34 4.34" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                    </svg>
+                </button>
+            </div>
+        </header>
+
+        <!-- 工具主内容 -->
+        <main class="tool-main">
+            <div class="tool-card">
+                <div class="tool-section">
+                    <h2>
+                        <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                            <rect x="3" y="3" width="14" height="14" rx="2" stroke="currentColor" stroke-width="2"/>
+                        </svg>
+                        工具功能
+                    </h2>
+                    
+                    
+            <div class="tool-card">
+                <div class="tool-section">
+                    <h2>
+                        <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                            <rect x="3" y="3" width="14" height="14" rx="2" stroke="currentColor" stroke-width="2"/>
+                        </svg>
+                        数字蒲公英 - Digital Dandelion
+                    </h2>
+                    <div class="container">
+        <div class="header">
+            <h1>🌼 数字蒲公英</h1>
+            <p>写下你的烦恼，让它们随风而逝，释怀就在一瞬间</p>
+        </div>
+
+        <div class="content">
+            <div class="wind-effect" id="windEffect"></div>
+            
+            <div class="dandelion-container" id="dandelionContainer">
+                <div class="dandelion-stem"></div>
+                <div class="dandelion-head" id="dandelionHead">
+                    <!-- 种子会动态生成 -->
+                </div>
+            </div>
+
+            <div class="input-section" id="inputSection">
+                <textarea 
+                    class="worry-input" 
+                    id="worryInput" 
+                    placeholder="在这里写下你的烦恼、秘密，或者任何想要放下的东西...
+
+也许是工作上的压力，感情上的困扰，或者对未来的焦虑。
+
+把它们都写出来吧，然后让蒲公英带走它们。"
+                ></textarea>
+                
+                <div>
+                    <button class="blow-button" id="blowButton" onclick="blowDandelion()">
+                        🌬️ 吹走烦恼
+                    </button>
+                    <button class="reset-button" onclick="resetDandelion()">
+                        🔄 重新开始
+                    </button>
+                </div>
+            </div>
+
+            <div class="message-area" id="messageArea">
+                <div class="message-title">✨ 烦恼已随风而逝</div>
+                <div class="message-text" id="messageText">
+                    就像蒲公英的种子一样，你的烦恼也已经被风带走了。每一次的放下都是一次成长，每一次的释怀都让你变得更加轻盈。相信自己，明天会更好。
+                </div>
+            </div>
+
+            <div class="stats">
+                <div class="stat-item">
+                    <span class="stat-value" id="totalBlows">0</span>
+                    <div class="stat-label">总释怀次数</div>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-value" id="todayBlows">0</span>
+                    <div class="stat-label">今日释怀</div>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-value" id="wordsReleased">0</span>
+                    <div class="stat-label">释放字数</div>
+                </div>
+            </div>
+
+            <div class="inspirational-quotes">
+                <div class="quote" id="inspirationalQuote">
+                    "有时候，放手比紧握更需要勇气。"
+                </div>
+                <div class="quote-author">— 生活的智慧</div>
+            </div>
+        </div>
+
+        <div class="footer">
+            由 <strong>小苏趣研AI</strong> 制作 | 释怀过去，拥抱未来
+        </div>
+    </div>
+
+    
+                </div>
+            </div>
+                    <!-- 结果显示区域 -->
+                    <div class="result-display" id="result">
+                        <pre id="resultContent">处理结果将在这里显示...</pre>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <!-- 工具页脚 -->
+        <footer class="tool-footer">
+            <p>由 <a href="../../index.html">AI工具集</a> 提供 | 原创工具</p>
+        </footer>
+    </div>
+
+    <!-- JavaScript -->
+    <script src="../../shared/js/utils.js"></script>
+    <script>
+        // 工具特定的JavaScript代码
+        class ToolApp {
+            constructor() {
+                this.init();
+            }
+
+            init() {
+                this.setupEventListeners();
+            }
+
+            setupEventListeners() {
+                document.getElementById('processBtn').addEventListener('click', () => this.process());
+                document.getElementById('clearBtn').addEventListener('click', () => this.clear());
+                document.getElementById('copyBtn').addEventListener('click', () => this.copyResult());
+                
+                // 实时处理（可选）
+                document.getElementById('input').addEventListener('input', 
+                    ToolUtils.debounce(() => this.process(), 300)
+                );
+            }
+
+            process() {
+                const input = document.getElementById('input').value;
+                const result = this.processInput(input);
+                this.displayResult(result);
+            }
+
+            processInput(input) {
+                
+        let totalBlows = parseInt(localStorage.getItem('dandelionTotalBlows') || '0');
+        let todayBlows = parseInt(localStorage.getItem('dandelionTodayBlows') || '0');
+        let wordsReleased = parseInt(localStorage.getItem('dandelionWordsReleased') || '0');
+        let lastDate = localStorage.getItem('dandelionLastDate');
+        let isBlowing = false;
+
+        const inspirationalQuotes = [
+            "有时候，放手比紧握更需要勇气。",
+            "让过去的过去，让未来的到来。",
+            "每一次释怀，都是重新开始的机会。",
+            "风会记住一朵花的香，正如你会记住这份轻松。",
+            "烦恼如云，总有散去的时候。",
+            "放下不是放弃，而是为了更好地前行。",
+            "心若无尘，清风自来。",
+            "学会释怀，是给自己最好的礼物。",
+            "生活的美好，从放下开始。",
+            "愿你眼中总有光芒，心中总有远方。"
+        ];
+
+        // 检查是否是新的一天
+        const today = new Date().toDateString();
+        if (lastDate !== today) {
+            todayBlows = 0;
+            localStorage.setItem('dandelionLastDate', today);
+        }
+
+        function generateSeeds() {
+            const head = document.getElementById('dandelionHead');
+            head.innerHTML = ''; // 清空现有种子
+            
+            const seedCount = 20;
+            for (let i = 0; i < seedCount; i++) {
+                const seed = document.createElement('div');
+                seed.className = 'seed';
+                
+                const angle = (i / seedCount) * 360;
+                const radius = 40;
+                const x = Math.cos(angle * Math.PI / 180) * radius;
+                const y = Math.sin(angle * Math.PI / 180) * radius;
+                
+                seed.style.left = `calc(50% + ${x}px)`;
+                seed.style.top = `calc(50% + ${y}px)`;
+                seed.style.transform = `rotate(${angle}deg)`;
+                seed.style.transformOrigin = 'bottom center';
+                
+                head.appendChild(seed);
+            }
+        }
+
+        function blowDandelion() {
+            const worryText = document.getElementById('worryInput').value.trim();
+            
+            if (!worryText) {
+                alert('请先写下你的烦恼或想法哦 💭');
+                return;
+            }
+
+            if (isBlowing) return;
+            
+            isBlowing = true;
+            const button = document.getElementById('blowButton');
+            button.disabled = true;
+            button.textContent = '正在吹走...';
+
+            // 创建风效果
+            createWindEffect();
+
+            // 让种子飞走
+            const seeds = document.querySelectorAll('.seed');
+            seeds.forEach((seed, index) => {
+                setTimeout(() => {
+                    const flyingSeed = seed.cloneNode(true);
+                    flyingSeed.className = 'flying-seed';
+                    
+                    const rect = seed.getBoundingClientRect();
+                    const containerRect = document.querySelector('.content').getBoundingClientRect();
+                    
+                    flyingSeed.style.left = (rect.left - containerRect.left) + 'px';
+                    flyingSeed.style.top = (rect.top - containerRect.top) + 'px';
+                    
+                    const endX = (Math.random() - 0.5) * 800;
+                    const endY = -200 - Math.random() * 300;
+                    const rotation = Math.random() * 720 - 360;
+                    
+                    flyingSeed.style.setProperty('--end-x', endX + 'px');
+                    flyingSeed.style.setProperty('--end-y', endY + 'px');
+                    flyingSeed.style.setProperty('--rotation', rotation + 'deg');
+                    flyingSeed.style.animation = `seedFly ${2 + Math.random()}s ease-out forwards`;
+                    
+                    document.querySelector('.content').appendChild(flyingSeed);
+                    
+                    // 隐藏原种子
+                    seed.style.opacity = '0';
+                    seed.style.transform += ' scale(0)';
+                    
+                    // 移除飞行的种子
+                    setTimeout(() => {
+                        if (flyingSeed.parentNode) {
+                            flyingSeed.parentNode.removeChild(flyingSeed);
+                        }
+                    }, 3000);
+                }, index * 100);
+            });
+
+            // 更新统计
+            totalBlows++;
+            todayBlows++;
+            wordsReleased += worryText.length;
+            
+            localStorage.setItem('dandelionTotalBlows', totalBlows.toString());
+            localStorage.setItem('dandelionTodayBlows', todayBlows.toString());
+            localStorage.setItem('dandelionWordsReleased', wordsReleased.toString());
+            
+            updateStats();
+
+            // 显示释怀消息
+            setTimeout(() => {
+                document.getElementById('inputSection').classList.add('blown');
+                document.getElementById('messageArea').classList.add('show');
+                
+                // 随机显示励志语句
+                const randomQuote = inspirationalQuotes[Math.floor(Math.random() * inspirationalQuotes.length)];
+                document.getElementById('inspirationalQuote').textContent = randomQuote;
+                
+                // 个性化消息
+                const messageText = generatePersonalMessage(worryText.length);
+                document.getElementById('messageText').textContent = messageText;
+                
+                button.disabled = false;
+                button.textContent = '🌬️ 再次释怀';
+            }, 2000);
+
+            setTimeout(() => {
+                isBlowing = false;
+            }, 3000);
+        }
+
+        function createWindEffect() {
+            const windEffect = document.getElementById('windEffect');
+            windEffect.classList.add('active');
+            
+            for (let i = 0; i < 15; i++) {
+                setTimeout(() => {
+                    const particle = document.createElement('div');
+                    particle.className = 'wind-particle';
+                    particle.style.left = Math.random() * 100 + '%';
+                    particle.style.top = Math.random() * 100 + '%';
+                    windEffect.appendChild(particle);
+                    
+                    setTimeout(() => {
+                        if (particle.parentNode) {
+                            particle.parentNode.removeChild(particle);
+                        }
+                    }, 2000);
+                }, i * 100);
+            }
+            
+            setTimeout(() => {
+                windEffect.classList.remove('active');
+            }, 3000);
+        }
+
+        function generatePersonalMessage(textLength) {
+            const messages = [
+                `你刚刚释放了${textLength}个字的烦恼，感受到轻松了吗？记住这种感觉，它会提醒你放下的力量。`,
+                `${textLength}个字的重负已经随风而逝。每个字都承载着过去，现在它们自由了，你也自由了。`,
+                `谢谢你信任这朵数字蒲公英，让它带走了你${textLength}个字的困扰。愿你心中常有清风。`,
+                `${textLength}个字的故事结束了，新的篇章即将开始。相信自己，你比想象中更坚强。`,
+                `这${textLength}个字见证了你的勇敢。敢于面对烦恼，更敢于放下，这就是成长的意义。`
+            ];
+            
+            return messages[Math.floor(Math.random() * messages.length)];
+        }
+
+        function resetDandelion() {
+            document.getElementById('worryInput').value = '';
+            document.getElementById('inputSection').classList.remove('blown');
+            document.getElementById('messageArea').classList.remove('show');
+            document.getElementById('blowButton').textContent = '🌬️ 吹走烦恼';
+            document.getElementById('blowButton').disabled = false;
+            
+            // 重新生成种子
+            generateSeeds();
+        }
+
+        function updateStats() {
+            document.getElementById('totalBlows').textContent = totalBlows;
+            document.getElementById('todayBlows').textContent = todayBlows;
+            document.getElementById('wordsReleased').textContent = wordsReleased.toLocaleString();
+        }
+
+        // 键盘快捷键支持
+        document.addEventListener('keydown', function(e) {
+            if (e.ctrlKey && e.key === 'Enter') {
+                blowDandelion();
+            }
+        });
+
+        // 初始化
+        window.onload = function() {
+            generateSeeds();
+            updateStats();
+            
+            // 随机显示励志语句
+            const randomQuote = inspirationalQuotes[Math.floor(Math.random() * inspirationalQuotes.length)];
+            document.getElementById('inspirationalQuote').textContent = randomQuote;
+        };
+    
+                return input;
+            }
+
+            displayResult(result) {
+                document.getElementById('resultContent').textContent = result;
+            }
+
+            clear() {
+                document.getElementById('input').value = '';
+                document.getElementById('resultContent').textContent = '处理结果将在这里显示...';
+            }
+
+            copyResult() {
+                const result = document.getElementById('resultContent').textContent;
+                if (result && result !== '处理结果将在这里显示...') {
+                    ToolUtils.copyToClipboard(result);
+                } else {
+                    ToolUtils.showToast('没有可复制的内容', 'warning');
+                }
+            }
+        }
+
+        // 初始化应用
+        document.addEventListener('DOMContentLoaded', () => {
+            new ToolApp();
+        });
+    </script>
+</body>
+</html>

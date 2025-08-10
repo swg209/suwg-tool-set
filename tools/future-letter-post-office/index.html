@@ -1,0 +1,474 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>未来信件邮局 - Future Letter Post Office - AI工具集</title>
+    <meta name="description" content="未来信件邮局 - Future Letter Post Office">
+    
+    <!-- 样式文件 -->
+    <link rel="stylesheet" href="../../shared/css/common.css">
+    
+    <!-- 工具特定样式 -->
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: var(--spacing-lg);
+            color: var(--text-primary);
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(45deg, #ff6b6b, #4ecdc4);
+            color: white;
+            text-align: center;
+            padding: 40px 20px;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .header p {
+            font-size: 1.1em;
+            opacity: 0.9;
+        }
+
+        .content {
+            padding: 40px;
+        }
+
+        .form-group {
+            margin-bottom: 25px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: bold;
+            color: #555;
+        }
+
+        .form-group input,
+        .form-group textarea,
+        .form-group select {
+            width: 100%;
+            padding: 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: var(--radius-md);
+            font-size: 16px;
+            transition: all 0.3s ease;
+        }
+
+        .form-group input:focus,
+        .form-group textarea:focus,
+        .form-group select:focus {
+            outline: none;
+            border-color: #4ecdc4;
+            box-shadow: 0 5px 15px rgba(78, 205, 196, 0.2);
+        }
+
+        .form-group textarea {
+            min-height: 200px;
+            resize: vertical;
+            line-height: 1.6;
+        }
+
+        .send-button {
+            background: linear-gradient(45deg, #ff6b6b, #4ecdc4);
+            color: white;
+            border: none;
+            padding: var(--spacing-lg) 40px;
+            font-size: 18px;
+            font-weight: bold;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+            width: 100%;
+        }
+
+        .send-button:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 15px 35px rgba(0,0,0,0.2);
+        }
+
+        .send-button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .letters-list {
+            margin-top: 40px;
+            padding-top: 30px;
+            border-top: 2px solid #f0f0f0;
+        }
+
+        .letter-item {
+            background: #f8f9fa;
+            border-radius: var(--radius-lg);
+            padding: var(--spacing-lg);
+            margin-bottom: 15px;
+            border-left: 5px solid #4ecdc4;
+        }
+
+        .letter-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .letter-recipient {
+            font-weight: bold;
+            color: var(--text-primary);
+        }
+
+        .letter-date {
+            color: var(--text-secondary);
+            font-size: 14px;
+        }
+
+        .letter-preview {
+            color: #555;
+            font-style: italic;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .delete-btn {
+            background: #ff6b6b;
+            color: white;
+            border: none;
+            padding: 5px 10px;
+            border-radius: var(--radius-sm);
+            cursor: pointer;
+            font-size: 12px;
+        }
+
+        .success-message {
+            background: #d4edda;
+            color: #155724;
+            padding: 15px;
+            border-radius: var(--radius-md);
+            margin-bottom: 20px;
+            border: 1px solid #c3e6cb;
+            display: none;
+        }
+
+        .footer {
+            text-align: center;
+            padding: var(--spacing-lg);
+            color: var(--text-secondary);
+            font-size: 14px;
+            border-top: 1px solid #eee;
+        }
+        
+        @media (max-width: 768px) {
+            .container {
+                padding: var(--spacing-md);
+                margin: var(--spacing-sm);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="tool-container">
+        <!-- 工具头部 -->
+        <header class="tool-header">
+            <div class="tool-header-content">
+                <a href="../../index.html" class="back-btn">
+                    <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                        <path d="M10 4l-4 4 4 4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                    返回工具集
+                </a>
+                
+                <div class="tool-title">
+                    <h1>未来信件邮局 - Future Letter Post Office</h1>
+                    <p class="tool-subtitle">未来信件邮局 - Future Letter Post Office</p>
+                </div>
+                
+                <button class="theme-toggle" id="themeToggle" aria-label="切换主题">
+                    <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                        <circle cx="10" cy="10" r="4" stroke="currentColor" stroke-width="2"/>
+                        <path d="M10 2v2M10 16v2M18 10h-2M4 10H2M15.66 4.34l-1.41 1.41M5.75 14.25l-1.41 1.41M15.66 15.66l-1.41-1.41M5.75 5.75L4.34 4.34" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                    </svg>
+                </button>
+            </div>
+        </header>
+
+        <!-- 工具主内容 -->
+        <main class="tool-main">
+            <div class="tool-card">
+                <div class="tool-section">
+                    <h2>
+                        <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                            <rect x="3" y="3" width="14" height="14" rx="2" stroke="currentColor" stroke-width="2"/>
+                        </svg>
+                        工具功能
+                    </h2>
+                    
+                    
+            <div class="tool-card">
+                <div class="tool-section">
+                    <h2>
+                        <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                            <rect x="3" y="3" width="14" height="14" rx="2" stroke="currentColor" stroke-width="2"/>
+                        </svg>
+                        未来信件邮局 - Future Letter Post Office
+                    </h2>
+                    <div class="container">
+        <div class="header">
+            <h1>📮 未来信件邮局</h1>
+            <p>写给未来的自己或他人，在特定日期自动发送</p>
+        </div>
+
+        <div class="content">
+            <div class="success-message" id="successMessage">
+                信件已成功保存！将在指定日期提醒您发送。
+            </div>
+
+            <form id="letterForm">
+                <div class="form-group">
+                    <label for="recipient">收件人姓名</label>
+                    <input type="text" id="recipient" placeholder="例如：未来的我、我的孩子、我的朋友..." required>
+                </div>
+
+                <div class="form-group">
+                    <label for="email">收件人邮箱</label>
+                    <input type="email" id="email" placeholder="example@email.com" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="sendDate">发送日期</label>
+                    <input type="date" id="sendDate" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="subject">信件主题</label>
+                    <input type="text" id="subject" placeholder="例如：给18岁的你、生日快乐..." required>
+                </div>
+
+                <div class="form-group">
+                    <label for="content">信件内容</label>
+                    <textarea id="content" placeholder="亲爱的...
+
+在这里写下你想对未来说的话，分享你的心情、期望、祝福或者想要传达的任何信息..." required></textarea>
+                </div>
+
+                <button type="submit" class="send-button">📮 投递到未来邮局</button>
+            </form>
+
+            <div class="letters-list">
+                <h3>📬 已投递的信件</h3>
+                <div id="lettersList">
+                    <p style="text-align: center; color: #999; padding: 20px;">还没有投递任何信件</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="footer">
+            <p>© 小苏趣研AI | 未来信件邮局 - 将心意传递到未来的某个时刻</p>
+        </div>
+    </div>
+
+    
+                </div>
+            </div>
+                    <!-- 结果显示区域 -->
+                    <div class="result-display" id="result">
+                        <pre id="resultContent">处理结果将在这里显示...</pre>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <!-- 工具页脚 -->
+        <footer class="tool-footer">
+            <p>由 <a href="../../index.html">AI工具集</a> 提供 | 原创工具</p>
+        </footer>
+    </div>
+
+    <!-- JavaScript -->
+    <script src="../../shared/js/utils.js"></script>
+    <script>
+        // 工具特定的JavaScript代码
+        class ToolApp {
+            constructor() {
+                this.init();
+            }
+
+            init() {
+                this.setupEventListeners();
+            }
+
+            setupEventListeners() {
+                document.getElementById('processBtn').addEventListener('click', () => this.process());
+                document.getElementById('clearBtn').addEventListener('click', () => this.clear());
+                document.getElementById('copyBtn').addEventListener('click', () => this.copyResult());
+                
+                // 实时处理（可选）
+                document.getElementById('input').addEventListener('input', 
+                    ToolUtils.debounce(() => this.process(), 300)
+                );
+            }
+
+            process() {
+                const input = document.getElementById('input').value;
+                const result = this.processInput(input);
+                this.displayResult(result);
+            }
+
+            processInput(input) {
+                
+        let letters = JSON.parse(localStorage.getItem('futureLetters') || '[]');
+
+        // 设置最小日期为今天
+        document.getElementById('sendDate').min = new Date().toISOString().split('T')[0];
+
+        document.getElementById('letterForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const letter = {
+                id: Date.now(),
+                recipient: document.getElementById('recipient').value,
+                email: document.getElementById('email').value,
+                sendDate: document.getElementById('sendDate').value,
+                subject: document.getElementById('subject').value,
+                content: document.getElementById('content').value,
+                createdAt: new Date().toISOString()
+            };
+
+            letters.push(letter);
+            localStorage.setItem('futureLetters', JSON.stringify(letters));
+            
+            // 显示成功消息
+            document.getElementById('successMessage').style.display = 'block';
+            setTimeout(() => {
+                document.getElementById('successMessage').style.display = 'none';
+            }, 3000);
+
+            // 重置表单
+            this.reset();
+            
+            // 更新列表
+            renderLetters();
+        });
+
+        function renderLetters() {
+            const container = document.getElementById('lettersList');
+            
+            if (letters.length === 0) {
+                container.innerHTML = '<p style="text-align: center; color: #999; padding: 20px;">还没有投递任何信件</p>';
+                return;
+            }
+
+            // 按发送日期排序
+            const sortedLetters = letters.sort((a, b) => new Date(a.sendDate) - new Date(b.sendDate));
+
+            container.innerHTML = sortedLetters.map(letter => {
+                const sendDate = new Date(letter.sendDate);
+                const today = new Date();
+                const isToday = sendDate.toDateString() === today.toDateString();
+                const isPast = sendDate < today;
+                
+                return `
+                    <div class="letter-item">
+                        <div class="letter-header">
+                            <div class="letter-recipient">📧 ${letter.recipient}</div>
+                            <div>
+                                <span class="letter-date">
+                                    ${isToday ? '🔔 今天发送' : isPast ? '⏰ 已过期' : '📅 ' + letter.sendDate}
+                                </span>
+                                <button class="delete-btn" onclick="deleteLetter(${letter.id})">删除</button>
+                            </div>
+                        </div>
+                        <div class="letter-preview">${letter.subject}</div>
+                        <div class="letter-preview" style="font-size: 12px; margin-top: 5px;">
+                            ${letter.content.substring(0, 50)}${letter.content.length > 50 ? '...' : ''}
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function deleteLetter(id) {
+            if (confirm('确定要删除这封信件吗？')) {
+                letters = letters.filter(letter => letter.id !== id);
+                localStorage.setItem('futureLetters', JSON.stringify(letters));
+                renderLetters();
+            }
+        }
+
+        // 检查今天是否有要发送的信件
+        function checkTodayLetters() {
+            const today = new Date().toDateString();
+            const todayLetters = letters.filter(letter => 
+                new Date(letter.sendDate).toDateString() === today
+            );
+
+            if (todayLetters.length > 0) {
+                const message = `今天有 ${todayLetters.length} 封信件要发送！\n\n` +
+                    todayLetters.map(letter => `📧 给 ${letter.recipient}: ${letter.subject}`).join('\n') +
+                    '\n\n请手动发送这些邮件到对应的邮箱地址。';
+                
+                alert(message);
+            }
+        }
+
+        // 页面加载时检查
+        window.onload = function() {
+            renderLetters();
+            checkTodayLetters();
+        };
+    
+                return input;
+            }
+
+            displayResult(result) {
+                document.getElementById('resultContent').textContent = result;
+            }
+
+            clear() {
+                document.getElementById('input').value = '';
+                document.getElementById('resultContent').textContent = '处理结果将在这里显示...';
+            }
+
+            copyResult() {
+                const result = document.getElementById('resultContent').textContent;
+                if (result && result !== '处理结果将在这里显示...') {
+                    ToolUtils.copyToClipboard(result);
+                } else {
+                    ToolUtils.showToast('没有可复制的内容', 'warning');
+                }
+            }
+        }
+
+        // 初始化应用
+        document.addEventListener('DOMContentLoaded', () => {
+            new ToolApp();
+        });
+    </script>
+</body>
+</html>

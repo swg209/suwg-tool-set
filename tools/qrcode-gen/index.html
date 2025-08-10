@@ -1,0 +1,664 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>二维码生成器 - AI工具集</title>
+    <meta name="description" content="二维码生成器">
+    
+    <!-- 外部依赖 -->
+    <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.1/build/qrcode.min.js"
+    <!-- 样式文件 -->
+    <link rel="stylesheet" href="../../shared/css/common.css">
+    
+    <!-- 工具特定样式 -->
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background-color: var(--bg-secondary);
+            color: var(--text-primary);
+            line-height: 1.6;
+            padding: var(--spacing-lg);
+        }
+        
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background-color: var(--bg-card);
+            border-radius: var(--radius-md);
+            box-shadow: var(--shadow-md);
+            padding: 30px;
+        }
+        
+        h1 {
+            text-align: center;
+            margin-bottom: 30px;
+            color: #2c3e50;
+        }
+        
+        .form-group {
+            margin-bottom: 15px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        
+        input[type="text"],
+        input[type="url"],
+        textarea {
+            width: 100%;
+            padding: var(--spacing-md);
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 16px;
+        }
+        
+        textarea {
+            resize: vertical;
+            min-height: 100px;
+        }
+        
+        .options-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        
+        .option-card {
+            background-color: #f9f9f9;
+            border-radius: var(--radius-sm);
+            padding: 15px;
+            border: 1px solid #eee;
+        }
+        
+        .option-title {
+            font-weight: bold;
+            margin-bottom: 10px;
+            color: #2c3e50;
+        }
+        
+        select {
+            width: 100%;
+            padding: var(--spacing-md);
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 16px;
+            background-color: white;
+        }
+        
+        input[type="color"] {
+            width: 100%;
+            height: 40px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            padding: 2px;
+        }
+        
+        input[type="range"] {
+            width: 100%;
+            margin-top: 5px;
+        }
+        
+        .range-value {
+            text-align: center;
+            font-weight: bold;
+            margin-top: 5px;
+        }
+        
+        button {
+            background-color: #3498db;
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s ease;
+            width: 100%;
+            margin-bottom: 20px;
+        }
+        
+        button:hover {
+            background-color: #2980b9;
+        }
+        
+        .result {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin-top: 20px;
+            padding: var(--spacing-lg);
+            background-color: #f9f9f9;
+            border-radius: var(--radius-sm);
+            border-left: 4px solid #3498db;
+        }
+        
+        #qrcode-container {
+            margin-bottom: 15px;
+            background-color: white;
+            padding: 15px;
+            border-radius: var(--radius-sm);
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+        
+        .action-buttons {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+        }
+        
+        .action-button {
+            background-color: #2ecc71;
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: background-color 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .action-button:hover {
+            background-color: #27ae60;
+        }
+        
+        .action-button.download {
+            background-color: #3498db;
+        }
+        
+        .action-button.download:hover {
+            background-color: #2980b9;
+        }
+        
+        .footer {
+            margin-top: 30px;
+            text-align: center;
+            font-size: 14px;
+            color: #7f8c8d;
+        }
+        
+        .error-message {
+            color: #e74c3c;
+            background-color: #fadbd8;
+            padding: var(--spacing-md);
+            border-radius: 4px;
+            margin-top: 10px;
+            display: none;
+        }
+        
+        .tabs {
+            display: flex;
+            margin-bottom: 20px;
+            border-bottom: 1px solid #ddd;
+        }
+        
+        .tab {
+            padding: var(--spacing-md) 20px;
+            cursor: pointer;
+            background-color: #f1f1f1;
+            border-radius: var(--radius-sm) 5px 0 0;
+            margin-right: 5px;
+            transition: all 0.3s ease;
+        }
+        
+        .tab.active {
+            background-color: #3498db;
+            color: white;
+        }
+        
+        .tab-content {
+            display: none;
+            padding: var(--spacing-lg) 0;
+        }
+        
+        .tab-content.active {
+            display: block;
+        }
+        
+        @media (max-width: 768px) {
+            .container {
+                padding: var(--spacing-md);
+                margin: var(--spacing-sm);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="tool-container">
+        <!-- 工具头部 -->
+        <header class="tool-header">
+            <div class="tool-header-content">
+                <a href="../../index.html" class="back-btn">
+                    <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                        <path d="M10 4l-4 4 4 4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                    返回工具集
+                </a>
+                
+                <div class="tool-title">
+                    <h1>二维码生成器</h1>
+                    <p class="tool-subtitle">二维码生成器</p>
+                </div>
+                
+                <button class="theme-toggle" id="themeToggle" aria-label="切换主题">
+                    <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                        <circle cx="10" cy="10" r="4" stroke="currentColor" stroke-width="2"/>
+                        <path d="M10 2v2M10 16v2M18 10h-2M4 10H2M15.66 4.34l-1.41 1.41M5.75 14.25l-1.41 1.41M15.66 15.66l-1.41-1.41M5.75 5.75L4.34 4.34" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                    </svg>
+                </button>
+            </div>
+        </header>
+
+        <!-- 工具主内容 -->
+        <main class="tool-main">
+            <div class="tool-card">
+                <div class="tool-section">
+                    <h2>
+                        <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                            <rect x="3" y="3" width="14" height="14" rx="2" stroke="currentColor" stroke-width="2"/>
+                        </svg>
+                        工具功能
+                    </h2>
+                    
+                    
+            <div class="tool-card">
+                <div class="tool-section">
+                    <h2>
+                        <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                            <rect x="3" y="3" width="14" height="14" rx="2" stroke="currentColor" stroke-width="2"/>
+                        </svg>
+                        二维码生成器
+                    </h2>
+                    <div class="container">
+        <h1>二维码生成器</h1>
+        
+        <div class="tabs">
+            <div class="tab active" data-tab="text">文本</div>
+            <div class="tab" data-tab="url">网址</div>
+            <div class="tab" data-tab="vcard">名片</div>
+        </div>
+        
+        <div class="tab-content active" id="text">
+            <div class="form-group">
+                <label for="text-input">输入文本内容:</label>
+                <textarea id="text-input" placeholder="输入要转换为二维码的文本..."></textarea>
+            </div>
+        </div>
+        
+        <div class="tab-content" id="url">
+            <div class="form-group">
+                <label for="url-input">输入网址:</label>
+                <input type="url" id="url-input" placeholder="https://example.com">
+            </div>
+        </div>
+        
+        <div class="tab-content" id="vcard">
+            <div class="form-group">
+                <label for="name-input">姓名:</label>
+                <input type="text" id="name-input" placeholder="张三">
+            </div>
+            <div class="form-group">
+                <label for="phone-input">电话:</label>
+                <input type="text" id="phone-input" placeholder="13800138000">
+            </div>
+            <div class="form-group">
+                <label for="email-input">邮箱:</label>
+                <input type="text" id="email-input" placeholder="example@example.com">
+            </div>
+            <div class="form-group">
+                <label for="company-input">公司:</label>
+                <input type="text" id="company-input" placeholder="公司名称">
+            </div>
+            <div class="form-group">
+                <label for="title-input">职位:</label>
+                <input type="text" id="title-input" placeholder="职位名称">
+            </div>
+            <div class="form-group">
+                <label for="address-input">地址:</label>
+                <input type="text" id="address-input" placeholder="公司地址">
+            </div>
+        </div>
+        
+        <div class="options-grid">
+            <div class="option-card">
+                <div class="option-title">二维码颜色</div>
+                <div class="form-group">
+                    <label for="foreground-color">前景色:</label>
+                    <input type="color" id="foreground-color" value="#000000">
+                </div>
+                <div class="form-group">
+                    <label for="background-color">背景色:</label>
+                    <input type="color" id="background-color" value="#ffffff">
+                </div>
+            </div>
+            
+            <div class="option-card">
+                <div class="option-title">二维码设置</div>
+                <div class="form-group">
+                    <label for="error-correction">纠错级别:</label>
+                    <select id="error-correction">
+                        <option value="L">低 (7%)</option>
+                        <option value="M" selected>中 (15%)</option>
+                        <option value="Q">较高 (25%)</option>
+                        <option value="H">高 (30%)</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="qr-size">二维码大小: <span id="size-value">200</span>px</label>
+                    <input type="range" id="qr-size" min="100" max="400" value="200" step="10">
+                </div>
+            </div>
+        </div>
+        
+        <button id="generate-btn">生成二维码</button>
+        
+        <div class="error-message" id="error-message"></div>
+        
+        <div class="result" id="result" style="display: none;">
+            <div id="qrcode-container"></div>
+            <div class="action-buttons">
+                <button class="action-button download" id="download-btn">下载二维码</button>
+            </div>
+        </div>
+        
+        <div class="footer">
+            <p>© 小苏趣研AI 二维码生成器 | 在本地安全生成二维码</p>
+        </div>
+    </div>
+
+    
+                </div>
+            </div>
+                    <!-- 结果显示区域 -->
+                    <div class="result-display" id="result">
+                        <pre id="resultContent">处理结果将在这里显示...</pre>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <!-- 工具页脚 -->
+        <footer class="tool-footer">
+            <p>由 <a href="../../index.html">AI工具集</a> 提供 | 原创工具</p>
+        </footer>
+    </div>
+
+    <!-- JavaScript -->
+    <script src="../../shared/js/utils.js"></script>
+    <script>
+        // 工具特定的JavaScript代码
+        class ToolApp {
+            constructor() {
+                this.init();
+            }
+
+            init() {
+                this.setupEventListeners();
+            }
+
+            setupEventListeners() {
+                document.getElementById('processBtn').addEventListener('click', () => this.process());
+                document.getElementById('clearBtn').addEventListener('click', () => this.clear());
+                document.getElementById('copyBtn').addEventListener('click', () => this.copyResult());
+                
+                // 实时处理（可选）
+                document.getElementById('input').addEventListener('input', 
+                    ToolUtils.debounce(() => this.process(), 300)
+                );
+            }
+
+            process() {
+                const input = document.getElementById('input').value;
+                const result = this.processInput(input);
+                this.displayResult(result);
+            }
+
+            processInput(input) {
+                
+        // 检查QRCode库是否成功加载
+        window.addEventListener('load', function() {
+            if (typeof QRCode === 'undefined') {
+                console.error('QRCode库加载失败，尝试从备用CDN加载');
+                // 创建备用脚本
+                var fallbackScript = document.createElement('script');
+                fallbackScript.src = 'https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js';
+                fallbackScript.onerror = function() {
+                    // 如果备用CDN也失败，显示错误消息
+                    document.body.innerHTML = '<div style="text-align:center;margin-top:50px;color:#e74c3c;"><h2>加载QRCode库失败</h2><p>请检查您的网络连接或稍后再试</p></div>';
+                };
+                document.head.appendChild(fallbackScript);
+            }
+        });
+    
+
+
+        // 选项卡切换功能
+        document.querySelectorAll('.tab').forEach(tab => {
+            tab.addEventListener('click', () => {
+                document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+                document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+                
+                tab.classList.add('active');
+                document.getElementById(tab.dataset.tab).classList.add('active');
+            });
+        });
+        
+        // 获取DOM元素
+        const generateBtn = document.getElementById('generate-btn');
+        const downloadBtn = document.getElementById('download-btn');
+        const qrcodeContainer = document.getElementById('qrcode-container');
+        const resultDiv = document.getElementById('result');
+        const errorMessageDiv = document.getElementById('error-message');
+        const qrSizeInput = document.getElementById('qr-size');
+        const sizeValueSpan = document.getElementById('size-value');
+        
+        // 更新大小值显示
+        qrSizeInput.addEventListener('input', () => {
+            sizeValueSpan.textContent = qrSizeInput.value;
+        });
+        
+        // 生成二维码
+        generateBtn.addEventListener('click', generateQRCode);
+        
+        // 下载二维码
+        downloadBtn.addEventListener('click', downloadQRCode);
+        
+        // 生成二维码函数
+        function generateQRCode() {
+            // 清空之前的二维码
+            qrcodeContainer.innerHTML = '';
+            
+            // 获取当前激活的选项卡
+            const activeTab = document.querySelector('.tab.active').dataset.tab;
+            
+            // 获取输入内容
+            let content = '';
+            
+            if (activeTab === 'text') {
+                content = document.getElementById('text-input').value.trim();
+                if (!content) {
+                    showError('请输入文本内容');
+                    return;
+                }
+            } else if (activeTab === 'url') {
+                content = document.getElementById('url-input').value.trim();
+                if (!content) {
+                    showError('请输入网址');
+                    return;
+                }
+                
+                // 简单的URL验证
+                if (!content.startsWith('http://') && !content.startsWith('https://')) {
+                    content = 'https://' + content;
+                    document.getElementById('url-input').value = content;
+                }
+            } else if (activeTab === 'vcard') {
+                const name = document.getElementById('name-input').value.trim();
+                const phone = document.getElementById('phone-input').value.trim();
+                const email = document.getElementById('email-input').value.trim();
+                const company = document.getElementById('company-input').value.trim();
+                const title = document.getElementById('title-input').value.trim();
+                const address = document.getElementById('address-input').value.trim();
+                
+                if (!name && !phone && !email) {
+                    showError('请至少填写姓名、电话或邮箱中的一项');
+                    return;
+                }
+                
+                // 创建vCard格式
+                content = 'BEGIN:VCARD\nVERSION:3.0\n';
+                if (name) content += `FN:${name}\n`;
+                if (phone) content += `TEL:${phone}\n`;
+                if (email) content += `EMAIL:${email}\n`;
+                if (company) content += `ORG:${company}\n`;
+                if (title) content += `TITLE:${title}\n`;
+                if (address) content += `ADR:;;${address};;;\n`;
+                content += 'END:VCARD';
+            }
+            
+            // 获取二维码选项
+            const size = parseInt(qrSizeInput.value);
+            const foregroundColor = document.getElementById('foreground-color').value;
+            const backgroundColor = document.getElementById('background-color').value;
+            const errorCorrectionLevel = document.getElementById('error-correction').value;
+            
+            // 隐藏错误消息
+            showError(false);
+            
+            try {
+                // 检查QRCode库的类型并使用相应的方法生成二维码
+                if (typeof QRCode === 'undefined') {
+                    showError('QRCode库未加载，请刷新页面重试');
+                    return;
+                }
+                
+                // 清除之前的内容
+                qrcodeContainer.innerHTML = '';
+                
+                // 检查是否为qrcode@1.5.1版本 (有toCanvas方法)
+                if (typeof QRCode.toCanvas === 'function') {
+                    const canvas = document.createElement('canvas');
+                    // 使用qrcode@1.5.1版本的API
+                    QRCode.toCanvas(canvas, content, {
+                        width: size,
+                        margin: 2,
+                        color: {
+                            dark: foregroundColor,
+                            light: backgroundColor
+                        },
+                        errorCorrectionLevel: errorCorrectionLevel
+                    }, function (error) {
+                        if (error) {
+                            showError('生成二维码时出错: ' + error);
+                        } else {
+                            qrcodeContainer.appendChild(canvas);
+                            // 显示结果
+                            resultDiv.style.display = 'flex';
+                        }
+                    });
+                } else {
+                    // 使用qrcodejs 1.0.0版本的API (构造函数方式)
+                    new QRCode(qrcodeContainer, {
+                        text: content,
+                        width: size,
+                        height: size,
+                        colorDark: foregroundColor,
+                        colorLight: backgroundColor,
+                        correctLevel: QRCode.CorrectLevel[errorCorrectionLevel] || QRCode.CorrectLevel.M
+                    });
+                    // 显示结果
+                    resultDiv.style.display = 'flex';
+                }
+            } catch (error) {
+                console.error('QRCode生成错误:', error);
+                showError('生成二维码时出错: ' + (error.message || '未知错误'));
+            }
+        }
+        
+        // 下载二维码函数
+        function downloadQRCode() {
+            const canvas = qrcodeContainer.querySelector('canvas');
+            if (!canvas) {
+                showError('没有可下载的二维码');
+                return;
+            }
+            
+            try {
+                // 创建下载链接
+                const link = document.createElement('a');
+                link.download = 'qrcode.png';
+                
+                // 尝试获取图像数据
+                try {
+                    link.href = canvas.toDataURL('image/png');
+                } catch (e) {
+                    // 如果canvas被污染（例如跨域问题），尝试创建新的canvas
+                    const newCanvas = document.createElement('canvas');
+                    const context = newCanvas.getContext('2d');
+                    newCanvas.width = canvas.width;
+                    newCanvas.height = canvas.height;
+                    context.drawImage(canvas, 0, 0);
+                    link.href = newCanvas.toDataURL('image/png');
+                }
+                
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+            } catch (error) {
+                console.error('下载错误:', error);
+                showError('下载二维码时出错: ' + (error.message || '未知错误'));
+            }
+        }
+        
+        // 显示/隐藏错误消息
+        function showError(message) {
+            if (message) {
+                errorMessageDiv.textContent = message;
+                errorMessageDiv.style.display = 'block';
+            } else {
+                errorMessageDiv.style.display = 'none';
+            }
+        }
+    
+                return input;
+            }
+
+            displayResult(result) {
+                document.getElementById('resultContent').textContent = result;
+            }
+
+            clear() {
+                document.getElementById('input').value = '';
+                document.getElementById('resultContent').textContent = '处理结果将在这里显示...';
+            }
+
+            copyResult() {
+                const result = document.getElementById('resultContent').textContent;
+                if (result && result !== '处理结果将在这里显示...') {
+                    ToolUtils.copyToClipboard(result);
+                } else {
+                    ToolUtils.showToast('没有可复制的内容', 'warning');
+                }
+            }
+        }
+
+        // 初始化应用
+        document.addEventListener('DOMContentLoaded', () => {
+            new ToolApp();
+        });
+    </script>
+</body>
+</html>

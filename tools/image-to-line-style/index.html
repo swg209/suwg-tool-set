@@ -1,0 +1,446 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>图片线稿生成工具 - AI工具集</title>
+    <meta name="description" content="图片线稿生成工具">
+    
+    <!-- 样式文件 -->
+    <link rel="stylesheet" href="../../shared/css/common.css">
+    
+    <!-- 工具特定样式 -->
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: var(--spacing-lg);
+            background-color: var(--bg-secondary);
+        }
+        h1 {
+            color: var(--text-primary);
+            text-align: center;
+        }
+        .container {
+            background-color: white;
+            padding: var(--spacing-lg);
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .upload-area {
+            border: 2px dashed #ccc;
+            padding: var(--spacing-lg);
+            text-align: center;
+            margin-bottom: 20px;
+            cursor: pointer;
+        }
+        .upload-area:hover {
+            border-color: var(--text-muted);
+        }
+        .controls {
+            margin: var(--spacing-lg) 0;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+        .control-group {
+            flex: 1;
+            min-width: 200px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        input[type="range"] {
+            width: 100%;
+        }
+        button {
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            padding: var(--spacing-md) 15px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        .image-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+            margin-top: 20px;
+        }
+        .image-box {
+            flex: 1;
+            min-width: 300px;
+        }
+        canvas {
+            max-width: 100%;
+            border: 1px solid #ddd;
+        }
+        .download-btn {
+            background-color: #2196F3;
+            margin-top: 10px;
+        }
+        .download-btn:hover {
+            background-color: #0b7dda;
+        }
+        
+        @media (max-width: 768px) {
+            .container {
+                padding: var(--spacing-md);
+                margin: var(--spacing-sm);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="tool-container">
+        <!-- 工具头部 -->
+        <header class="tool-header">
+            <div class="tool-header-content">
+                <a href="../../index.html" class="back-btn">
+                    <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                        <path d="M10 4l-4 4 4 4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                    返回工具集
+                </a>
+                
+                <div class="tool-title">
+                    <h1>图片线稿生成工具</h1>
+                    <p class="tool-subtitle">图片线稿生成工具</p>
+                </div>
+                
+                <button class="theme-toggle" id="themeToggle" aria-label="切换主题">
+                    <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                        <circle cx="10" cy="10" r="4" stroke="currentColor" stroke-width="2"/>
+                        <path d="M10 2v2M10 16v2M18 10h-2M4 10H2M15.66 4.34l-1.41 1.41M5.75 14.25l-1.41 1.41M15.66 15.66l-1.41-1.41M5.75 5.75L4.34 4.34" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                    </svg>
+                </button>
+            </div>
+        </header>
+
+        <!-- 工具主内容 -->
+        <main class="tool-main">
+            <div class="tool-card">
+                <div class="tool-section">
+                    <h2>
+                        <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                            <rect x="3" y="3" width="14" height="14" rx="2" stroke="currentColor" stroke-width="2"/>
+                        </svg>
+                        工具功能
+                    </h2>
+                    
+                    
+            <div class="tool-card">
+                <div class="tool-section">
+                    <h2>
+                        <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                            <rect x="3" y="3" width="14" height="14" rx="2" stroke="currentColor" stroke-width="2"/>
+                        </svg>
+                        图片线稿生成工具
+                    </h2>
+                    <div class="container">
+        <h1>图片线稿生成工具</h1>
+        
+        <div class="upload-area" id="dropArea">
+            <p>点击或拖拽图片到此处上传</p>
+            <input type="file" id="fileInput" accept="image/*" style="display: none;">
+        </div>
+        
+        <div class="controls">
+            <div class="control-group">
+                <label for="threshold">阈值: <span id="thresholdValue">50</span></label>
+                <input type="range" id="threshold" min="1" max="255" value="50">
+            </div>
+            
+            <div class="control-group">
+                <label for="invert">反转颜色</label>
+                <input type="checkbox" id="invert">
+            </div>
+            
+            <button id="generateBtn">生成线稿</button>
+        </div>
+        
+        <div class="image-container">
+            <div class="image-box">
+                <h3>原始图片</h3>
+                <canvas id="originalCanvas"></canvas>
+            </div>
+            <div class="image-box">
+                <h3>线稿效果</h3>
+                <canvas id="sketchCanvas"></canvas>
+                <button id="downloadBtn" class="download-btn">下载线稿</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="footer" style="text-align: center; margin-top: 20px; color: #666; font-size: 14px;">
+        © 小苏趣研AI 图片线稿生成工具 | 在浏览器中安全地处理图片
+    </div>
+
+    
+                </div>
+            </div>
+                    <!-- 结果显示区域 -->
+                    <div class="result-display" id="result">
+                        <pre id="resultContent">处理结果将在这里显示...</pre>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <!-- 工具页脚 -->
+        <footer class="tool-footer">
+            <p>由 <a href="../../index.html">AI工具集</a> 提供 | 原创工具</p>
+        </footer>
+    </div>
+
+    <!-- JavaScript -->
+    <script src="../../shared/js/utils.js"></script>
+    <script>
+        // 工具特定的JavaScript代码
+        class ToolApp {
+            constructor() {
+                this.init();
+            }
+
+            init() {
+                this.setupEventListeners();
+            }
+
+            setupEventListeners() {
+                document.getElementById('processBtn').addEventListener('click', () => this.process());
+                document.getElementById('clearBtn').addEventListener('click', () => this.clear());
+                document.getElementById('copyBtn').addEventListener('click', () => this.copyResult());
+                
+                // 实时处理（可选）
+                document.getElementById('input').addEventListener('input', 
+                    ToolUtils.debounce(() => this.process(), 300)
+                );
+            }
+
+            process() {
+                const input = document.getElementById('input').value;
+                const result = this.processInput(input);
+                this.displayResult(result);
+            }
+
+            processInput(input) {
+                
+        // 获取DOM元素
+        const fileInput = document.getElementById('fileInput');
+        const dropArea = document.getElementById('dropArea');
+        const originalCanvas = document.getElementById('originalCanvas');
+        const sketchCanvas = document.getElementById('sketchCanvas');
+        const generateBtn = document.getElementById('generateBtn');
+        const downloadBtn = document.getElementById('downloadBtn');
+        const thresholdSlider = document.getElementById('threshold');
+        const thresholdValue = document.getElementById('thresholdValue');
+        const invertCheckbox = document.getElementById('invert');
+        
+        let originalImage = null;
+        let originalCtx = originalCanvas.getContext('2d');
+        let sketchCtx = sketchCanvas.getContext('2d');
+        
+        // 用于存储自动刷新的定时器
+        let autoRefreshTimer = null;
+        
+        // 更新阈值显示
+        thresholdSlider.addEventListener('input', () => {
+            thresholdValue.textContent = thresholdSlider.value;
+            
+            // 清除之前的定时器
+            if (autoRefreshTimer) {
+                clearTimeout(autoRefreshTimer);
+            }
+            
+            // 设置新的定时器，500毫秒后自动刷新
+            autoRefreshTimer = setTimeout(() => {
+                if (originalImage) {
+                    generateSketch();
+                }
+            }, 500);
+        });
+        
+        // 点击上传区域触发文件选择
+        dropArea.addEventListener('click', () => {
+            fileInput.click();
+        });
+        
+        // 处理拖放
+        dropArea.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            dropArea.style.borderColor = '#4CAF50';
+        });
+        
+        dropArea.addEventListener('dragleave', () => {
+            dropArea.style.borderColor = '#ccc';
+        });
+        
+        dropArea.addEventListener('drop', (e) => {
+            e.preventDefault();
+            dropArea.style.borderColor = '#ccc';
+            
+            if (e.dataTransfer.files.length) {
+                fileInput.files = e.dataTransfer.files;
+                handleFileSelect(e.dataTransfer.files[0]);
+            }
+        });
+        
+        // 处理文件选择
+        fileInput.addEventListener('change', () => {
+            if (fileInput.files.length) {
+                handleFileSelect(fileInput.files[0]);
+            }
+        });
+        
+        function handleFileSelect(file) {
+            if (!file.type.match('image.*')) {
+                alert('请选择图片文件');
+                return;
+            }
+            
+            const reader = new FileReader();
+            
+            reader.onload = (e) => {
+                originalImage = new Image();
+                originalImage.onload = () => {
+                    // 调整画布大小以适应图片
+                    const maxWidth = 600;
+                    const maxHeight = 600;
+                    let width = originalImage.width;
+                    let height = originalImage.height;
+                    
+                    if (width > maxWidth) {
+                        height = (maxWidth / width) * height;
+                        width = maxWidth;
+                    }
+                    
+                    if (height > maxHeight) {
+                        width = (maxHeight / height) * width;
+                        height = maxHeight;
+                    }
+                    
+                    originalCanvas.width = width;
+                    originalCanvas.height = height;
+                    sketchCanvas.width = width;
+                    sketchCanvas.height = height;
+                    
+                    // 绘制原始图片
+                    originalCtx.drawImage(originalImage, 0, 0, width, height);
+                };
+                originalImage.src = e.target.result;
+            };
+            
+            reader.readAsDataURL(file);
+        }
+        
+        // 生成线稿
+        generateBtn.addEventListener('click', generateSketch);
+        
+        // 线稿生成函数
+        function generateSketch() {
+            if (!originalImage) {
+                alert('请先上传图片');
+                return;
+            }
+            
+            const threshold = parseInt(thresholdSlider.value);
+            const invert = invertCheckbox.checked;
+            
+            // 获取原始图像数据
+            originalCtx.drawImage(originalImage, 0, 0, originalCanvas.width, originalCanvas.height);
+            const imageData = originalCtx.getImageData(0, 0, originalCanvas.width, originalCanvas.height);
+            const data = imageData.data;
+            
+            // 创建线稿图像数据
+            const sketchData = sketchCtx.createImageData(originalCanvas.width, originalCanvas.height);
+            
+            // 边缘检测算法 (简化版)
+            for (let y = 0; y < originalCanvas.height; y++) {
+                for (let x = 0; x < originalCanvas.width; x++) {
+                    const i = (y * originalCanvas.width + x) * 4;
+                    
+                    // 获取当前像素和周围像素的亮度
+                    const current = getBrightness(data, i);
+                    const right = x < originalCanvas.width - 1 ? getBrightness(data, i + 4) : current;
+                    const bottom = y < originalCanvas.height - 1 ? getBrightness(data, i + originalCanvas.width * 4) : current;
+                    
+                    // 计算边缘强度
+                    const edge = Math.abs(current - right) + Math.abs(current - bottom);
+                    
+                    // 根据阈值决定是否为边缘
+                    const isEdge = edge > threshold;
+                    const value = invert ? (isEdge ? 0 : 255) : (isEdge ? 255 : 0);
+                    
+                    // 设置线稿像素
+                    sketchData.data[i] = value;     // R
+                    sketchData.data[i + 1] = value;   // G
+                    sketchData.data[i + 2] = value;   // B
+                    sketchData.data[i + 3] = 255;     // A
+                }
+            }
+            
+            // 绘制线稿
+            sketchCtx.putImageData(sketchData, 0, 0);
+        }
+        
+        // 计算像素亮度 (灰度值)
+        function getBrightness(data, i) {
+            return 0.34 * data[i] + 0.5 * data[i + 1] + 0.16 * data[i + 2];
+        }
+        
+        // 下载线稿
+        downloadBtn.addEventListener('click', () => {
+            if (!originalImage) {
+                alert('没有可下载的线稿');
+                return;
+            }
+            
+            const link = document.createElement('a');
+            link.download = '线稿.png';
+            link.href = sketchCanvas.toDataURL('image/png');
+            link.click();
+        });
+
+        // 反转复选框也添加自动刷新
+        invertCheckbox.addEventListener('change', () => {
+            if (originalImage) {
+                generateSketch();
+            }
+        });
+    
+                return input;
+            }
+
+            displayResult(result) {
+                document.getElementById('resultContent').textContent = result;
+            }
+
+            clear() {
+                document.getElementById('input').value = '';
+                document.getElementById('resultContent').textContent = '处理结果将在这里显示...';
+            }
+
+            copyResult() {
+                const result = document.getElementById('resultContent').textContent;
+                if (result && result !== '处理结果将在这里显示...') {
+                    ToolUtils.copyToClipboard(result);
+                } else {
+                    ToolUtils.showToast('没有可复制的内容', 'warning');
+                }
+            }
+        }
+
+        // 初始化应用
+        document.addEventListener('DOMContentLoaded', () => {
+            new ToolApp();
+        });
+    </script>
+</body>
+</html>

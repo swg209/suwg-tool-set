@@ -4,222 +4,214 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>颜色选择器 - AI工具集</title>
-    <meta name="description" content="在线颜色选择器，支持RGB、HEX、HSL颜色格式转换和调色板功能">
+    <meta name="description" content="颜色选择器">
     
     <!-- 样式文件 -->
     <link rel="stylesheet" href="../../shared/css/common.css">
     
     <!-- 工具特定样式 -->
     <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: var(--spacing-lg);
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white;
+            text-align: center;
+            padding: 40px 20px;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            font-size: 1.1em;
+            opacity: 0.9;
+        }
+
+        .content {
+            padding: 40px;
+        }
+
         .color-picker-container {
             display: grid;
             grid-template-columns: 1fr 1fr;
-            gap: var(--spacing-xl);
-            margin-bottom: var(--spacing-xl);
+            gap: 40px;
+            margin-bottom: 40px;
         }
-        
-        .color-display {
-            aspect-ratio: 1;
+
+        .picker-section {
+            background: #f8f9fa;
+            padding: 30px;
             border-radius: var(--radius-lg);
-            border: 3px solid var(--border-color);
-            background: linear-gradient(45deg, #ccc 25%, transparent 25%), 
-                        linear-gradient(-45deg, #ccc 25%, transparent 25%), 
-                        linear-gradient(45deg, transparent 75%, #ccc 75%), 
-                        linear-gradient(-45deg, transparent 75%, #ccc 75%);
-            background-size: 20px 20px;
-            background-position: 0 0, 0 10px, 10px -10px, -10px 0px;
-            position: relative;
-            overflow: hidden;
         }
-        
-        .color-overlay {
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
+
+        .picker-title {
+            font-size: 1.3em;
+            font-weight: bold;
+            margin-bottom: 20px;
+            color: var(--text-primary);
+            text-align: center;
+        }
+
+        .color-canvas {
+            width: 100%;
+            height: 200px;
             border-radius: var(--radius-md);
+            cursor: crosshair;
+            border: 2px solid #ddd;
+            margin-bottom: 20px;
         }
-        
-        .color-inputs {
-            display: grid;
-            gap: var(--spacing-md);
-        }
-        
-        .color-input-group {
-            display: grid;
-            grid-template-columns: 80px 1fr auto;
-            gap: var(--spacing-sm);
-            align-items: center;
-        }
-        
-        .color-input-label {
-            font-weight: 500;
-            color: var(--text-primary);
-            font-size: 0.875rem;
-        }
-        
-        .color-input {
-            padding: var(--spacing-sm) var(--spacing-md);
-            border: 1px solid var(--border-color);
-            border-radius: var(--radius-sm);
-            background-color: var(--bg-primary);
-            color: var(--text-primary);
-            font-family: 'Monaco', 'Menlo', monospace;
-            font-size: 0.875rem;
-        }
-        
-        .copy-btn {
-            padding: var(--spacing-sm);
-            border: 1px solid var(--border-color);
-            border-radius: var(--radius-sm);
-            background-color: var(--bg-secondary);
-            color: var(--text-secondary);
+
+        .hue-slider {
+            width: 100%;
+            height: 20px;
+            border-radius: var(--radius-md);
             cursor: pointer;
-            transition: all var(--transition-fast);
+            border: 2px solid #ddd;
+            background: linear-gradient(to right, 
+                #ff0000 0%, var(--bg-card)f00 17%, #00ff00 33%, 
+                #00ffff 50%, #0000ff 67%, #ff00ff 83%, #ff0000 100%);
         }
-        
-        .copy-btn:hover {
-            background-color: var(--primary-color);
-            color: white;
-            border-color: var(--primary-color);
+
+        .color-preview {
+            background: #f8f9fa;
+            padding: 30px;
+            border-radius: var(--radius-lg);
+            text-align: center;
         }
-        
-        .color-sliders {
+
+        .preview-color {
+            width: 150px;
+            height: 150px;
+            border-radius: 50%;
+            margin: 0 auto 20px;
+            border: 5px solid var(--bg-card);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            background: #ff0000;
+        }
+
+        .color-values {
             display: grid;
-            gap: var(--spacing-md);
+            gap: 15px;
         }
-        
-        .slider-group {
-            display: grid;
-            grid-template-columns: 40px 1fr 60px;
-            gap: var(--spacing-sm);
-            align-items: center;
+
+        .value-group {
+            background: white;
+            padding: 15px;
+            border-radius: var(--radius-md);
+            border-left: 4px solid #667eea;
         }
-        
-        .slider-label {
-            font-weight: 500;
+
+        .value-label {
+            font-weight: bold;
             color: var(--text-primary);
-            font-size: 0.875rem;
+            margin-bottom: 5px;
         }
-        
-        .color-slider {
-            -webkit-appearance: none;
-            appearance: none;
-            height: 8px;
-            border-radius: 4px;
+
+        .value-input {
+            width: 100%;
+            padding: 8px 12px;
+            border: 2px solid #ddd;
+            border-radius: var(--radius-sm);
+            font-family: monospace;
+            font-size: 14px;
+        }
+
+        .value-input:focus {
             outline: none;
-            cursor: pointer;
+            border-color: #667eea;
         }
-        
-        .color-slider::-webkit-slider-thumb {
-            -webkit-appearance: none;
-            appearance: none;
-            width: 20px;
-            height: 20px;
-            border-radius: 50%;
-            background: white;
-            border: 2px solid var(--primary-color);
-            cursor: pointer;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+
+        .preset-colors {
+            background: #f8f9fa;
+            padding: 30px;
+            border-radius: var(--radius-lg);
+            margin-top: 30px;
         }
-        
-        .color-slider::-moz-range-thumb {
-            width: 20px;
-            height: 20px;
-            border-radius: 50%;
-            background: white;
-            border: 2px solid var(--primary-color);
-            cursor: pointer;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
-        }
-        
-        .slider-value {
-            font-family: 'Monaco', 'Menlo', monospace;
-            font-size: 0.875rem;
-            color: var(--text-secondary);
+
+        .preset-title {
+            font-size: 1.3em;
+            font-weight: bold;
+            margin-bottom: 20px;
+            color: var(--text-primary);
             text-align: center;
         }
-        
-        .color-palette {
+
+        .preset-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(60px, 1fr));
-            gap: var(--spacing-sm);
-            margin-top: var(--spacing-lg);
+            grid-template-columns: repeat(auto-fill, minmax(50px, 1fr));
+            gap: 10px;
         }
-        
-        .palette-color {
-            aspect-ratio: 1;
-            border-radius: var(--radius-sm);
-            border: 2px solid var(--border-color);
+
+        .preset-color {
+            width: 50px;
+            height: 50px;
+            border-radius: var(--radius-md);
             cursor: pointer;
-            transition: all var(--transition-fast);
-            position: relative;
+            border: 3px solid transparent;
+            transition: all 0.3s ease;
         }
-        
-        .palette-color:hover {
+
+        .preset-color:hover {
             transform: scale(1.1);
-            border-color: var(--primary-color);
-            box-shadow: var(--shadow-md);
+            border-color: #667eea;
         }
-        
-        .palette-color.active {
-            border-color: var(--primary-color);
-            box-shadow: 0 0 0 3px rgba(91,106,255,0.2);
-        }
-        
-        .random-colors {
+
+        .copy-buttons {
             display: grid;
-            grid-template-columns: repeat(5, 1fr);
-            gap: var(--spacing-sm);
-            margin-top: var(--spacing-lg);
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            margin-top: 20px;
         }
-        
-        .random-color {
-            aspect-ratio: 1;
-            border-radius: var(--radius-sm);
-            border: 1px solid var(--border-color);
-            cursor: pointer;
-            transition: all var(--transition-fast);
-            position: relative;
-            overflow: hidden;
-        }
-        
-        .random-color:hover {
-            transform: translateY(-2px);
-            box-shadow: var(--shadow-md);
-        }
-        
-        .color-info {
-            position: absolute;
-            bottom: 0;
-            left: 0;
-            right: 0;
-            background: rgba(0,0,0,0.7);
+
+        .copy-btn {
+            background: #667eea;
             color: white;
-            font-size: 0.75rem;
-            padding: 2px 4px;
+            border: none;
+            padding: var(--spacing-md) 15px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: background 0.3s ease;
+        }
+
+        .copy-btn:hover {
+            background: #5a6fd8;
+        }
+
+        .footer {
+            background: #f8f9fa;
             text-align: center;
-            opacity: 0;
-            transition: opacity var(--transition-fast);
+            padding: var(--spacing-lg);
+            color: var(--text-secondary);
         }
-        
-        .random-color:hover .color-info {
-            opacity: 1;
-        }
-        
+
         @media (max-width: 768px) {
             .color-picker-container {
                 grid-template-columns: 1fr;
-                gap: var(--spacing-lg);
-            }
-            
-            .color-input-group {
-                grid-template-columns: 60px 1fr auto;
-            }
-            
-            .random-colors {
-                grid-template-columns: repeat(3, 1fr);
+                gap: 20px;
             }
         }
     </style>
@@ -238,7 +230,7 @@
                 
                 <div class="tool-title">
                     <h1>颜色选择器</h1>
-                    <p class="tool-subtitle">RGB、HEX、HSL颜色格式转换和调色板工具</p>
+                    <p class="tool-subtitle">颜色选择器</p>
                 </div>
                 
                 <button class="theme-toggle" id="themeToggle" aria-label="切换主题">
@@ -252,144 +244,86 @@
 
         <!-- 工具主内容 -->
         <main class="tool-main">
-            <!-- 颜色选择器主界面 -->
-            <div class="tool-card">
-                <div class="color-picker-container">
-                    <!-- 颜色显示区域 -->
-                    <div class="color-display">
-                        <div class="color-overlay" id="colorOverlay"></div>
-                    </div>
-                    
-                    <!-- 颜色值输入 -->
-                    <div class="color-inputs">
-                        <div class="color-input-group">
-                            <label class="color-input-label">HEX</label>
-                            <input type="text" class="color-input" id="hexInput" value="#5B6AFF" maxlength="7">
-                            <button class="copy-btn" onclick="copyColor('hex')">
-                                <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-                                    <rect x="2" y="2" width="8" height="8" rx="1" stroke="currentColor" stroke-width="1.5"/>
-                                    <path d="M6 2v-1a1 1 0 011-1h8a1 1 0 011 1v8a1 1 0 01-1 1h-1" stroke="currentColor" stroke-width="1.5"/>
-                                </svg>
-                            </button>
-                        </div>
-                        
-                        <div class="color-input-group">
-                            <label class="color-input-label">RGB</label>
-                            <input type="text" class="color-input" id="rgbInput" value="rgb(91, 106, 255)" readonly>
-                            <button class="copy-btn" onclick="copyColor('rgb')">
-                                <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-                                    <rect x="2" y="2" width="8" height="8" rx="1" stroke="currentColor" stroke-width="1.5"/>
-                                    <path d="M6 2v-1a1 1 0 011-1h8a1 1 0 011 1v8a1 1 0 01-1 1h-1" stroke="currentColor" stroke-width="1.5"/>
-                                </svg>
-                            </button>
-                        </div>
-                        
-                        <div class="color-input-group">
-                            <label class="color-input-label">HSL</label>
-                            <input type="text" class="color-input" id="hslInput" value="hsl(233, 100%, 68%)" readonly>
-                            <button class="copy-btn" onclick="copyColor('hsl')">
-                                <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-                                    <rect x="2" y="2" width="8" height="8" rx="1" stroke="currentColor" stroke-width="1.5"/>
-                                    <path d="M6 2v-1a1 1 0 011-1h8a1 1 0 011 1v8a1 1 0 01-1 1h-1" stroke="currentColor" stroke-width="1.5"/>
-                                </svg>
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- RGB滑块控制 -->
             <div class="tool-card">
                 <div class="tool-section">
                     <h2>
                         <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
-                            <circle cx="10" cy="10" r="8" stroke="currentColor" stroke-width="2"/>
-                            <path d="M10 6v8M6 10h8" stroke="currentColor" stroke-width="2"/>
+                            <rect x="3" y="3" width="14" height="14" rx="2" stroke="currentColor" stroke-width="2"/>
                         </svg>
-                        RGB 调色
+                        工具功能
                     </h2>
                     
-                    <div class="color-sliders">
-                        <div class="slider-group">
-                            <label class="slider-label">R</label>
-                            <input type="range" class="color-slider" id="redSlider" min="0" max="255" value="91" 
-                                   style="background: linear-gradient(to right, #000, #ff0000);">
-                            <span class="slider-value" id="redValue">91</span>
-                        </div>
-                        
-                        <div class="slider-group">
-                            <label class="slider-label">G</label>
-                            <input type="range" class="color-slider" id="greenSlider" min="0" max="255" value="106"
-                                   style="background: linear-gradient(to right, #000, #00ff00);">
-                            <span class="slider-value" id="greenValue">106</span>
-                        </div>
-                        
-                        <div class="slider-group">
-                            <label class="slider-label">B</label>
-                            <input type="range" class="color-slider" id="blueSlider" min="0" max="255" value="255"
-                                   style="background: linear-gradient(to right, #000, #0000ff);">
-                            <span class="slider-value" id="blueValue">255</span>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- 预设颜色调色板 -->
+                    
             <div class="tool-card">
                 <div class="tool-section">
                     <h2>
                         <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
-                            <path d="M10 2C5.58 2 2 5.58 2 10s3.58 8 8 8c.55 0 1-.45 1-1 0-.26-.11-.5-.29-.68-.18-.18-.29-.42-.29-.68 0-.55.45-1 1-1h1.5c3.03 0 5.5-2.47 5.5-5.5C18.5 5.58 14.92 2 10 2z" stroke="currentColor" stroke-width="2"/>
-                            <circle cx="6.5" cy="11.5" r="1.5" fill="currentColor"/>
-                            <circle cx="9.5" cy="7.5" r="1.5" fill="currentColor"/>
-                            <circle cx="13.5" cy="8.5" r="1.5" fill="currentColor"/>
+                            <rect x="3" y="3" width="14" height="14" rx="2" stroke="currentColor" stroke-width="2"/>
                         </svg>
-                        预设调色板
+                        颜色选择器
                     </h2>
+                    <div class="container">
+        <div class="header">
+            <h1>🎨 颜色选择器</h1>
+            <p>拖动选择颜色，实时显示 HEX/RGB/HSL 值</p>
+        </div>
+
+        <div class="content">
+            <div class="color-picker-container">
+                <div class="picker-section">
+                    <div class="picker-title">颜色选择器</div>
+                    <canvas class="color-canvas" id="colorCanvas" width="300" height="200"></canvas>
+                    <div class="hue-slider" id="hueSlider"></div>
+                </div>
+
+                <div class="color-preview">
+                    <div class="picker-title">颜色预览</div>
+                    <div class="preview-color" id="previewColor"></div>
                     
-                    <div class="tool-toolbar">
-                        <button class="btn btn-primary" id="randomColorBtn">
-                            <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-                                <path d="M8 1v14M1 8h14" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-                            </svg>
-                            随机颜色
-                        </button>
-                        
-                        <button class="btn btn-secondary" id="saveColorBtn">
-                            <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-                                <path d="M12 1H4a1 1 0 00-1 1v12a1 1 0 001 1h8a1 1 0 001-1V2a1 1 0 00-1-1z" stroke="currentColor" stroke-width="2"/>
-                                <path d="M8 5v6M5 8h6" stroke="currentColor" stroke-width="2"/>
-                            </svg>
-                            保存颜色
-                        </button>
-                        
-                        <button class="btn btn-secondary" id="exportPaletteBtn">
-                            <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-                                <path d="M8 1v10M5 8l3 3 3-3M2 12v2a1 1 0 001 1h10a1 1 0 001-1v-2" stroke="currentColor" stroke-width="2"/>
-                            </svg>
-                            导出调色板
-                        </button>
+                    <div class="color-values">
+                        <div class="value-group">
+                            <div class="value-label">HEX</div>
+                            <input type="text" class="value-input" id="hexValue" value="#ff0000" readonly>
+                        </div>
+                        <div class="value-group">
+                            <div class="value-label">RGB</div>
+                            <input type="text" class="value-input" id="rgbValue" value="rgb(255, 0, 0)" readonly>
+                        </div>
+                        <div class="value-group">
+                            <div class="value-label">HSL</div>
+                            <input type="text" class="value-input" id="hslValue" value="hsl(0, 100%, 50%)" readonly>
+                        </div>
                     </div>
-                    
-                    <div class="color-palette" id="colorPalette">
-                        <!-- 预设颜色将通过JavaScript生成 -->
+
+                    <div class="copy-buttons">
+                        <button class="copy-btn" onclick="copyValue('hex')">复制 HEX</button>
+                        <button class="copy-btn" onclick="copyValue('rgb')">复制 RGB</button>
+                        <button class="copy-btn" onclick="copyValue('hsl')">复制 HSL</button>
                     </div>
                 </div>
             </div>
 
-            <!-- 随机颜色生成 -->
-            <div class="tool-card">
-                <div class="tool-section">
-                    <h2>
-                        <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
-                            <path d="M2.5 8.5L8.5 2.5L17.5 11.5L11.5 17.5L2.5 8.5Z" stroke="currentColor" stroke-width="2"/>
-                            <path d="M8.5 2.5L11.5 5.5" stroke="currentColor" stroke-width="2"/>
-                        </svg>
-                        随机颜色灵感
-                    </h2>
-                    
-                    <div class="random-colors" id="randomColors">
-                        <!-- 随机颜色将通过JavaScript生成 -->
+            <div class="preset-colors">
+                <div class="preset-title">预设颜色</div>
+                <div class="preset-grid" id="presetGrid"></div>
+            </div>
+        </div>
+
+        <div class="footer">
+            <p>© 小苏趣研AI | 颜色选择器</p>
+            <p style="margin-top: 10px; opacity: 0.8;">
+                <a href="#" target="_blank" style="color: #666; text-decoration: none;">小苏趣研AI</a> - 
+                专业的颜色选择工具，支持拖拽取色、实时预览，提供HEX、RGB、HSL多种格式，让设计配色更便捷。
+            </p>
+        </div>
+    </div>
+
+    
+                </div>
+            </div>
+                    <!-- 结果显示区域 -->
+                    <div class="result-display" id="result">
+                        <pre id="resultContent">处理结果将在这里显示...</pre>
                     </div>
                 </div>
             </div>
@@ -404,194 +338,302 @@
     <!-- JavaScript -->
     <script src="../../shared/js/utils.js"></script>
     <script>
-        class ColorPickerApp {
+        // 工具特定的JavaScript代码
+        class ToolApp {
             constructor() {
-                this.currentColor = { r: 91, g: 106, b: 255 };
-                this.savedColors = JSON.parse(localStorage.getItem('colorPalette') || '[]');
                 this.init();
             }
 
             init() {
                 this.setupEventListeners();
-                this.initializePalette();
-                this.generateRandomColors();
-                this.updateColor();
             }
 
             setupEventListeners() {
-                // HEX输入
-                document.getElementById('hexInput').addEventListener('input', (e) => {
-                    this.updateFromHex(e.target.value);
-                });
-
-                // RGB滑块
-                ['red', 'green', 'blue'].forEach(color => {
-                    const slider = document.getElementById(`${color}Slider`);
-                    const value = document.getElementById(`${color}Value`);
-                    
-                    slider.addEventListener('input', (e) => {
-                        const colorKey = color.charAt(0);
-                        this.currentColor[colorKey] = parseInt(e.target.value);
-                        value.textContent = e.target.value;
-                        this.updateColor();
-                    });
-                });
-
-                // 按钮事件
-                document.getElementById('randomColorBtn').addEventListener('click', () => this.generateRandomColor());
-                document.getElementById('saveColorBtn').addEventListener('click', () => this.saveCurrentColor());
-                document.getElementById('exportPaletteBtn').addEventListener('click', () => this.exportPalette());
+                document.getElementById('processBtn').addEventListener('click', () => this.process());
+                document.getElementById('clearBtn').addEventListener('click', () => this.clear());
+                document.getElementById('copyBtn').addEventListener('click', () => this.copyResult());
+                
+                // 实时处理（可选）
+                document.getElementById('input').addEventListener('input', 
+                    ToolUtils.debounce(() => this.process(), 300)
+                );
             }
 
-            updateFromHex(hex) {
-                if (hex.startsWith('#') && hex.length === 7) {
-                    const rgb = ToolUtils.colorUtils.hexToRgb(hex);
-                    if (rgb) {
-                        this.currentColor = rgb;
-                        this.updateSliders();
-                        this.updateColor();
+            process() {
+                const input = document.getElementById('input').value;
+                const result = this.processInput(input);
+                this.displayResult(result);
+            }
+
+            processInput(input) {
+                
+        class ColorPicker {
+            constructor() {
+                this.canvas = document.getElementById('colorCanvas');
+                this.ctx = this.canvas.getContext('2d');
+                this.hueSlider = document.getElementById('hueSlider');
+                this.previewColor = document.getElementById('previewColor');
+                
+                this.currentHue = 0;
+                this.currentSaturation = 100;
+                this.currentLightness = 50;
+                
+                this.init();
+            }
+
+            init() {
+                this.drawColorCanvas();
+                this.setupEventListeners();
+                this.createPresetColors();
+                this.updateColor();
+            }
+
+            drawColorCanvas() {
+                const width = this.canvas.width;
+                const height = this.canvas.height;
+                
+                // 创建渐变
+                for (let x = 0; x < width; x++) {
+                    for (let y = 0; y < height; y++) {
+                        const saturation = (x / width) * 100;
+                        const lightness = 100 - (y / height) * 100;
+                        
+                        const color = this.hslToRgb(this.currentHue, saturation, lightness);
+                        this.ctx.fillStyle = `rgb(${color.r}, ${color.g}, ${color.b})`;
+                        this.ctx.fillRect(x, y, 1, 1);
                     }
                 }
             }
 
-            updateSliders() {
-                document.getElementById('redSlider').value = this.currentColor.r;
-                document.getElementById('greenSlider').value = this.currentColor.g;
-                document.getElementById('blueSlider').value = this.currentColor.b;
-                
-                document.getElementById('redValue').textContent = this.currentColor.r;
-                document.getElementById('greenValue').textContent = this.currentColor.g;
-                document.getElementById('blueValue').textContent = this.currentColor.b;
+            setupEventListeners() {
+                // 画布点击事件
+                this.canvas.addEventListener('mousedown', (e) => {
+                    this.isMouseDown = true;
+                    this.handleCanvasClick(e);
+                });
+
+                this.canvas.addEventListener('mousemove', (e) => {
+                    if (this.isMouseDown) {
+                        this.handleCanvasClick(e);
+                    }
+                });
+
+                document.addEventListener('mouseup', () => {
+                    this.isMouseDown = false;
+                });
+
+                // 色相滑块事件
+                this.hueSlider.addEventListener('click', (e) => {
+                    this.handleHueSliderClick(e);
+                });
             }
 
-            updateColor() {
-                const { r, g, b } = this.currentColor;
-                const hex = ToolUtils.colorUtils.rgbToHex(r, g, b);
-                const hsl = ToolUtils.colorUtils.rgbToHsl(r, g, b);
+            handleCanvasClick(e) {
+                const rect = this.canvas.getBoundingClientRect();
+                const x = e.clientX - rect.left;
+                const y = e.clientY - rect.top;
                 
-                // 更新显示
-                document.getElementById('colorOverlay').style.backgroundColor = `rgb(${r}, ${g}, ${b})`;
-                document.getElementById('hexInput').value = hex;
-                document.getElementById('rgbInput').value = `rgb(${r}, ${g}, ${b})`;
-                document.getElementById('hslInput').value = `hsl(${hsl.h}, ${hsl.s}%, ${hsl.l}%)`;
-            }
-
-            generateRandomColor() {
-                this.currentColor = {
-                    r: Math.floor(Math.random() * 256),
-                    g: Math.floor(Math.random() * 256),
-                    b: Math.floor(Math.random() * 256)
-                };
-                this.updateSliders();
+                const saturation = (x / rect.width) * 100;
+                const lightness = 100 - (y / rect.height) * 100;
+                
+                this.currentSaturation = Math.max(0, Math.min(100, saturation));
+                this.currentLightness = Math.max(0, Math.min(100, lightness));
+                
                 this.updateColor();
             }
 
-            saveCurrentColor() {
-                const { r, g, b } = this.currentColor;
-                const hex = ToolUtils.colorUtils.rgbToHex(r, g, b);
+            handleHueSliderClick(e) {
+                const rect = this.hueSlider.getBoundingClientRect();
+                const x = e.clientX - rect.left;
+                const hue = (x / rect.width) * 360;
                 
-                if (!this.savedColors.includes(hex)) {
-                    this.savedColors.push(hex);
-                    localStorage.setItem('colorPalette', JSON.stringify(this.savedColors));
-                    this.renderPalette();
-                    ToolUtils.showToast('颜色已保存到调色板', 'success');
-                } else {
-                    ToolUtils.showToast('颜色已存在于调色板中', 'warning');
-                }
+                this.currentHue = Math.max(0, Math.min(360, hue));
+                this.drawColorCanvas();
+                this.updateColor();
             }
 
-            initializePalette() {
-                // 预设一些常用颜色
-                const presetColors = [
-                    '#FF6B6B', '#4ECDC4', '#45B7D1', '#96CEB4', '#FFEAA7',
-                    '#DDA0DD', '#98D8C8', '#F7DC6F', '#BB8FCE', '#85C1E9',
-                    '#F8C471', '#82E0AA', '#F1948A', '#85C1E9', '#D7BDE2'
-                ];
+            updateColor() {
+                const rgb = this.hslToRgb(this.currentHue, this.currentSaturation, this.currentLightness);
+                const hex = this.rgbToHex(rgb.r, rgb.g, rgb.b);
                 
-                if (this.savedColors.length === 0) {
-                    this.savedColors = presetColors;
-                    localStorage.setItem('colorPalette', JSON.stringify(this.savedColors));
-                }
+                // 更新预览
+                this.previewColor.style.backgroundColor = hex;
                 
-                this.renderPalette();
+                // 更新值显示
+                document.getElementById('hexValue').value = hex;
+                document.getElementById('rgbValue').value = `rgb(${rgb.r}, ${rgb.g}, ${rgb.b})`;
+                document.getElementById('hslValue').value = `hsl(${Math.round(this.currentHue)}, ${Math.round(this.currentSaturation)}%, ${Math.round(this.currentLightness)}%)`;
             }
 
-            renderPalette() {
-                const palette = document.getElementById('colorPalette');
-                palette.innerHTML = this.savedColors.map(color => `
-                    <div class="palette-color" style="background-color: ${color}" 
-                         onclick="colorPicker.selectPaletteColor('${color}')" 
-                         title="${color}">
-                    </div>
-                `).join('');
-            }
+            hslToRgb(h, s, l) {
+                h /= 360;
+                s /= 100;
+                l /= 100;
 
-            selectPaletteColor(hex) {
-                const rgb = ToolUtils.colorUtils.hexToRgb(hex);
-                if (rgb) {
-                    this.currentColor = rgb;
-                    this.updateSliders();
-                    this.updateColor();
-                }
-            }
-
-            generateRandomColors() {
-                const container = document.getElementById('randomColors');
-                const colors = [];
-                
-                for (let i = 0; i < 15; i++) {
-                    const r = Math.floor(Math.random() * 256);
-                    const g = Math.floor(Math.random() * 256);
-                    const b = Math.floor(Math.random() * 256);
-                    const hex = ToolUtils.colorUtils.rgbToHex(r, g, b);
-                    colors.push({ hex, r, g, b });
-                }
-                
-                container.innerHTML = colors.map(color => `
-                    <div class="random-color" style="background-color: ${color.hex}" 
-                         onclick="colorPicker.selectPaletteColor('${color.hex}')">
-                        <div class="color-info">${color.hex}</div>
-                    </div>
-                `).join('');
-            }
-
-            exportPalette() {
-                if (this.savedColors.length === 0) {
-                    ToolUtils.showToast('调色板为空', 'warning');
-                    return;
-                }
-
-                const paletteData = {
-                    name: '我的调色板',
-                    colors: this.savedColors.map(hex => {
-                        const rgb = ToolUtils.colorUtils.hexToRgb(hex);
-                        const hsl = ToolUtils.colorUtils.rgbToHsl(rgb.r, rgb.g, rgb.b);
-                        return { hex, rgb, hsl };
-                    }),
-                    exportDate: new Date().toISOString()
+                const hue2rgb = (p, q, t) => {
+                    if (t < 0) t += 1;
+                    if (t > 1) t -= 1;
+                    if (t < 1/6) return p + (q - p) * 6 * t;
+                    if (t < 1/2) return q;
+                    if (t < 2/3) return p + (q - p) * (2/3 - t) * 6;
+                    return p;
                 };
 
-                const content = JSON.stringify(paletteData, null, 2);
-                const filename = `调色板_${new Date().toISOString().slice(0, 10)}.json`;
-                ToolUtils.downloadFile(content, filename, 'application/json');
+                let r, g, b;
+
+                if (s === 0) {
+                    r = g = b = l;
+                } else {
+                    const q = l < 0.5 ? l * (1 + s) : l + s - l * s;
+                    const p = 2 * l - q;
+                    r = hue2rgb(p, q, h + 1/3);
+                    g = hue2rgb(p, q, h);
+                    b = hue2rgb(p, q, h - 1/3);
+                }
+
+                return {
+                    r: Math.round(r * 255),
+                    g: Math.round(g * 255),
+                    b: Math.round(b * 255)
+                };
+            }
+
+            rgbToHex(r, g, b) {
+                return "#" + ((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1);
+            }
+
+            createPresetColors() {
+                const presetGrid = document.getElementById('presetGrid');
+                const colors = [
+                    '#FF0000', '#FF8000', '#FFFF00', '#80FF00', '#00FF00', '#00FF80',
+                    '#00FFFF', '#0080FF', '#0000FF', '#8000FF', '#FF00FF', '#FF0080',
+                    '#800000', '#804000', '#808000', '#408000', '#008000', '#008040',
+                    '#008080', '#004080', '#000080', '#400080', '#800080', '#800040',
+                    '#000000', '#404040', '#808080', '#C0C0C0', '#FFFFFF', '#FFE4E1'
+                ];
+
+                colors.forEach(color => {
+                    const colorDiv = document.createElement('div');
+                    colorDiv.className = 'preset-color';
+                    colorDiv.style.backgroundColor = color;
+                    colorDiv.addEventListener('click', () => {
+                        this.setColorFromHex(color);
+                    });
+                    presetGrid.appendChild(colorDiv);
+                });
+            }
+
+            setColorFromHex(hex) {
+                const rgb = this.hexToRgb(hex);
+                const hsl = this.rgbToHsl(rgb.r, rgb.g, rgb.b);
+                
+                this.currentHue = hsl.h;
+                this.currentSaturation = hsl.s;
+                this.currentLightness = hsl.l;
+                
+                this.drawColorCanvas();
+                this.updateColor();
+            }
+
+            hexToRgb(hex) {
+                const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+                return result ? {
+                    r: parseInt(result[1], 16),
+                    g: parseInt(result[2], 16),
+                    b: parseInt(result[3], 16)
+                } : null;
+            }
+
+            rgbToHsl(r, g, b) {
+                r /= 255;
+                g /= 255;
+                b /= 255;
+
+                const max = Math.max(r, g, b);
+                const min = Math.min(r, g, b);
+                let h, s, l = (max + min) / 2;
+
+                if (max === min) {
+                    h = s = 0;
+                } else {
+                    const d = max - min;
+                    s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
+
+                    switch (max) {
+                        case r: h = (g - b) / d + (g < b ? 6 : 0); break;
+                        case g: h = (b - r) / d + 2; break;
+                        case b: h = (r - g) / d + 4; break;
+                    }
+                    h /= 6;
+                }
+
+                return {
+                    h: h * 360,
+                    s: s * 100,
+                    l: l * 100
+                };
             }
         }
 
-        // 全局函数
-        function copyColor(format) {
-            const inputs = {
-                hex: document.getElementById('hexInput').value,
-                rgb: document.getElementById('rgbInput').value,
-                hsl: document.getElementById('hslInput').value
-            };
-            
-            ToolUtils.copyToClipboard(inputs[format]);
+        // 复制颜色值
+        function copyValue(type) {
+            let value;
+            switch(type) {
+                case 'hex':
+                    value = document.getElementById('hexValue').value;
+                    break;
+                case 'rgb':
+                    value = document.getElementById('rgbValue').value;
+                    break;
+                case 'hsl':
+                    value = document.getElementById('hslValue').value;
+                    break;
+            }
+
+            navigator.clipboard.writeText(value).then(() => {
+                // 简单的复制成功提示
+                const btn = event.target;
+                const originalText = btn.textContent;
+                btn.textContent = '已复制!';
+                btn.style.background = '#28a745';
+                
+                setTimeout(() => {
+                    btn.textContent = originalText;
+                    btn.style.background = '#667eea';
+                }, 1000);
+            });
+        }
+
+        // 初始化颜色选择器
+        document.addEventListener('DOMContentLoaded', () => {
+            new ColorPicker();
+        });
+    
+                return input;
+            }
+
+            displayResult(result) {
+                document.getElementById('resultContent').textContent = result;
+            }
+
+            clear() {
+                document.getElementById('input').value = '';
+                document.getElementById('resultContent').textContent = '处理结果将在这里显示...';
+            }
+
+            copyResult() {
+                const result = document.getElementById('resultContent').textContent;
+                if (result && result !== '处理结果将在这里显示...') {
+                    ToolUtils.copyToClipboard(result);
+                } else {
+                    ToolUtils.showToast('没有可复制的内容', 'warning');
+                }
+            }
         }
 
         // 初始化应用
-        let colorPicker;
         document.addEventListener('DOMContentLoaded', () => {
-            colorPicker = new ColorPickerApp();
+            new ToolApp();
         });
     </script>
 </body>

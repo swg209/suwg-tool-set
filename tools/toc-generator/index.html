@@ -1,0 +1,855 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>文章目录生成器 - Table of Contents Generator - AI工具集</title>
+    <meta name="description" content="文章目录生成器 - Table of Contents Generator">
+    
+    <!-- 样式文件 -->
+    <link rel="stylesheet" href="../../shared/css/common.css">
+    
+    <!-- 工具特定样式 -->
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: var(--spacing-lg);
+            color: var(--text-primary);
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #4c51bf, #667eea);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .title {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            font-weight: 700;
+        }
+
+        .subtitle {
+            font-size: 1.1rem;
+            opacity: 0.9;
+            margin-bottom: 20px;
+        }
+
+        .description {
+            background: rgba(255, 255, 255, 0.1);
+            padding: var(--spacing-lg);
+            border-radius: var(--radius-md);
+            font-size: 0.95rem;
+            line-height: 1.6;
+            text-align: left;
+        }
+
+        .main-content {
+            padding: 30px;
+        }
+
+        .input-section {
+            margin-bottom: 30px;
+        }
+
+        .section-title {
+            font-size: 1.3rem;
+            color: #4a5568;
+            margin-bottom: 15px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .format-tabs {
+            display: flex;
+            gap: 5px;
+            margin-bottom: 15px;
+            background: #f7fafc;
+            padding: 5px;
+            border-radius: var(--radius-md);
+        }
+
+        .tab-btn {
+            flex: 1;
+            padding: var(--spacing-md) 20px;
+            border: none;
+            background: transparent;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            color: #718096;
+        }
+
+        .tab-btn.active {
+            background: white;
+            color: #4c51bf;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .input-textarea {
+            width: 100%;
+            height: 300px;
+            padding: var(--spacing-lg);
+            border: 2px solid #e2e8f0;
+            border-radius: var(--radius-lg);
+            font-size: 0.95rem;
+            font-family: 'Courier New', monospace;
+            resize: vertical;
+            transition: border-color 0.3s ease;
+            line-height: 1.6;
+        }
+
+        .input-textarea:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .controls {
+            display: flex;
+            gap: 15px;
+            margin: var(--spacing-lg) 0;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: var(--radius-md);
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #4c51bf, #667eea);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(76, 81, 191, 0.4);
+        }
+
+        .btn-secondary {
+            background: linear-gradient(135deg, #48bb78, #38a169);
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(72, 187, 120, 0.4);
+        }
+
+        .btn-clear {
+            background: linear-gradient(135deg, #e53e3e, #c53030);
+            color: white;
+        }
+
+        .btn-clear:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(229, 62, 62, 0.4);
+        }
+
+        .output-section {
+            background: #f7fafc;
+            border: 2px solid #e2e8f0;
+            border-radius: var(--radius-lg);
+            overflow: hidden;
+        }
+
+        .output-header {
+            background: #e2e8f0;
+            padding: 15px 20px;
+            font-weight: 600;
+            color: #4a5568;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .output-content {
+            padding: var(--spacing-lg);
+            min-height: 200px;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .toc-list {
+            list-style: none;
+            padding: 0;
+        }
+
+        .toc-item {
+            margin: 8px 0;
+            position: relative;
+        }
+
+        .toc-link {
+            display: block;
+            padding: 8px 12px;
+            text-decoration: none;
+            color: #4a5568;
+            border-radius: 8px;
+            transition: all 0.3s ease;
+            border-left: 3px solid transparent;
+        }
+
+        .toc-link:hover {
+            background: #e2e8f0;
+            border-left-color: #667eea;
+            transform: translateX(5px);
+        }
+
+        .toc-h1 { font-size: 1.1rem; font-weight: 700; margin-left: 0; }
+        .toc-h2 { font-size: 1.05rem; font-weight: 600; margin-left: 20px; }
+        .toc-h3 { font-size: 1rem; font-weight: 500; margin-left: 40px; }
+        .toc-h4 { font-size: 0.95rem; font-weight: 400; margin-left: 60px; }
+        .toc-h5 { font-size: 0.9rem; font-weight: 400; margin-left: 80px; }
+        .toc-h6 { font-size: 0.85rem; font-weight: 400; margin-left: 100px; }
+
+        .empty-state {
+            text-align: center;
+            color: #718096;
+            padding: 40px;
+            font-style: italic;
+        }
+
+        .stats {
+            display: flex;
+            gap: 20px;
+            margin: var(--spacing-lg) 0;
+            flex-wrap: wrap;
+        }
+
+        .stat-item {
+            background: white;
+            padding: 15px 20px;
+            border-radius: var(--radius-md);
+            border: 1px solid #e2e8f0;
+            text-align: center;
+            min-width: 120px;
+        }
+
+        .stat-value {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #4c51bf;
+            margin-bottom: 5px;
+        }
+
+        .stat-label {
+            font-size: 0.9rem;
+            color: #718096;
+        }
+
+        .footer {
+            background: #f7fafc;
+            padding: var(--spacing-lg) 30px;
+            border-top: 1px solid #e2e8f0;
+            text-align: center;
+            color: #718096;
+            font-size: 0.9rem;
+        }
+
+        .footer a {
+            color: #667eea;
+            text-decoration: none;
+            font-weight: 600;
+        }
+
+        .footer a:hover {
+            text-decoration: underline;
+        }
+
+        .copy-notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: #48bb78;
+            color: white;
+            padding: 12px 20px;
+            border-radius: var(--radius-md);
+            box-shadow: 0 10px 25px rgba(72, 187, 120, 0.3);
+            transform: translateX(300px);
+            transition: transform 0.3s ease;
+            z-index: 1000;
+        }
+
+        .copy-notification.show {
+            transform: translateX(0);
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                margin: 0;
+                border-radius: 0;
+            }
+
+            .header {
+                padding: var(--spacing-lg);
+            }
+
+            .title {
+                font-size: 2rem;
+            }
+
+            .main-content {
+                padding: var(--spacing-lg);
+            }
+
+            .controls {
+                flex-direction: column;
+            }
+
+            .btn {
+                justify-content: center;
+            }
+
+            .stats {
+                justify-content: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="tool-container">
+        <!-- 工具头部 -->
+        <header class="tool-header">
+            <div class="tool-header-content">
+                <a href="../../index.html" class="back-btn">
+                    <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                        <path d="M10 4l-4 4 4 4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                    返回工具集
+                </a>
+                
+                <div class="tool-title">
+                    <h1>文章目录生成器 - Table of Contents Generator</h1>
+                    <p class="tool-subtitle">文章目录生成器 - Table of Contents Generator</p>
+                </div>
+                
+                <button class="theme-toggle" id="themeToggle" aria-label="切换主题">
+                    <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                        <circle cx="10" cy="10" r="4" stroke="currentColor" stroke-width="2"/>
+                        <path d="M10 2v2M10 16v2M18 10h-2M4 10H2M15.66 4.34l-1.41 1.41M5.75 14.25l-1.41 1.41M15.66 15.66l-1.41-1.41M5.75 5.75L4.34 4.34" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                    </svg>
+                </button>
+            </div>
+        </header>
+
+        <!-- 工具主内容 -->
+        <main class="tool-main">
+            <div class="tool-card">
+                <div class="tool-section">
+                    <h2>
+                        <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                            <rect x="3" y="3" width="14" height="14" rx="2" stroke="currentColor" stroke-width="2"/>
+                        </svg>
+                        工具功能
+                    </h2>
+                    
+                    
+            <div class="tool-card">
+                <div class="tool-section">
+                    <h2>
+                        <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                            <rect x="3" y="3" width="14" height="14" rx="2" stroke="currentColor" stroke-width="2"/>
+                        </svg>
+                        文章目录生成器 - Table of Contents Generator
+                    </h2>
+                    <div class="container">
+        <div class="header">
+            <h1 class="title">📚 文章目录生成器</h1>
+            <p class="subtitle">Table of Contents Generator</p>
+            <div class="description">
+                <strong>🎯 工具介绍：</strong><br>
+                智能文章目录生成器，支持解析Markdown和HTML格式的文章内容，自动提取H1-H6标题标签，生成结构化的可点击目录。支持嵌套层级显示，让长文章的导航变得简单高效。适合技术文档、博客文章、学术论文等各种文本内容的目录生成需求。
+            </div>
+        </div>
+
+        <div class="main-content">
+            <div class="input-section">
+                <h2 class="section-title">📝 输入文章内容</h2>
+                
+                <div class="format-tabs">
+                    <button class="tab-btn active" data-format="markdown">Markdown</button>
+                    <button class="tab-btn" data-format="html">HTML</button>
+                </div>
+
+                <textarea 
+                    id="contentInput" 
+                    class="input-textarea" 
+                    placeholder="请粘贴您的Markdown或HTML内容...
+
+示例 Markdown 格式：
+# 第一章 概述
+## 1.1 背景介绍
+### 1.1.1 技术发展
+#### 详细说明
+## 1.2 目标定义
+
+# 第二章 实现方案
+## 2.1 架构设计
+## 2.2 技术选型
+
+示例 HTML 格式：
+<h1>第一章 概述</h1>
+<h2>1.1 背景介绍</h2>
+<h3>1.1.1 技术发展</h3>
+<h4>详细说明</h4>
+<h2>1.2 目标定义</h2>"></textarea>
+
+                <div class="controls">
+                    <button class="btn btn-primary" id="generateBtn">
+                        🔄 生成目录
+                    </button>
+                    <button class="btn btn-secondary" id="copyBtn">
+                        📋 复制目录
+                    </button>
+                    <button class="btn btn-clear" id="clearBtn">
+                        🗑️ 清空内容
+                    </button>
+                </div>
+
+                <div class="stats" id="stats" style="display: none;">
+                    <div class="stat-item">
+                        <div class="stat-value" id="totalHeadings">0</div>
+                        <div class="stat-label">总标题数</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value" id="maxLevel">0</div>
+                        <div class="stat-label">最大层级</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value" id="h1Count">0</div>
+                        <div class="stat-label">一级标题</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value" id="h2Count">0</div>
+                        <div class="stat-label">二级标题</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="output-section">
+                <div class="output-header">
+                    <span>📖 生成的目录结构</span>
+                    <span id="tocFormat">HTML格式</span>
+                </div>
+                <div class="output-content" id="outputContent">
+                    <div class="empty-state">
+                        请在上方输入文章内容，然后点击"生成目录"按钮
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="footer">
+            <p>💡 <strong>使用提示：</strong>支持Markdown（#标题）和HTML（&lt;h1-h6&gt;标签）两种格式解析</p>
+            <p style="margin-top: 10px;">
+                <a href="#" target="_blank">小苏趣研AI</a> - 让工作更智能，让生活更有趣
+            </p>
+        </div>
+    </div>
+
+    <div class="copy-notification" id="copyNotification">
+        ✅ 目录已复制到剪贴板
+    </div>
+
+    
+                </div>
+            </div>
+                    <!-- 结果显示区域 -->
+                    <div class="result-display" id="result">
+                        <pre id="resultContent">处理结果将在这里显示...</pre>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <!-- 工具页脚 -->
+        <footer class="tool-footer">
+            <p>由 <a href="../../index.html">AI工具集</a> 提供 | 原创工具</p>
+        </footer>
+    </div>
+
+    <!-- JavaScript -->
+    <script src="../../shared/js/utils.js"></script>
+    <script>
+        // 工具特定的JavaScript代码
+        class ToolApp {
+            constructor() {
+                this.init();
+            }
+
+            init() {
+                this.setupEventListeners();
+            }
+
+            setupEventListeners() {
+                document.getElementById('processBtn').addEventListener('click', () => this.process());
+                document.getElementById('clearBtn').addEventListener('click', () => this.clear());
+                document.getElementById('copyBtn').addEventListener('click', () => this.copyResult());
+                
+                // 实时处理（可选）
+                document.getElementById('input').addEventListener('input', 
+                    ToolUtils.debounce(() => this.process(), 300)
+                );
+            }
+
+            process() {
+                const input = document.getElementById('input').value;
+                const result = this.processInput(input);
+                this.displayResult(result);
+            }
+
+            processInput(input) {
+                
+        class TOCGenerator {
+            constructor() {
+                this.currentFormat = 'markdown';
+                this.headings = [];
+                
+                this.contentInput = document.getElementById('contentInput');
+                this.generateBtn = document.getElementById('generateBtn');
+                this.copyBtn = document.getElementById('copyBtn');
+                this.clearBtn = document.getElementById('clearBtn');
+                this.outputContent = document.getElementById('outputContent');
+                this.tocFormat = document.getElementById('tocFormat');
+                this.stats = document.getElementById('stats');
+                this.copyNotification = document.getElementById('copyNotification');
+                
+                this.bindEvents();
+            }
+            
+            bindEvents() {
+                // 格式切换
+                document.querySelectorAll('.tab-btn').forEach(btn => {
+                    btn.addEventListener('click', (e) => {
+                        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+                        e.target.classList.add('active');
+                        this.currentFormat = e.target.dataset.format;
+                        this.updatePlaceholder();
+                    });
+                });
+                
+                // 按钮事件
+                this.generateBtn.addEventListener('click', () => this.generateTOC());
+                this.copyBtn.addEventListener('click', () => this.copyTOC());
+                this.clearBtn.addEventListener('click', () => this.clearContent());
+                
+                // 实时生成
+                this.contentInput.addEventListener('input', () => {
+                    if (this.contentInput.value.trim()) {
+                        this.generateTOC();
+                    }
+                });
+            }
+            
+            updatePlaceholder() {
+                if (this.currentFormat === 'markdown') {
+                    this.contentInput.placeholder = `请粘贴您的Markdown内容...
+
+示例格式：
+# 第一章 概述
+## 1.1 背景介绍
+### 1.1.1 技术发展
+#### 详细说明
+## 1.2 目标定义
+
+# 第二章 实现方案
+## 2.1 架构设计
+## 2.2 技术选型`;
+                } else {
+                    this.contentInput.placeholder = `请粘贴您的HTML内容...
+
+示例格式：
+<h1>第一章 概述</h1>
+<h2>1.1 背景介绍</h2>
+<h3>1.1.1 技术发展</h3>
+<h4>详细说明</h4>
+<h2>1.2 目标定义</h2>
+
+<h1>第二章 实现方案</h1>
+<h2>2.1 架构设计</h2>
+<h2>2.2 技术选型</h2>`;
+                }
+            }
+            
+            generateTOC() {
+                const content = this.contentInput.value.trim();
+                
+                if (!content) {
+                    this.showEmptyState();
+                    return;
+                }
+                
+                this.headings = this.currentFormat === 'markdown' 
+                    ? this.parseMarkdownHeadings(content)
+                    : this.parseHTMLHeadings(content);
+                
+                if (this.headings.length === 0) {
+                    this.showNoHeadingsFound();
+                    return;
+                }
+                
+                this.renderTOC();
+                this.updateStats();
+            }
+            
+            parseMarkdownHeadings(content) {
+                const headings = [];
+                const lines = content.split('\n');
+                
+                lines.forEach((line, index) => {
+                    const trimmed = line.trim();
+                    const match = trimmed.match(/^(#{1,6})\s+(.+)$/);
+                    
+                    if (match) {
+                        const level = match[1].length;
+                        const text = match[2].trim();
+                        const id = this.generateId(text);
+                        
+                        headings.push({
+                            level,
+                            text,
+                            id,
+                            lineNumber: index + 1
+                        });
+                    }
+                });
+                
+                return headings;
+            }
+            
+            parseHTMLHeadings(content) {
+                const headings = [];
+                const tempDiv = document.createElement('div');
+                tempDiv.innerHTML = content;
+                
+                const headingElements = tempDiv.querySelectorAll('h1, h2, h3, h4, h5, h6');
+                
+                headingElements.forEach((element, index) => {
+                    const level = parseInt(element.tagName.charAt(1));
+                    const text = element.textContent.trim();
+                    const id = element.id || this.generateId(text);
+                    
+                    headings.push({
+                        level,
+                        text,
+                        id,
+                        element: element.tagName.toLowerCase()
+                    });
+                });
+                
+                return headings;
+            }
+            
+            generateId(text) {
+                return text
+                    .toLowerCase()
+                    .replace(/[^\w\u4e00-\u9fa5\s-]/g, '')
+                    .replace(/\s+/g, '-')
+                    .replace(/-+/g, '-')
+                    .replace(/^-|-$/g, '');
+            }
+            
+            renderTOC() {
+                const tocHTML = this.generateTOCHTML();
+                const tocMarkdown = this.generateTOCMarkdown();
+                
+                this.outputContent.innerHTML = `
+                    <div class="format-tabs" style="margin-bottom: 20px;">
+                        <button class="tab-btn active" onclick="this.parentElement.parentElement.querySelector('.toc-html').style.display='block'; this.parentElement.parentElement.querySelector('.toc-markdown').style.display='none'; this.parentElement.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active')); this.classList.add('active'); document.getElementById('tocFormat').textContent='HTML格式';">HTML格式</button>
+                        <button class="tab-btn" onclick="this.parentElement.parentElement.querySelector('.toc-html').style.display='none'; this.parentElement.parentElement.querySelector('.toc-markdown').style.display='block'; this.parentElement.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active')); this.classList.add('active'); document.getElementById('tocFormat').textContent='Markdown格式';">Markdown格式</button>
+                    </div>
+                    <div class="toc-html">
+                        ${tocHTML}
+                    </div>
+                    <div class="toc-markdown" style="display: none;">
+                        <pre style="background: #f7fafc; padding: 20px; border-radius: 10px; margin: 0; white-space: pre-wrap; font-family: 'Courier New', monospace; font-size: 0.9rem; line-height: 1.6;">${tocMarkdown}</pre>
+                    </div>
+                `;
+            }
+            
+            generateTOCHTML() {
+                if (this.headings.length === 0) return '';
+                
+                let html = '<ul class="toc-list">';
+                
+                this.headings.forEach(heading => {
+                    html += `
+                        <li class="toc-item">
+                            <a href="#${heading.id}" class="toc-link toc-h${heading.level}">
+                                ${heading.text}
+                            </a>
+                        </li>
+                    `;
+                });
+                
+                html += '</ul>';
+                return html;
+            }
+            
+            generateTOCMarkdown() {
+                if (this.headings.length === 0) return '';
+                
+                let markdown = '';
+                
+                this.headings.forEach(heading => {
+                    const indent = '  '.repeat(heading.level - 1);
+                    markdown += `${indent}- [${heading.text}](#${heading.id})\n`;
+                });
+                
+                return markdown.trim();
+            }
+            
+            updateStats() {
+                const stats = this.calculateStats();
+                
+                document.getElementById('totalHeadings').textContent = stats.total;
+                document.getElementById('maxLevel').textContent = stats.maxLevel;
+                document.getElementById('h1Count').textContent = stats.h1Count;
+                document.getElementById('h2Count').textContent = stats.h2Count;
+                
+                this.stats.style.display = 'flex';
+            }
+            
+            calculateStats() {
+                const stats = {
+                    total: this.headings.length,
+                    maxLevel: Math.max(...this.headings.map(h => h.level), 0),
+                    h1Count: this.headings.filter(h => h.level === 1).length,
+                    h2Count: this.headings.filter(h => h.level === 2).length
+                };
+                
+                return stats;
+            }
+            
+            showEmptyState() {
+                this.outputContent.innerHTML = `
+                    <div class="empty-state">
+                        请在上方输入文章内容，然后点击"生成目录"按钮
+                    </div>
+                `;
+                this.stats.style.display = 'none';
+            }
+            
+            showNoHeadingsFound() {
+                this.outputContent.innerHTML = `
+                    <div class="empty-state">
+                        未找到任何标题标签<br>
+                        <small>请确保内容包含${this.currentFormat === 'markdown' ? 'Markdown标题（# ## ###）' : 'HTML标题标签（&lt;h1&gt; &lt;h2&gt; 等）'}</small>
+                    </div>
+                `;
+                this.stats.style.display = 'none';
+            }
+            
+            copyTOC() {
+                if (this.headings.length === 0) {
+                    alert('请先生成目录');
+                    return;
+                }
+                
+                const isMarkdownVisible = this.outputContent.querySelector('.toc-markdown').style.display !== 'none';
+                const content = isMarkdownVisible 
+                    ? this.generateTOCMarkdown()
+                    : this.generateTOCHTMLText();
+                
+                navigator.clipboard.writeText(content).then(() => {
+                    this.showCopyNotification();
+                }).catch(() => {
+                    // 降级处理
+                    const textArea = document.createElement('textarea');
+                    textArea.value = content;
+                    document.body.appendChild(textArea);
+                    textArea.select();
+                    document.execCommand('copy');
+                    document.body.removeChild(textArea);
+                    this.showCopyNotification();
+                });
+            }
+            
+            generateTOCHTMLText() {
+                let html = '<ul>\n';
+                this.headings.forEach(heading => {
+                    const indent = '  '.repeat(heading.level - 1);
+                    html += `${indent}  <li><a href="#${heading.id}">${heading.text}</a></li>\n`;
+                });
+                html += '</ul>';
+                return html;
+            }
+            
+            showCopyNotification() {
+                this.copyNotification.classList.add('show');
+                setTimeout(() => {
+                    this.copyNotification.classList.remove('show');
+                }, 2000);
+            }
+            
+            clearContent() {
+                this.contentInput.value = '';
+                this.showEmptyState();
+            }
+        }
+        
+        // 初始化生成器
+        document.addEventListener('DOMContentLoaded', () => {
+            new TOCGenerator();
+        });
+    
+                return input;
+            }
+
+            displayResult(result) {
+                document.getElementById('resultContent').textContent = result;
+            }
+
+            clear() {
+                document.getElementById('input').value = '';
+                document.getElementById('resultContent').textContent = '处理结果将在这里显示...';
+            }
+
+            copyResult() {
+                const result = document.getElementById('resultContent').textContent;
+                if (result && result !== '处理结果将在这里显示...') {
+                    ToolUtils.copyToClipboard(result);
+                } else {
+                    ToolUtils.showToast('没有可复制的内容', 'warning');
+                }
+            }
+        }
+
+        // 初始化应用
+        document.addEventListener('DOMContentLoaded', () => {
+            new ToolApp();
+        });
+    </script>
+</body>
+</html>

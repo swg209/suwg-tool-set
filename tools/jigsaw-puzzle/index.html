@@ -1,0 +1,824 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>简易拼图游戏 - AI工具集</title>
+    <meta name="description" content="简易拼图游戏">
+    
+    <!-- 样式文件 -->
+    <link rel="stylesheet" href="../../shared/css/common.css">
+    
+    <!-- 工具特定样式 -->
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: var(--spacing-lg);
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .header p {
+            font-size: 1.1em;
+            opacity: 0.9;
+        }
+
+        .game-container {
+            display: grid;
+            grid-template-columns: 1fr 300px;
+            gap: 30px;
+            padding: 30px;
+        }
+
+        .upload-area {
+            border: 3px dashed #dee2e6;
+            border-radius: var(--radius-lg);
+            padding: 60px 20px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            background: #f8f9fa;
+            margin-bottom: 30px;
+        }
+
+        .upload-area:hover {
+            border-color: #667eea;
+            background: #e8f4fd;
+        }
+
+        .upload-area.dragover {
+            border-color: #667eea;
+            background: #e8f4fd;
+            transform: scale(1.02);
+        }
+
+        .upload-icon {
+            font-size: 3em;
+            margin-bottom: 15px;
+            color: #6c757d;
+        }
+
+        .upload-text {
+            font-size: 1.2em;
+            color: #495057;
+            margin-bottom: 10px;
+        }
+
+        .upload-hint {
+            font-size: 0.9em;
+            color: #6c757d;
+        }
+
+        .puzzle-board {
+            display: grid;
+            gap: 2px;
+            background: #2c3e50;
+            padding: var(--spacing-md);
+            border-radius: var(--radius-lg);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+            margin-bottom: 20px;
+            min-height: 400px;
+            place-items: center;
+        }
+
+        .puzzle-piece {
+            background: white;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s;
+            position: relative;
+            overflow: hidden;
+            border: 2px solid transparent;
+        }
+
+        .puzzle-piece:hover {
+            transform: scale(1.05);
+            border-color: #667eea;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+
+        .puzzle-piece.selected {
+            border-color: #ffc107;
+            box-shadow: 0 0 20px rgba(255, 193, 7, 0.5);
+        }
+
+        .puzzle-piece.correct {
+            border-color: #28a745;
+            box-shadow: 0 0 20px rgba(40, 167, 69, 0.3);
+        }
+
+        .puzzle-piece img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+        }
+
+        .controls-panel {
+            background: #f8f9fa;
+            padding: 25px;
+            border-radius: var(--radius-lg);
+            border: 2px solid #e9ecef;
+        }
+
+        .controls-panel h3 {
+            color: #495057;
+            margin-bottom: 20px;
+            font-size: 1.3em;
+        }
+
+        .difficulty-selector {
+            margin-bottom: 25px;
+        }
+
+        .difficulty-btn {
+            display: block;
+            width: 100%;
+            padding: 12px;
+            margin-bottom: 10px;
+            border: 2px solid #dee2e6;
+            background: white;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-weight: 600;
+            color: #495057;
+        }
+
+        .difficulty-btn.active {
+            border-color: #667eea;
+            background: #667eea;
+            color: white;
+        }
+
+        .difficulty-btn:hover:not(.active) {
+            border-color: #adb5bd;
+            background: #f8f9fa;
+        }
+
+        .game-stats {
+            background: white;
+            padding: var(--spacing-lg);
+            border-radius: var(--radius-md);
+            margin-bottom: 20px;
+            border: 1px solid #dee2e6;
+        }
+
+        .stat-item {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+            font-weight: 600;
+        }
+
+        .stat-value {
+            color: #667eea;
+        }
+
+        .game-buttons {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .btn {
+            padding: 12px 20px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s;
+            font-size: 14px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-success {
+            background: #28a745;
+            color: white;
+        }
+
+        .btn-success:hover {
+            background: #218838;
+        }
+
+        .btn-warning {
+            background: #ffc107;
+            color: #212529;
+        }
+
+        .btn-warning:hover {
+            background: #e0a800;
+        }
+
+        .completion-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.8);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+
+        .modal-content {
+            background: white;
+            padding: 40px;
+            border-radius: 20px;
+            text-align: center;
+            max-width: 400px;
+            width: 90%;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+        }
+
+        .modal-content h2 {
+            color: #28a745;
+            margin-bottom: 20px;
+            font-size: 2em;
+        }
+
+        .modal-content p {
+            margin-bottom: 20px;
+            color: #495057;
+            font-size: 1.1em;
+        }
+
+        .footer {
+            background: #f8f9fa;
+            padding: var(--spacing-lg);
+            text-align: center;
+            color: #6c757d;
+            border-top: 1px solid #dee2e6;
+        }
+
+        .footer p {
+            margin-bottom: 5px;
+        }
+
+        .footer a {
+            color: #667eea;
+            text-decoration: none;
+        }
+
+        .footer a:hover {
+            text-decoration: underline;
+        }
+
+        #fileInput {
+            display: none;
+        }
+
+        @media (max-width: 768px) {
+            .game-container {
+                grid-template-columns: 1fr;
+                gap: 20px;
+            }
+            
+            .header h1 {
+                font-size: 2em;
+            }
+            
+            .puzzle-board {
+                min-height: 300px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="tool-container">
+        <!-- 工具头部 -->
+        <header class="tool-header">
+            <div class="tool-header-content">
+                <a href="../../index.html" class="back-btn">
+                    <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                        <path d="M10 4l-4 4 4 4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                    返回工具集
+                </a>
+                
+                <div class="tool-title">
+                    <h1>简易拼图游戏</h1>
+                    <p class="tool-subtitle">简易拼图游戏</p>
+                </div>
+                
+                <button class="theme-toggle" id="themeToggle" aria-label="切换主题">
+                    <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                        <circle cx="10" cy="10" r="4" stroke="currentColor" stroke-width="2"/>
+                        <path d="M10 2v2M10 16v2M18 10h-2M4 10H2M15.66 4.34l-1.41 1.41M5.75 14.25l-1.41 1.41M15.66 15.66l-1.41-1.41M5.75 5.75L4.34 4.34" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                    </svg>
+                </button>
+            </div>
+        </header>
+
+        <!-- 工具主内容 -->
+        <main class="tool-main">
+            <div class="tool-card">
+                <div class="tool-section">
+                    <h2>
+                        <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                            <rect x="3" y="3" width="14" height="14" rx="2" stroke="currentColor" stroke-width="2"/>
+                        </svg>
+                        工具功能
+                    </h2>
+                    
+                    
+            <div class="tool-card">
+                <div class="tool-section">
+                    <h2>
+                        <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                            <rect x="3" y="3" width="14" height="14" rx="2" stroke="currentColor" stroke-width="2"/>
+                        </svg>
+                        简易拼图游戏
+                    </h2>
+                    <div class="container">
+        <div class="header">
+            <h1>🧩 简易拼图游戏</h1>
+            <p>上传图片，挑战你的拼图技巧！</p>
+        </div>
+
+        <div class="game-container">
+            <div class="game-area">
+                <div class="upload-area" id="uploadArea">
+                    <div class="upload-icon">📤</div>
+                    <div class="upload-text">点击或拖拽上传图片</div>
+                    <div class="upload-hint">支持 JPG、PNG、GIF 格式</div>
+                </div>
+                <input type="file" id="fileInput" accept="image/*">
+
+                <div class="puzzle-board" id="puzzleBoard">
+                    <div style="color: #6c757d; font-size: 1.2em;">
+                        上传图片开始游戏
+                    </div>
+                </div>
+            </div>
+
+            <div class="controls-panel">
+                <h3>🎮 游戏设置</h3>
+                
+                <div class="difficulty-selector">
+                    <button class="difficulty-btn active" onclick="setDifficulty(3)">简单 (3×3)</button>
+                    <button class="difficulty-btn" onclick="setDifficulty(4)">中等 (4×4)</button>
+                    <button class="difficulty-btn" onclick="setDifficulty(5)">困难 (5×5)</button>
+                </div>
+
+                <div class="game-stats">
+                    <div class="stat-item">
+                        <span>移动次数:</span>
+                        <span class="stat-value" id="moveCount">0</span>
+                    </div>
+                    <div class="stat-item">
+                        <span>游戏时间:</span>
+                        <span class="stat-value" id="gameTime">00:00</span>
+                    </div>
+                    <div class="stat-item">
+                        <span>完成度:</span>
+                        <span class="stat-value" id="progress">0%</span>
+                    </div>
+                </div>
+
+                <div class="game-buttons">
+                    <button class="btn btn-primary" onclick="shufflePuzzle()">🔀 打乱拼图</button>
+                    <button class="btn btn-success" onclick="showPreview()">👁️ 查看原图</button>
+                    <button class="btn btn-warning" onclick="resetGame()">🔄 重新开始</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="footer">
+            <p>© <a href="#" target="_blank">小苏趣研AI</a> | 简易拼图游戏</p>
+            <p style="margin-top: 5px;">上传图片创建个性化拼图，支持多种难度，锻炼观察力和逻辑思维能力</p>
+        </div>
+    </div>
+
+    <!-- 完成提示模态框 -->
+    <div class="completion-modal" id="completionModal">
+        <div class="modal-content">
+            <h2>🎉 恭喜完成！</h2>
+            <p>你用了 <span id="finalMoves">0</span> 步</p>
+            <p>耗时 <span id="finalTime">00:00</span></p>
+            <button class="btn btn-primary" onclick="closeModal()">继续游戏</button>
+        </div>
+    </div>
+
+    
+                </div>
+            </div>
+                    <!-- 结果显示区域 -->
+                    <div class="result-display" id="result">
+                        <pre id="resultContent">处理结果将在这里显示...</pre>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <!-- 工具页脚 -->
+        <footer class="tool-footer">
+            <p>由 <a href="../../index.html">AI工具集</a> 提供 | 原创工具</p>
+        </footer>
+    </div>
+
+    <!-- JavaScript -->
+    <script src="../../shared/js/utils.js"></script>
+    <script>
+        // 工具特定的JavaScript代码
+        class ToolApp {
+            constructor() {
+                this.init();
+            }
+
+            init() {
+                this.setupEventListeners();
+            }
+
+            setupEventListeners() {
+                document.getElementById('processBtn').addEventListener('click', () => this.process());
+                document.getElementById('clearBtn').addEventListener('click', () => this.clear());
+                document.getElementById('copyBtn').addEventListener('click', () => this.copyResult());
+                
+                // 实时处理（可选）
+                document.getElementById('input').addEventListener('input', 
+                    ToolUtils.debounce(() => this.process(), 300)
+                );
+            }
+
+            process() {
+                const input = document.getElementById('input').value;
+                const result = this.processInput(input);
+                this.displayResult(result);
+            }
+
+            processInput(input) {
+                
+        class JigsawPuzzle {
+            constructor() {
+                this.gridSize = 3;
+                this.pieces = [];
+                this.correctOrder = [];
+                this.currentOrder = [];
+                this.selectedPiece = null;
+                this.imageData = null;
+                this.moveCount = 0;
+                this.startTime = null;
+                this.timerInterval = null;
+                this.isComplete = false;
+                
+                this.setupEventListeners();
+            }
+            
+            setupEventListeners() {
+                const uploadArea = document.getElementById('uploadArea');
+                const fileInput = document.getElementById('fileInput');
+                
+                uploadArea.addEventListener('click', () => fileInput.click());
+                
+                uploadArea.addEventListener('dragover', (e) => {
+                    e.preventDefault();
+                    uploadArea.classList.add('dragover');
+                });
+                
+                uploadArea.addEventListener('dragleave', (e) => {
+                    e.preventDefault();
+                    uploadArea.classList.remove('dragover');
+                });
+                
+                uploadArea.addEventListener('drop', (e) => {
+                    e.preventDefault();
+                    uploadArea.classList.remove('dragover');
+                    const files = e.dataTransfer.files;
+                    if (files.length > 0) {
+                        this.loadImage(files[0]);
+                    }
+                });
+                
+                fileInput.addEventListener('change', (e) => {
+                    const file = e.target.files[0];
+                    if (file) {
+                        this.loadImage(file);
+                    }
+                });
+            }
+            
+            loadImage(file) {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    const img = new Image();
+                    img.onload = () => {
+                        this.imageData = img;
+                        this.setupGame();
+                    };
+                    img.src = e.target.result;
+                };
+                reader.readAsDataURL(file);
+            }
+            
+            setupGame() {
+                this.createPieces();
+                this.renderBoard();
+                this.shufflePuzzle();
+                this.startTimer();
+                this.moveCount = 0;
+                this.updateStats();
+            }
+            
+            createPieces() {
+                this.pieces = [];
+                this.correctOrder = [];
+                
+                const canvas = document.createElement('canvas');
+                const ctx = canvas.getContext('2d');
+                
+                // 计算正方形尺寸
+                const size = Math.min(this.imageData.width, this.imageData.height);
+                canvas.width = size;
+                canvas.height = size;
+                
+                // 绘制居中的正方形图片
+                const offsetX = (this.imageData.width - size) / 2;
+                const offsetY = (this.imageData.height - size) / 2;
+                ctx.drawImage(this.imageData, offsetX, offsetY, size, size, 0, 0, size, size);
+                
+                const pieceSize = size / this.gridSize;
+                
+                for (let row = 0; row < this.gridSize; row++) {
+                    for (let col = 0; col < this.gridSize; col++) {
+                        const pieceCanvas = document.createElement('canvas');
+                        const pieceCtx = pieceCanvas.getContext('2d');
+                        
+                        pieceCanvas.width = pieceSize;
+                        pieceCanvas.height = pieceSize;
+                        
+                        pieceCtx.drawImage(
+                            canvas,
+                            col * pieceSize, row * pieceSize, pieceSize, pieceSize,
+                            0, 0, pieceSize, pieceSize
+                        );
+                        
+                        const piece = {
+                            id: row * this.gridSize + col,
+                            correctRow: row,
+                            correctCol: col,
+                            currentRow: row,
+                            currentCol: col,
+                            canvas: pieceCanvas,
+                            element: null
+                        };
+                        
+                        this.pieces.push(piece);
+                        this.correctOrder.push(piece.id);
+                    }
+                }
+                
+                this.currentOrder = [...this.correctOrder];
+            }
+            
+            renderBoard() {
+                const board = document.getElementById('puzzleBoard');
+                board.innerHTML = '';
+                board.style.gridTemplateColumns = `repeat(${this.gridSize}, 1fr)`;
+                board.style.gridTemplateRows = `repeat(${this.gridSize}, 1fr)`;
+                
+                const boardSize = Math.min(500, window.innerWidth - 100);
+                const pieceSize = (boardSize - 20) / this.gridSize;
+                
+                this.pieces.forEach((piece, index) => {
+                    const pieceElement = document.createElement('div');
+                    pieceElement.className = 'puzzle-piece';
+                    pieceElement.style.width = `${pieceSize}px`;
+                    pieceElement.style.height = `${pieceSize}px`;
+                    pieceElement.dataset.id = piece.id;
+                    
+                    const img = document.createElement('img');
+                    img.src = piece.canvas.toDataURL();
+                    pieceElement.appendChild(img);
+                    
+                    pieceElement.addEventListener('click', () => this.selectPiece(piece));
+                    
+                    piece.element = pieceElement;
+                    board.appendChild(pieceElement);
+                });
+            }
+            
+            selectPiece(piece) {
+                if (this.isComplete) return;
+                
+                if (this.selectedPiece === null) {
+                    this.selectedPiece = piece;
+                    piece.element.classList.add('selected');
+                } else if (this.selectedPiece === piece) {
+                    this.selectedPiece.element.classList.remove('selected');
+                    this.selectedPiece = null;
+                } else {
+                    this.swapPieces(this.selectedPiece, piece);
+                    this.selectedPiece.element.classList.remove('selected');
+                    this.selectedPiece = null;
+                    this.moveCount++;
+                    this.updateStats();
+                    this.checkCompletion();
+                }
+            }
+            
+            swapPieces(piece1, piece2) {
+                const tempRow = piece1.currentRow;
+                const tempCol = piece1.currentCol;
+                
+                piece1.currentRow = piece2.currentRow;
+                piece1.currentCol = piece2.currentCol;
+                piece2.currentRow = tempRow;
+                piece2.currentCol = tempCol;
+                
+                // 交换DOM位置
+                const board = document.getElementById('puzzleBoard');
+                const temp = document.createElement('div');
+                board.insertBefore(temp, piece1.element);
+                board.insertBefore(piece1.element, piece2.element);
+                board.insertBefore(piece2.element, temp);
+                board.removeChild(temp);
+            }
+            
+            shufflePuzzle() {
+                if (!this.pieces.length) return;
+                
+                // Fisher-Yates 洗牌算法
+                for (let i = this.pieces.length - 1; i > 0; i--) {
+                    const j = Math.floor(Math.random() * (i + 1));
+                    this.swapPieces(this.pieces[i], this.pieces[j]);
+                }
+                
+                this.moveCount = 0;
+                this.updateStats();
+                this.isComplete = false;
+            }
+            
+            checkCompletion() {
+                let correct = 0;
+                this.pieces.forEach(piece => {
+                    if (piece.currentRow === piece.correctRow && piece.currentCol === piece.correctCol) {
+                        piece.element.classList.add('correct');
+                        correct++;
+                    } else {
+                        piece.element.classList.remove('correct');
+                    }
+                });
+                
+                const progress = Math.round((correct / this.pieces.length) * 100);
+                document.getElementById('progress').textContent = `${progress}%`;
+                
+                if (correct === this.pieces.length && !this.isComplete) {
+                    this.isComplete = true;
+                    this.stopTimer();
+                    this.showCompletionModal();
+                }
+            }
+            
+            startTimer() {
+                this.startTime = Date.now();
+                this.timerInterval = setInterval(() => {
+                    const elapsed = Date.now() - this.startTime;
+                    const minutes = Math.floor(elapsed / 60000);
+                    const seconds = Math.floor((elapsed % 60000) / 1000);
+                    document.getElementById('gameTime').textContent = 
+                        `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+                }, 1000);
+            }
+            
+            stopTimer() {
+                if (this.timerInterval) {
+                    clearInterval(this.timerInterval);
+                    this.timerInterval = null;
+                }
+            }
+            
+            updateStats() {
+                document.getElementById('moveCount').textContent = this.moveCount;
+                this.checkCompletion();
+            }
+            
+            showCompletionModal() {
+                const modal = document.getElementById('completionModal');
+                const elapsed = Date.now() - this.startTime;
+                const minutes = Math.floor(elapsed / 60000);
+                const seconds = Math.floor((elapsed % 60000) / 1000);
+                
+                document.getElementById('finalMoves').textContent = this.moveCount;
+                document.getElementById('finalTime').textContent = 
+                    `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+                
+                modal.style.display = 'flex';
+            }
+        }
+        
+        // 全局实例
+        const puzzle = new JigsawPuzzle();
+        
+        // 全局函数
+        function setDifficulty(size) {
+            puzzle.gridSize = size;
+            document.querySelectorAll('.difficulty-btn').forEach(btn => btn.classList.remove('active'));
+            event.target.classList.add('active');
+            
+            if (puzzle.imageData) {
+                puzzle.setupGame();
+            }
+        }
+        
+        function shufflePuzzle() {
+            puzzle.shufflePuzzle();
+        }
+        
+        function showPreview() {
+            if (!puzzle.imageData) return;
+            
+            const modal = document.createElement('div');
+            modal.style.cssText = `
+                position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+                background: rgba(0,0,0,0.8); display: flex; justify-content: center;
+                align-items: center; z-index: 1000; cursor: pointer;
+            `;
+            
+            const img = document.createElement('img');
+            img.src = puzzle.imageData.src;
+            img.style.cssText = 'max-width: 80%; max-height: 80%; border-radius: 10px;';
+            
+            modal.appendChild(img);
+            modal.addEventListener('click', () => document.body.removeChild(modal));
+            document.body.appendChild(modal);
+        }
+        
+        function resetGame() {
+            if (puzzle.imageData) {
+                puzzle.setupGame();
+            }
+        }
+        
+        function closeModal() {
+            document.getElementById('completionModal').style.display = 'none';
+        }
+    
+                return input;
+            }
+
+            displayResult(result) {
+                document.getElementById('resultContent').textContent = result;
+            }
+
+            clear() {
+                document.getElementById('input').value = '';
+                document.getElementById('resultContent').textContent = '处理结果将在这里显示...';
+            }
+
+            copyResult() {
+                const result = document.getElementById('resultContent').textContent;
+                if (result && result !== '处理结果将在这里显示...') {
+                    ToolUtils.copyToClipboard(result);
+                } else {
+                    ToolUtils.showToast('没有可复制的内容', 'warning');
+                }
+            }
+        }
+
+        // 初始化应用
+        document.addEventListener('DOMContentLoaded', () => {
+            new ToolApp();
+        });
+    </script>
+</body>
+</html>

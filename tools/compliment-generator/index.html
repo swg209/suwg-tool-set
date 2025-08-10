@@ -1,0 +1,717 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>彩虹屁生成器 - Compliment Generator - AI工具集</title>
+    <meta name="description" content="彩虹屁生成器 - Compliment Generator">
+    
+    <!-- 样式文件 -->
+    <link rel="stylesheet" href="../../shared/css/common.css">
+    
+    <!-- 工具特定样式 -->
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(-45deg, #ee7752, #e73c7e, #23a6d5, #23d5ab);
+            background-size: 400% 400%;
+            animation: gradientShift 15s ease infinite;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: var(--spacing-lg);
+        }
+
+        @keyframes gradientShift {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        .container {
+            max-width: 600px;
+            width: 100%;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            border-radius: 25px;
+            box-shadow: 0 25px 50px rgba(0, 0, 0, 0.15);
+            padding: 40px;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .container::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
+            animation: rotate 20s linear infinite;
+            pointer-events: none;
+        }
+
+        @keyframes rotate {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        .header {
+            position: relative;
+            z-index: 1;
+            margin-bottom: 40px;
+        }
+
+        .title {
+            font-size: 3em;
+            background: linear-gradient(45deg, #ff6b6b, #4ecdc4, #45b7d1, #96ceb4);
+            background-size: 300% 300%;
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            animation: gradientText 3s ease infinite;
+            margin-bottom: 15px;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        @keyframes gradientText {
+            0%, 100% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+        }
+
+        .subtitle {
+            font-size: 1.2em;
+            color: var(--text-secondary);
+            margin-bottom: 10px;
+        }
+
+        .description {
+            color: #888;
+            font-size: 0.95em;
+            line-height: 1.5;
+        }
+
+        .compliment-display {
+            position: relative;
+            z-index: 1;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 40px 30px;
+            border-radius: 20px;
+            margin: 30px 0;
+            min-height: 150px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 15px 30px rgba(0,0,0,0.2);
+            transform: translateY(0);
+            transition: all 0.5s ease;
+        }
+
+        .compliment-display.animate {
+            transform: translateY(-5px);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+        }
+
+        .compliment-text {
+            font-size: 1.4em;
+            line-height: 1.6;
+            text-align: center;
+            opacity: 0;
+            transform: translateY(20px);
+            animation: fadeInUp 0.8s ease forwards;
+        }
+
+        @keyframes fadeInUp {
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .placeholder-text {
+            color: rgba(255, 255, 255, 0.7);
+            font-style: italic;
+            font-size: 1.1em;
+        }
+
+        .generate-btn {
+            position: relative;
+            z-index: 1;
+            background: linear-gradient(45deg, #ff6b6b, #ee5a52);
+            color: white;
+            border: none;
+            padding: 18px 40px;
+            font-size: 1.2em;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 10px 20px rgba(255, 107, 107, 0.3);
+            margin: var(--spacing-lg) 10px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .generate-btn::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 0;
+            height: 0;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+            transition: all 0.5s ease;
+        }
+
+        .generate-btn:hover::before {
+            width: 300px;
+            height: 300px;
+        }
+
+        .generate-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 15px 30px rgba(255, 107, 107, 0.4);
+        }
+
+        .generate-btn:active {
+            transform: translateY(-1px);
+        }
+
+        .generate-btn span {
+            position: relative;
+            z-index: 1;
+        }
+
+        .category-buttons {
+            position: relative;
+            z-index: 1;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            justify-content: center;
+            margin: var(--spacing-lg) 0;
+        }
+
+        .category-btn {
+            background: rgba(255, 255, 255, 0.8);
+            border: 2px solid transparent;
+            padding: var(--spacing-md) 20px;
+            border-radius: 25px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 0.9em;
+            color: var(--text-secondary);
+        }
+
+        .category-btn:hover {
+            background: rgba(255, 255, 255, 1);
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+
+        .category-btn.active {
+            background: linear-gradient(45deg, #4ecdc4, #44a08d);
+            color: white;
+            border-color: white;
+        }
+
+        .stats {
+            position: relative;
+            z-index: 1;
+            margin-top: 30px;
+            padding: var(--spacing-lg);
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: var(--radius-lg);
+            display: flex;
+            justify-content: space-around;
+            flex-wrap: wrap;
+        }
+
+        .stat-item {
+            text-align: center;
+            margin: var(--spacing-md);
+        }
+
+        .stat-number {
+            font-size: 2em;
+            font-weight: bold;
+            color: var(--text-primary);
+            display: block;
+        }
+
+        .stat-label {
+            color: var(--text-secondary);
+            font-size: 0.9em;
+        }
+
+        .copy-btn {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: rgba(255, 255, 255, 0.2);
+            border: none;
+            color: white;
+            padding: 8px 12px;
+            border-radius: var(--radius-lg);
+            cursor: pointer;
+            font-size: 0.8em;
+            transition: all 0.3s ease;
+            opacity: 0;
+        }
+
+        .compliment-display:hover .copy-btn {
+            opacity: 1;
+        }
+
+        .copy-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        .floating-hearts {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .heart {
+            position: absolute;
+            color: rgba(255, 107, 107, 0.6);
+            font-size: 20px;
+            animation: float 6s ease-in-out infinite;
+        }
+
+        @keyframes float {
+            0% {
+                transform: translateY(100vh) rotate(0deg);
+                opacity: 0;
+            }
+            10% {
+                opacity: 1;
+            }
+            90% {
+                opacity: 1;
+            }
+            100% {
+                transform: translateY(-100px) rotate(360deg);
+                opacity: 0;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                margin: var(--spacing-md);
+                padding: var(--spacing-lg);
+            }
+            
+            .title {
+                font-size: 2.2em;
+            }
+            
+            .compliment-text {
+                font-size: 1.2em;
+            }
+            
+            .generate-btn {
+                padding: 15px 30px;
+                font-size: 1.1em;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="tool-container">
+        <!-- 工具头部 -->
+        <header class="tool-header">
+            <div class="tool-header-content">
+                <a href="../../index.html" class="back-btn">
+                    <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                        <path d="M10 4l-4 4 4 4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                    返回工具集
+                </a>
+                
+                <div class="tool-title">
+                    <h1>彩虹屁生成器 - Compliment Generator</h1>
+                    <p class="tool-subtitle">彩虹屁生成器 - Compliment Generator</p>
+                </div>
+                
+                <button class="theme-toggle" id="themeToggle" aria-label="切换主题">
+                    <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                        <circle cx="10" cy="10" r="4" stroke="currentColor" stroke-width="2"/>
+                        <path d="M10 2v2M10 16v2M18 10h-2M4 10H2M15.66 4.34l-1.41 1.41M5.75 14.25l-1.41 1.41M15.66 15.66l-1.41-1.41M5.75 5.75L4.34 4.34" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                    </svg>
+                </button>
+            </div>
+        </header>
+
+        <!-- 工具主内容 -->
+        <main class="tool-main">
+            <div class="tool-card">
+                <div class="tool-section">
+                    <h2>
+                        <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                            <rect x="3" y="3" width="14" height="14" rx="2" stroke="currentColor" stroke-width="2"/>
+                        </svg>
+                        工具功能
+                    </h2>
+                    
+                    
+            <div class="tool-card">
+                <div class="tool-section">
+                    <h2>
+                        <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                            <rect x="3" y="3" width="14" height="14" rx="2" stroke="currentColor" stroke-width="2"/>
+                        </svg>
+                        彩虹屁生成器 - Compliment Generator
+                    </h2>
+                    <div class="floating-hearts" id="heartsContainer"></div>
+    
+    <div class="container">
+        <div class="header">
+            <h1 class="title">🌈 彩虹屁生成器</h1>
+            <p class="subtitle">专业级花式夸夸机器</p>
+            <p class="description">生活需要更多赞美，让每一句话都充满阳光✨</p>
+        </div>
+
+        <div class="category-buttons">
+            <button class="category-btn active" data-category="general">通用夸夸</button>
+            <button class="category-btn" data-category="work">工作能力</button>
+            <button class="category-btn" data-category="appearance">颜值担当</button>
+            <button class="category-btn" data-category="personality">性格魅力</button>
+            <button class="category-btn" data-category="creative">创意无限</button>
+            <button class="category-btn" data-category="funny">沙雕搞笑</button>
+        </div>
+
+        <div class="compliment-display" id="complimentDisplay">
+            <div class="placeholder-text">点击按钮，开启彩虹屁之旅 🚀</div>
+            <button class="copy-btn" id="copyBtn">复制</button>
+        </div>
+
+        <button class="generate-btn" id="generateBtn">
+            <span>生成彩虹屁 ✨</span>
+        </button>
+
+        <div class="stats">
+            <div class="stat-item">
+                <span class="stat-number" id="totalCount">0</span>
+                <span class="stat-label">总生成次数</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-number" id="todayCount">0</span>
+                <span class="stat-label">今日生成</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-number" id="favoriteCount">0</span>
+                <span class="stat-label">收藏数量</span>
+            </div>
+        </div>
+    </div>
+
+    
+                </div>
+            </div>
+                    <!-- 结果显示区域 -->
+                    <div class="result-display" id="result">
+                        <pre id="resultContent">处理结果将在这里显示...</pre>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <!-- 工具页脚 -->
+        <footer class="tool-footer">
+            <p>由 <a href="../../index.html">AI工具集</a> 提供 | 原创工具</p>
+        </footer>
+    </div>
+
+    <!-- JavaScript -->
+    <script src="../../shared/js/utils.js"></script>
+    <script>
+        // 工具特定的JavaScript代码
+        class ToolApp {
+            constructor() {
+                this.init();
+            }
+
+            init() {
+                this.setupEventListeners();
+            }
+
+            setupEventListeners() {
+                document.getElementById('processBtn').addEventListener('click', () => this.process());
+                document.getElementById('clearBtn').addEventListener('click', () => this.clear());
+                document.getElementById('copyBtn').addEventListener('click', () => this.copyResult());
+                
+                // 实时处理（可选）
+                document.getElementById('input').addEventListener('input', 
+                    ToolUtils.debounce(() => this.process(), 300)
+                );
+            }
+
+            process() {
+                const input = document.getElementById('input').value;
+                const result = this.processInput(input);
+                this.displayResult(result);
+            }
+
+            processInput(input) {
+                
+        const compliments = {
+            general: [
+                "你就像夏日里的一阵清风，让人感到无比舒适和愉悦 🌞",
+                "你的存在本身就是这个世界上最美好的事情之一 ✨",
+                "你拥有着让人羡慕的智慧和优雅，简直是人间理想 💫",
+                "你就是那种一出现就能让整个房间都亮起来的人 🌟",
+                "你的笑容比春天的花朵还要灿烂，治愈了我整个世界 🌸",
+                "你不仅有着天使般的外表，更有着钻石般闪耀的内心 💎",
+                "遇见你就像中了彩票一样幸运，感谢宇宙的安排 🎰",
+                "你是那种让人一见面就觉得世界变得更美好的存在 🌈",
+                "你的每一个细节都在告诉世界什么叫做完美 👑",
+                "你就是传说中'别人家的孩子'，但是更加温暖可爱 🏠"
+            ],
+            work: [
+                "你的工作能力简直是开了挂，效率高到让人怀疑你是不是机器人 🤖",
+                "你处理问题的方式堪称教科书级别，应该出个教程 📚",
+                "你的专业素养让人敬佩，简直是行业标杆级别的存在 🏆",
+                "你不仅工作出色，还能在忙碌中保持优雅，太厉害了 💼",
+                "你的创新思维总是能让人眼前一亮，简直是天才 💡",
+                "你的执行力强到可以改变世界，NASA都想挖你 🚀",
+                "你的团队协作能力满分，简直是完美队友的代名词 🤝",
+                "你的时间管理技能让人怀疑你是不是有时间魔法 ⏰",
+                "你的学习能力就像海绵吸水，什么都能快速掌握 🧽",
+                "你在工作中展现的专业态度，比钻石还要珍贵 💎"
+            ],
+            appearance: [
+                "你今天又美出了新高度，简直是行走的艺术品 🎨",
+                "你的颜值已经超越了人类的理解范围，建议申请专利 📄",
+                "你不化妆的样子都比别人精心打扮还要好看 💄",
+                "你的眼睛里有星星，笑起来整个银河系都在闪烁 ⭐",
+                "你的美貌已经成为了这个城市的一道风景线 🏙️",
+                "你走在路上的回头率应该有180%吧 🔄",
+                "你的气质优雅到让人怀疑你是贵族出身 👸",
+                "你的美丽不需要滤镜，因为你本身就是最好的滤镜 📸",
+                "你的侧颜简直可以当雕塑的模板，完美到不真实 🗿",
+                "你的美貌让人相信这个世界上真的有天使存在 😇"
+            ],
+            personality: [
+                "你的善良温暖了整个世界，简直是人间小太阳 ☀️",
+                "你的幽默感总是能在最合适的时候出现，太有趣了 😄",
+                "你的温柔可以治愈一切，比任何良药都要有效 💊",
+                "你的乐观精神具有传染性，和你在一起总是很开心 😊",
+                "你的包容心让人感动，简直是人间菩萨 🙏",
+                "你的真诚让人如沐春风，在这个浮躁的世界里太珍贵了 🌸",
+                "你的坚强让人敬佩，任何困难在你面前都显得渺小 💪",
+                "你的智慧和情商都爆表，简直是完美人格的化身 🧠",
+                "你的体贴入微让人感到无比温暖，心都要化了 ❤️",
+                "你的积极向上的态度比任何励志书都要管用 📖"
+            ],
+            creative: [
+                "你的创意就像泉水一样源源不断，太有才华了 💧",
+                "你的想象力丰富到可以创造一个新的宇宙 🌌",
+                "你的艺术天赋让人嫉妒，达芬奇都要甘拜下风 🎭",
+                "你的创作灵感多到可以开个创意工厂 🏭",
+                "你的审美品味简直是教科书级别的，太有眼光了 👁️",
+                "你的每一个想法都闪闪发光，比钻石还要珍贵 💎",
+                "你的创新能力强到可以改写历史 📜",
+                "你的表达方式总是那么独特，让人印象深刻 🎪",
+                "你的创意思维让人怀疑你的大脑是不是有特殊构造 🧠",
+                "你的想法总是能给人带来惊喜，简直是创意小天才 🎨"
+            ],
+            funny: [
+                "你的存在证明了上帝在创造你的时候一定很开心 😂",
+                "你这么优秀，肯定是充了会员的人生 💳",
+                "你美得像是从漫画里走出来的，建议回去拯救世界 🦸",
+                "你这么厉害，NASA是不是该考虑请你去火星当CEO 🚀",
+                "你的智商这么高，大脑内存是不是512G起步的 💾",
+                "你这么完美，是不是工厂出厂设置就是VIP版本 🏭",
+                "你长得这么好看，建议申请世界文化遗产保护 🏛️",
+                "你这么有趣，联合国应该设立一个'快乐传播大使'给你 🌍",
+                "你的颜值和才华都爆表，建议分两个人来装 👥",
+                "你这么优秀，其他人都要重新定义什么叫做'普通人'了 🤷"
+            ]
+        };
+
+        let currentCategory = 'general';
+        let totalCount = parseInt(localStorage.getItem('totalCount') || '0');
+        let todayCount = parseInt(localStorage.getItem('todayCount') || '0');
+        let favoriteCount = parseInt(localStorage.getItem('favoriteCount') || '0');
+        let lastDate = localStorage.getItem('lastDate');
+
+        // 检查是否是新的一天
+        const today = new Date().toDateString();
+        if (lastDate !== today) {
+            todayCount = 0;
+            localStorage.setItem('lastDate', today);
+        }
+
+        // 更新统计显示
+        function updateStats() {
+            document.getElementById('totalCount').textContent = totalCount;
+            document.getElementById('todayCount').textContent = todayCount;
+            document.getElementById('favoriteCount').textContent = favoriteCount;
+        }
+
+        // 保存统计数据
+        function saveStats() {
+            localStorage.setItem('totalCount', totalCount.toString());
+            localStorage.setItem('todayCount', todayCount.toString());
+            localStorage.setItem('favoriteCount', favoriteCount.toString());
+        }
+
+        // 生成彩虹屁
+        function generateCompliment() {
+            const categoryCompliments = compliments[currentCategory];
+            const randomIndex = Math.floor(Math.random() * categoryCompliments.length);
+            const compliment = categoryCompliments[randomIndex];
+            
+            const display = document.getElementById('complimentDisplay');
+            display.classList.add('animate');
+            
+            setTimeout(() => {
+                display.innerHTML = `
+                    <div class="compliment-text">${compliment}</div>
+                    <button class="copy-btn" id="copyBtn">复制</button>
+                `;
+                
+                // 重新绑定复制按钮事件
+                document.getElementById('copyBtn').onclick = copyCompliment;
+                
+                display.classList.remove('animate');
+            }, 300);
+
+            // 更新统计
+            totalCount++;
+            todayCount++;
+            saveStats();
+            updateStats();
+
+            // 创建飘落的爱心
+            createFloatingHearts();
+        }
+
+        // 复制彩虹屁
+        function copyCompliment() {
+            const textElement = document.querySelector('.compliment-text');
+            if (textElement) {
+                const text = textElement.textContent;
+                navigator.clipboard.writeText(text).then(() => {
+                    const copyBtn = document.getElementById('copyBtn');
+                    copyBtn.textContent = '已复制!';
+                    setTimeout(() => {
+                        copyBtn.textContent = '复制';
+                    }, 1000);
+                    favoriteCount++;
+                    saveStats();
+                    updateStats();
+                });
+            }
+        }
+
+        // 创建飘落的爱心
+        function createFloatingHearts() {
+            const heartsContainer = document.getElementById('heartsContainer');
+            const heartSymbols = ['💖', '💕', '💗', '💝', '💘', '💓', '💌', '🌟', '✨', '🎈'];
+            
+            for (let i = 0; i < 5; i++) {
+                setTimeout(() => {
+                    const heart = document.createElement('div');
+                    heart.className = 'heart';
+                    heart.textContent = heartSymbols[Math.floor(Math.random() * heartSymbols.length)];
+                    heart.style.left = Math.random() * 100 + '%';
+                    heart.style.animationDelay = Math.random() * 2 + 's';
+                    heart.style.fontSize = (15 + Math.random() * 10) + 'px';
+                    
+                    heartsContainer.appendChild(heart);
+                    
+                    setTimeout(() => {
+                        heart.remove();
+                    }, 6000);
+                }, i * 200);
+            }
+        }
+
+        // 切换分类
+        function switchCategory(category) {
+            currentCategory = category;
+            
+            // 更新按钮状态
+            document.querySelectorAll('.category-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            document.querySelector(`[data-category="${category}"]`).classList.add('active');
+        }
+
+        // 事件监听
+        document.getElementById('generateBtn').addEventListener('click', generateCompliment);
+
+        document.querySelectorAll('.category-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                switchCategory(e.target.dataset.category);
+            });
+        });
+
+        // 键盘快捷键
+        document.addEventListener('keydown', (e) => {
+            if (e.code === 'Space') {
+                e.preventDefault();
+                generateCompliment();
+            }
+        });
+
+        // 初始化
+        updateStats();
+
+        // 定期清理爱心元素，防止内存泄漏
+        setInterval(() => {
+            const hearts = document.querySelectorAll('.heart');
+            hearts.forEach(heart => {
+                if (heart.offsetTop > window.innerHeight + 100) {
+                    heart.remove();
+                }
+            });
+        }, 5000);
+    
+                return input;
+            }
+
+            displayResult(result) {
+                document.getElementById('resultContent').textContent = result;
+            }
+
+            clear() {
+                document.getElementById('input').value = '';
+                document.getElementById('resultContent').textContent = '处理结果将在这里显示...';
+            }
+
+            copyResult() {
+                const result = document.getElementById('resultContent').textContent;
+                if (result && result !== '处理结果将在这里显示...') {
+                    ToolUtils.copyToClipboard(result);
+                } else {
+                    ToolUtils.showToast('没有可复制的内容', 'warning');
+                }
+            }
+        }
+
+        // 初始化应用
+        document.addEventListener('DOMContentLoaded', () => {
+            new ToolApp();
+        });
+    </script>
+</body>
+</html>

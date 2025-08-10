@@ -1,0 +1,997 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>简易平台跳跃游戏 - AI工具集</title>
+    <meta name="description" content="简易平台跳跃游戏">
+    
+    <!-- 样式文件 -->
+    <link rel="stylesheet" href="../../shared/css/common.css">
+    
+    <!-- 工具特定样式 -->
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #87CEEB 0%, #98D8E8 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: var(--spacing-lg);
+            overflow: hidden;
+        }
+
+        .game-container {
+            max-width: 1000px;
+            width: 100%;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+            position: relative;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #FF6B6B 0%, #FF8E53 100%);
+            color: white;
+            padding: var(--spacing-lg);
+            text-align: center;
+            position: relative;
+        }
+
+        .header h1 {
+            font-size: 2.2em;
+            margin-bottom: 8px;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .header p {
+            font-size: 1em;
+            opacity: 0.9;
+        }
+
+        .game-info {
+            position: absolute;
+            top: 15px;
+            right: 20px;
+            display: flex;
+            gap: 20px;
+            font-size: 1.1em;
+            font-weight: bold;
+        }
+
+        .score, .lives {
+            background: rgba(255,255,255,0.2);
+            padding: 8px 15px;
+            border-radius: 20px;
+            backdrop-filter: blur(10px);
+        }
+
+        .game-canvas {
+            width: 100%;
+            height: 500px;
+            display: block;
+            background: linear-gradient(to bottom, #87CEEB 0%, #E0F6FF 50%, #32CD32 100%);
+            position: relative;
+        }
+
+        .controls {
+            padding: var(--spacing-lg);
+            background: #f8f9fa;
+            text-align: center;
+            border-top: 2px solid #e9ecef;
+        }
+
+        .control-instructions {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .control-item {
+            background: white;
+            padding: 15px;
+            border-radius: var(--radius-md);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .control-key {
+            background: #667eea;
+            color: white;
+            padding: 8px 12px;
+            border-radius: 6px;
+            font-weight: bold;
+            min-width: 60px;
+            text-align: center;
+        }
+
+        .control-desc {
+            color: #495057;
+            font-weight: 600;
+        }
+
+        .game-buttons {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+
+        .game-btn {
+            padding: 12px 25px;
+            border: none;
+            border-radius: 25px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+        }
+
+        .btn-start {
+            background: linear-gradient(135deg, #4CAF50 0%, #45a049 100%);
+            color: white;
+        }
+
+        .btn-start:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(76, 175, 80, 0.4);
+        }
+
+        .btn-pause {
+            background: linear-gradient(135deg, #FF9800 0%, #F57C00 100%);
+            color: white;
+        }
+
+        .btn-pause:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(255, 152, 0, 0.4);
+        }
+
+        .btn-reset {
+            background: linear-gradient(135deg, #f44336 0%, #d32f2f 100%);
+            color: white;
+        }
+
+        .btn-reset:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(244, 67, 54, 0.4);
+        }
+
+        .game-over {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(0,0,0,0.9);
+            color: white;
+            padding: 40px;
+            border-radius: 20px;
+            text-align: center;
+            display: none;
+            z-index: 1000;
+        }
+
+        .game-over h2 {
+            font-size: 2.5em;
+            margin-bottom: 15px;
+            color: #FF6B6B;
+        }
+
+        .game-over p {
+            font-size: 1.2em;
+            margin-bottom: 25px;
+        }
+
+        .footer {
+            text-align: center;
+            padding: var(--spacing-lg);
+            background: #f8f9fa;
+            color: #6c757d;
+            font-size: 0.9em;
+        }
+
+        .mobile-controls {
+            display: none;
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0,0,0,0.7);
+            padding: 15px;
+            border-radius: var(--radius-lg);
+            z-index: 1000;
+        }
+
+        .mobile-btn {
+            background: rgba(255,255,255,0.2);
+            border: 2px solid rgba(255,255,255,0.3);
+            color: white;
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            font-size: 24px;
+            margin: 0 10px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .mobile-btn:active {
+            background: rgba(255,255,255,0.4);
+            transform: scale(0.95);
+        }
+
+        @media (max-width: 768px) {
+            .game-container {
+                margin: var(--spacing-md);
+                border-radius: var(--radius-lg);
+            }
+            
+            .header {
+                padding: 15px;
+            }
+            
+            .header h1 {
+                font-size: 1.8em;
+            }
+            
+            .game-info {
+                position: static;
+                justify-content: center;
+                margin-top: 10px;
+            }
+            
+            .game-canvas {
+                height: 400px;
+            }
+            
+            .control-instructions {
+                grid-template-columns: 1fr;
+                gap: 10px;
+            }
+            
+            .mobile-controls {
+                display: flex;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="tool-container">
+        <!-- 工具头部 -->
+        <header class="tool-header">
+            <div class="tool-header-content">
+                <a href="../../index.html" class="back-btn">
+                    <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                        <path d="M10 4l-4 4 4 4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                    返回工具集
+                </a>
+                
+                <div class="tool-title">
+                    <h1>简易平台跳跃游戏</h1>
+                    <p class="tool-subtitle">简易平台跳跃游戏</p>
+                </div>
+                
+                <button class="theme-toggle" id="themeToggle" aria-label="切换主题">
+                    <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                        <circle cx="10" cy="10" r="4" stroke="currentColor" stroke-width="2"/>
+                        <path d="M10 2v2M10 16v2M18 10h-2M4 10H2M15.66 4.34l-1.41 1.41M5.75 14.25l-1.41 1.41M15.66 15.66l-1.41-1.41M5.75 5.75L4.34 4.34" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                    </svg>
+                </button>
+            </div>
+        </header>
+
+        <!-- 工具主内容 -->
+        <main class="tool-main">
+            <div class="tool-card">
+                <div class="tool-section">
+                    <h2>
+                        <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                            <rect x="3" y="3" width="14" height="14" rx="2" stroke="currentColor" stroke-width="2"/>
+                        </svg>
+                        工具功能
+                    </h2>
+                    
+                    
+            <div class="tool-card">
+                <div class="tool-section">
+                    <h2>
+                        <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                            <rect x="3" y="3" width="14" height="14" rx="2" stroke="currentColor" stroke-width="2"/>
+                        </svg>
+                        简易平台跳跃游戏
+                    </h2>
+                    <div class="container">
+                        <div class="game-container">
+        <div class="header">
+            <h1>🎮 简易平台跳跃</h1>
+            <p>控制小人跳跃收集金币，避开敌人和陷阱！</p>
+            <div class="game-info">
+                <div class="score">得分: <span id="score">0</span></div>
+                <div class="lives">生命: <span id="lives">3</span></div>
+            </div>
+        </div>
+
+        <canvas id="gameCanvas" class="game-canvas" width="1000" height="500"></canvas>
+
+        <div class="game-over" id="gameOver">
+            <h2>游戏结束</h2>
+            <p>最终得分: <span id="finalScore">0</span></p>
+            <button class="game-btn btn-start" onclick="restartGame()">重新开始</button>
+        </div>
+
+        <div class="controls">
+            <div class="control-instructions">
+                <div class="control-item">
+                    <div class="control-key">←→</div>
+                    <div class="control-desc">左右移动</div>
+                </div>
+                <div class="control-item">
+                    <div class="control-key">空格</div>
+                    <div class="control-desc">跳跃</div>
+                </div>
+                <div class="control-item">
+                    <div class="control-key">R</div>
+                    <div class="control-desc">重新开始</div>
+                </div>
+                <div class="control-item">
+                    <div class="control-key">P</div>
+                    <div class="control-desc">暂停/继续</div>
+                </div>
+            </div>
+
+            <div class="game-buttons">
+                <button class="game-btn btn-start" id="startBtn" onclick="startGame()">开始游戏</button>
+                <button class="game-btn btn-pause" id="pauseBtn" onclick="togglePause()" style="display: none;">暂停</button>
+                <button class="game-btn btn-reset" onclick="restartGame()">重新开始</button>
+            </div>
+        </div>
+
+        <div class="footer">
+            <p>💡 跳跃时机很重要，小心地面上的敌人和空中的障碍物</p>
+            <p>脚注：小苏趣研AI - 让平台跳跃变得简单有趣</p>
+        </div>
+    </div>
+
+    <!-- 移动端控制 -->
+    <div class="mobile-controls">
+        <button class="mobile-btn" id="leftBtn">←</button>
+        <button class="mobile-btn" id="jumpBtn">↑</button>
+        <button class="mobile-btn" id="rightBtn">→</button>
+    </div>
+
+    
+                    </div>
+                </div>
+            </div>
+                    <!-- 结果显示区域 -->
+                    <div class="result-display" id="result">
+                        <pre id="resultContent">处理结果将在这里显示...</pre>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <!-- 工具页脚 -->
+        <footer class="tool-footer">
+            <p>由 <a href="../../index.html">AI工具集</a> 提供 | 原创工具</p>
+        </footer>
+    </div>
+
+    <!-- JavaScript -->
+    <script src="../../shared/js/utils.js"></script>
+    <script>
+        // 工具特定的JavaScript代码
+        class ToolApp {
+            constructor() {
+                this.init();
+            }
+
+            init() {
+                this.setupEventListeners();
+            }
+
+            setupEventListeners() {
+                document.getElementById('processBtn').addEventListener('click', () => this.process());
+                document.getElementById('clearBtn').addEventListener('click', () => this.clear());
+                document.getElementById('copyBtn').addEventListener('click', () => this.copyResult());
+                
+                // 实时处理（可选）
+                document.getElementById('input').addEventListener('input', 
+                    ToolUtils.debounce(() => this.process(), 300)
+                );
+            }
+
+            process() {
+                const input = document.getElementById('input').value;
+                const result = this.processInput(input);
+                this.displayResult(result);
+            }
+
+            processInput(input) {
+                
+        // 游戏变量
+        let canvas, ctx;
+        let gameRunning = false;
+        let gamePaused = false;
+        let animationId;
+
+        // 游戏状态
+        let gameState = {
+            score: 0,
+            lives: 3,
+            level: 1,
+            scrollOffset: 0
+        };
+
+        // 玩家对象
+        let player = {
+            x: 100,
+            y: 350,
+            width: 30,
+            height: 40,
+            velocityX: 0,
+            velocityY: 0,
+            speed: 5,
+            jumpPower: 15,
+            onGround: false,
+            color: '#FF6B6B'
+        };
+
+        // 游戏对象数组
+        let platforms = [];
+        let coins = [];
+        let enemies = [];
+        let particles = [];
+
+        // 输入状态
+        let keys = {
+            left: false,
+            right: false,
+            jump: false
+        };
+
+        // 物理常量
+        const GRAVITY = 0.8;
+        const FRICTION = 0.8;
+
+        // 初始化游戏
+        function init() {
+            canvas = document.getElementById('gameCanvas');
+            ctx = canvas.getContext('2d');
+            
+            // 设置画布大小
+            resizeCanvas();
+            window.addEventListener('resize', resizeCanvas);
+            
+            // 设置事件监听
+            setupEventListeners();
+            
+            // 初始化游戏世界
+            initializeWorld();
+            
+            // 开始游戏循环
+            gameLoop();
+        }
+
+        function resizeCanvas() {
+            const container = canvas.parentElement;
+            canvas.width = container.clientWidth;
+            canvas.height = 500;
+        }
+
+        function setupEventListeners() {
+            // 键盘事件
+            document.addEventListener('keydown', (e) => {
+                switch(e.code) {
+                    case 'ArrowLeft':
+                    case 'KeyA':
+                        keys.left = true;
+                        e.preventDefault();
+                        break;
+                    case 'ArrowRight':
+                    case 'KeyD':
+                        keys.right = true;
+                        e.preventDefault();
+                        break;
+                    case 'Space':
+                    case 'ArrowUp':
+                    case 'KeyW':
+                        keys.jump = true;
+                        e.preventDefault();
+                        break;
+                    case 'KeyP':
+                        togglePause();
+                        e.preventDefault();
+                        break;
+                    case 'KeyR':
+                        restartGame();
+                        e.preventDefault();
+                        break;
+                }
+            });
+
+            document.addEventListener('keyup', (e) => {
+                switch(e.code) {
+                    case 'ArrowLeft':
+                    case 'KeyA':
+                        keys.left = false;
+                        break;
+                    case 'ArrowRight':
+                    case 'KeyD':
+                        keys.right = false;
+                        break;
+                    case 'Space':
+                    case 'ArrowUp':
+                    case 'KeyW':
+                        keys.jump = false;
+                        break;
+                }
+            });
+
+            // 移动端触摸事件
+            const leftBtn = document.getElementById('leftBtn');
+            const rightBtn = document.getElementById('rightBtn');
+            const jumpBtn = document.getElementById('jumpBtn');
+
+            leftBtn.addEventListener('touchstart', () => keys.left = true);
+            leftBtn.addEventListener('touchend', () => keys.left = false);
+            leftBtn.addEventListener('mousedown', () => keys.left = true);
+            leftBtn.addEventListener('mouseup', () => keys.left = false);
+
+            rightBtn.addEventListener('touchstart', () => keys.right = true);
+            rightBtn.addEventListener('touchend', () => keys.right = false);
+            rightBtn.addEventListener('mousedown', () => keys.right = true);
+            rightBtn.addEventListener('mouseup', () => keys.right = false);
+
+            jumpBtn.addEventListener('touchstart', () => keys.jump = true);
+            jumpBtn.addEventListener('touchend', () => keys.jump = false);
+            jumpBtn.addEventListener('mousedown', () => keys.jump = true);
+            jumpBtn.addEventListener('mouseup', () => keys.jump = false);
+        }
+
+        function initializeWorld() {
+            // 重置游戏状态
+            gameState = {
+                score: 0,
+                lives: 3,
+                level: 1,
+                scrollOffset: 0
+            };
+
+            // 重置玩家
+            player = {
+                x: 100,
+                y: 350,
+                width: 30,
+                height: 40,
+                velocityX: 0,
+                velocityY: 0,
+                speed: 5,
+                jumpPower: 15,
+                onGround: false,
+                color: '#FF6B6B'
+            };
+
+            // 创建平台
+            platforms = [
+                // 地面平台
+                {x: 0, y: 450, width: 300, height: 50, color: '#8B4513'},
+                {x: 400, y: 450, width: 200, height: 50, color: '#8B4513'},
+                {x: 700, y: 450, width: 300, height: 50, color: '#8B4513'},
+                {x: 1100, y: 450, width: 200, height: 50, color: '#8B4513'},
+                
+                // 悬浮平台
+                {x: 200, y: 350, width: 100, height: 20, color: '#A0522D'},
+                {x: 500, y: 300, width: 100, height: 20, color: '#A0522D'},
+                {x: 800, y: 250, width: 100, height: 20, color: '#A0522D'},
+                {x: 1000, y: 350, width: 100, height: 20, color: '#A0522D'},
+                {x: 1300, y: 300, width: 100, height: 20, color: '#A0522D'},
+            ];
+
+            // 创建金币
+            coins = [
+                {x: 250, y: 300, width: 20, height: 20, collected: false},
+                {x: 450, y: 400, width: 20, height: 20, collected: false},
+                {x: 550, y: 250, width: 20, height: 20, collected: false},
+                {x: 850, y: 200, width: 20, height: 20, collected: false},
+                {x: 1050, y: 300, width: 20, height: 20, collected: false},
+                {x: 1350, y: 250, width: 20, height: 20, collected: false},
+            ];
+
+            // 创建敌人
+            enemies = [
+                {x: 420, y: 410, width: 30, height: 30, velocityX: 2, color: '#8B0000', direction: 1, patrolStart: 400, patrolEnd: 580},
+                {x: 720, y: 410, width: 30, height: 30, velocityX: 1.5, color: '#8B0000', direction: -1, patrolStart: 700, patrolEnd: 980},
+                {x: 1120, y: 410, width: 30, height: 30, velocityX: 2.5, color: '#8B0000', direction: 1, patrolStart: 1100, patrolEnd: 1280},
+            ];
+
+            particles = [];
+            updateUI();
+        }
+
+        function startGame() {
+            if (gameRunning) return;
+            
+            gameRunning = true;
+            document.getElementById('startBtn').style.display = 'none';
+            document.getElementById('pauseBtn').style.display = 'inline-block';
+        }
+
+        function togglePause() {
+            if (!gameRunning) return;
+            
+            gamePaused = !gamePaused;
+            const pauseBtn = document.getElementById('pauseBtn');
+            pauseBtn.textContent = gamePaused ? '继续' : '暂停';
+        }
+
+        function restartGame() {
+            gameRunning = false;
+            gamePaused = false;
+            document.getElementById('gameOver').style.display = 'none';
+            document.getElementById('startBtn').style.display = 'inline-block';
+            document.getElementById('pauseBtn').style.display = 'none';
+            
+            initializeWorld();
+        }
+
+        function gameLoop() {
+            update();
+            render();
+            animationId = requestAnimationFrame(gameLoop);
+        }
+
+        function update() {
+            if (!gameRunning || gamePaused) return;
+
+            // 更新玩家
+            updatePlayer();
+            
+            // 更新敌人
+            updateEnemies();
+            
+            // 更新粒子效果
+            updateParticles();
+            
+            // 检查碰撞
+            checkCollisions();
+            
+            // 更新摄像机
+            updateCamera();
+            
+            // 检查游戏结束
+            checkGameOver();
+        }
+
+        function updatePlayer() {
+            // 水平移动
+            if (keys.left) {
+                player.velocityX = -player.speed;
+            } else if (keys.right) {
+                player.velocityX = player.speed;
+            } else {
+                player.velocityX *= FRICTION;
+            }
+
+            // 跳跃
+            if (keys.jump && player.onGround) {
+                player.velocityY = -player.jumpPower;
+                player.onGround = false;
+                createJumpParticles();
+            }
+
+            // 应用重力
+            player.velocityY += GRAVITY;
+
+            // 更新位置
+            player.x += player.velocityX;
+            player.y += player.velocityY;
+
+            // 检查平台碰撞
+            player.onGround = false;
+            for (let platform of platforms) {
+                if (isColliding(player, platform)) {
+                    // 从上方落到平台上
+                    if (player.velocityY > 0 && player.y < platform.y) {
+                        player.y = platform.y - player.height;
+                        player.velocityY = 0;
+                        player.onGround = true;
+                    }
+                }
+            }
+
+            // 防止玩家掉落到屏幕外
+            if (player.y > canvas.height) {
+                takeDamage();
+            }
+
+            // 限制玩家在屏幕范围内
+            if (player.x < gameState.scrollOffset) {
+                player.x = gameState.scrollOffset;
+            }
+        }
+
+        function updateEnemies() {
+            for (let enemy of enemies) {
+                // 敌人巡逻移动
+                enemy.x += enemy.velocityX * enemy.direction;
+                
+                // 巡逻边界检查
+                if (enemy.x <= enemy.patrolStart || enemy.x >= enemy.patrolEnd) {
+                    enemy.direction *= -1;
+                }
+            }
+        }
+
+        function updateParticles() {
+            for (let i = particles.length - 1; i >= 0; i--) {
+                let particle = particles[i];
+                particle.x += particle.velocityX;
+                particle.y += particle.velocityY;
+                particle.velocityY += 0.2; // 重力
+                particle.life--;
+                
+                if (particle.life <= 0) {
+                    particles.splice(i, 1);
+                }
+            }
+        }
+
+        function updateCamera() {
+            // 跟随玩家的摄像机
+            const targetScrollX = player.x - canvas.width / 3;
+            gameState.scrollOffset = Math.max(0, targetScrollX);
+        }
+
+        function checkCollisions() {
+            // 检查金币碰撞
+            for (let coin of coins) {
+                if (!coin.collected && isColliding(player, coin)) {
+                    coin.collected = true;
+                    gameState.score += 100;
+                    createCoinParticles(coin.x, coin.y);
+                    updateUI();
+                }
+            }
+
+            // 检查敌人碰撞
+            for (let enemy of enemies) {
+                if (isColliding(player, enemy)) {
+                    takeDamage();
+                    break;
+                }
+            }
+        }
+
+        function isColliding(rect1, rect2) {
+            return rect1.x < rect2.x + rect2.width &&
+                   rect1.x + rect1.width > rect2.x &&
+                   rect1.y < rect2.y + rect2.height &&
+                   rect1.y + rect1.height > rect2.y;
+        }
+
+        function takeDamage() {
+            gameState.lives--;
+            createDamageParticles();
+            
+            // 重置玩家位置
+            player.x = 100;
+            player.y = 350;
+            player.velocityX = 0;
+            player.velocityY = 0;
+            gameState.scrollOffset = 0;
+            
+            updateUI();
+        }
+
+        function checkGameOver() {
+            if (gameState.lives <= 0) {
+                gameRunning = false;
+                document.getElementById('finalScore').textContent = gameState.score;
+                document.getElementById('gameOver').style.display = 'block';
+                document.getElementById('pauseBtn').style.display = 'none';
+            }
+        }
+
+        function createJumpParticles() {
+            for (let i = 0; i < 5; i++) {
+                particles.push({
+                    x: player.x + player.width / 2,
+                    y: player.y + player.height,
+                    velocityX: (Math.random() - 0.5) * 4,
+                    velocityY: Math.random() * 2 + 1,
+                    life: 20,
+                    color: '#87CEEB'
+                });
+            }
+        }
+
+        function createCoinParticles(x, y) {
+            for (let i = 0; i < 8; i++) {
+                particles.push({
+                    x: x,
+                    y: y,
+                    velocityX: (Math.random() - 0.5) * 6,
+                    velocityY: -Math.random() * 4 - 2,
+                    life: 30,
+                    color: '#FFD700'
+                });
+            }
+        }
+
+        function createDamageParticles() {
+            for (let i = 0; i < 10; i++) {
+                particles.push({
+                    x: player.x + player.width / 2,
+                    y: player.y + player.height / 2,
+                    velocityX: (Math.random() - 0.5) * 8,
+                    velocityY: -Math.random() * 6 - 2,
+                    life: 25,
+                    color: '#FF0000'
+                });
+            }
+        }
+
+        function render() {
+            // 清空画布
+            ctx.fillStyle = 'linear-gradient(to bottom, #87CEEB 0%, #E0F6FF 50%, #98FB98 100%)';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            
+            // 绘制背景渐变
+            const gradient = ctx.createLinearGradient(0, 0, 0, canvas.height);
+            gradient.addColorStop(0, '#87CEEB');
+            gradient.addColorStop(0.5, '#E0F6FF');
+            gradient.addColorStop(1, '#98FB98');
+            ctx.fillStyle = gradient;
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            // 保存上下文
+            ctx.save();
+            
+            // 应用摄像机偏移
+            ctx.translate(-gameState.scrollOffset, 0);
+
+            // 绘制平台
+            for (let platform of platforms) {
+                ctx.fillStyle = platform.color;
+                ctx.fillRect(platform.x, platform.y, platform.width, platform.height);
+                
+                // 平台顶部高光
+                ctx.fillStyle = 'rgba(255, 255, 255, 0.3)';
+                ctx.fillRect(platform.x, platform.y, platform.width, 5);
+            }
+
+            // 绘制金币
+            for (let coin of coins) {
+                if (!coin.collected) {
+                    // 金币旋转效果
+                    const time = Date.now() * 0.01;
+                    const rotation = Math.sin(time + coin.x * 0.01) * 0.3;
+                    
+                    ctx.save();
+                    ctx.translate(coin.x + coin.width/2, coin.y + coin.height/2);
+                    ctx.rotate(rotation);
+                    
+                    // 绘制金币
+                    ctx.fillStyle = '#FFD700';
+                    ctx.beginPath();
+                    ctx.arc(0, 0, coin.width/2, 0, Math.PI * 2);
+                    ctx.fill();
+                    
+                    // 金币光泽
+                    ctx.fillStyle = '#FFFF00';
+                    ctx.beginPath();
+                    ctx.arc(-3, -3, coin.width/4, 0, Math.PI * 2);
+                    ctx.fill();
+                    
+                    ctx.restore();
+                }
+            }
+
+            // 绘制敌人
+            for (let enemy of enemies) {
+                ctx.fillStyle = enemy.color;
+                ctx.fillRect(enemy.x, enemy.y, enemy.width, enemy.height);
+                
+                // 敌人眼睛
+                ctx.fillStyle = '#FFFF00';
+                ctx.fillRect(enemy.x + 5, enemy.y + 8, 6, 6);
+                ctx.fillRect(enemy.x + 19, enemy.y + 8, 6, 6);
+                
+                ctx.fillStyle = '#000';
+                ctx.fillRect(enemy.x + 7, enemy.y + 10, 2, 2);
+                ctx.fillRect(enemy.x + 21, enemy.y + 10, 2, 2);
+            }
+
+            // 绘制玩家
+            ctx.fillStyle = player.color;
+            ctx.fillRect(player.x, player.y, player.width, player.height);
+            
+            // 玩家细节
+            ctx.fillStyle = '#FFFFFF';
+            ctx.fillRect(player.x + 8, player.y + 8, 6, 6); // 左眼
+            ctx.fillRect(player.x + 16, player.y + 8, 6, 6); // 右眼
+            
+            ctx.fillStyle = '#000000';
+            ctx.fillRect(player.x + 10, player.y + 10, 2, 2); // 左瞳孔
+            ctx.fillRect(player.x + 18, player.y + 10, 2, 2); // 右瞳孔
+            
+            // 嘴巴
+            ctx.fillStyle = '#000000';
+            ctx.fillRect(player.x + 12, player.y + 20, 6, 2);
+
+            // 绘制粒子效果
+            for (let particle of particles) {
+                ctx.fillStyle = particle.color;
+                ctx.globalAlpha = particle.life / 30;
+                ctx.fillRect(particle.x, particle.y, 4, 4);
+            }
+            
+            ctx.globalAlpha = 1;
+            ctx.restore();
+
+            // 绘制暂停提示
+            if (gamePaused) {
+                ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+                
+                ctx.fillStyle = 'white';
+                ctx.font = 'bold 48px Arial';
+                ctx.textAlign = 'center';
+                ctx.fillText('游戏暂停', canvas.width / 2, canvas.height / 2);
+                
+                ctx.font = '24px Arial';
+                ctx.fillText('按 P 键继续', canvas.width / 2, canvas.height / 2 + 50);
+            }
+        }
+
+        function updateUI() {
+            document.getElementById('score').textContent = gameState.score;
+            document.getElementById('lives').textContent = gameState.lives;
+        }
+
+        // 初始化游戏
+        window.addEventListener('load', init);
+    
+                return input;
+            }
+
+            displayResult(result) {
+                document.getElementById('resultContent').textContent = result;
+            }
+
+            clear() {
+                document.getElementById('input').value = '';
+                document.getElementById('resultContent').textContent = '处理结果将在这里显示...';
+            }
+
+            copyResult() {
+                const result = document.getElementById('resultContent').textContent;
+                if (result && result !== '处理结果将在这里显示...') {
+                    ToolUtils.copyToClipboard(result);
+                } else {
+                    ToolUtils.showToast('没有可复制的内容', 'warning');
+                }
+            }
+        }
+
+        // 初始化应用
+        document.addEventListener('DOMContentLoaded', () => {
+            new ToolApp();
+        });
+    </script>
+</body>
+</html>

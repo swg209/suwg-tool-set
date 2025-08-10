@@ -1,0 +1,900 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>粒子效果生成器 - AI工具集</title>
+    <meta name="description" content="粒子效果生成器">
+    
+    <!-- 样式文件 -->
+    <link rel="stylesheet" href="../../shared/css/common.css">
+    
+    <!-- 工具特定样式 -->
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: var(--spacing-lg);
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white;
+            text-align: center;
+            padding: 40px 20px;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            font-size: 1.1em;
+            opacity: 0.9;
+        }
+
+        .content {
+            display: grid;
+            grid-template-columns: 350px 1fr;
+            gap: 0;
+        }
+
+        .controls-panel {
+            background: #f8f9fa;
+            padding: 30px;
+            border-right: 1px solid #e9ecef;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+
+        .canvas-container {
+            position: relative;
+            background: #000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 600px;
+        }
+
+        .particle-canvas {
+            width: 100%;
+            height: 100%;
+            cursor: crosshair;
+        }
+
+        .control-group {
+            margin-bottom: 25px;
+            padding: var(--spacing-lg);
+            background: white;
+            border-radius: var(--radius-md);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .control-title {
+            font-size: 1.1em;
+            font-weight: bold;
+            margin-bottom: 15px;
+            color: var(--text-primary);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .control-item {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            margin-bottom: 15px;
+        }
+
+        .control-label {
+            font-weight: 500;
+            color: #555;
+            font-size: 0.9em;
+        }
+
+        .control-input {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .slider {
+            flex: 1;
+            height: 6px;
+            border-radius: 3px;
+            background: #ddd;
+            outline: none;
+            -webkit-appearance: none;
+        }
+
+        .slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: #667eea;
+            cursor: pointer;
+        }
+
+        .value-display {
+            min-width: 50px;
+            font-weight: bold;
+            color: #667eea;
+            font-size: 0.9em;
+        }
+
+        .color-input {
+            width: 50px;
+            height: 30px;
+            border: none;
+            border-radius: var(--radius-sm);
+            cursor: pointer;
+        }
+
+        .preset-buttons {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .preset-btn {
+            padding: 8px 12px;
+            border: 2px solid #ddd;
+            background: white;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.9em;
+            font-weight: 500;
+            transition: all 0.3s;
+        }
+
+        .preset-btn:hover {
+            border-color: #667eea;
+            background: #f0f4ff;
+        }
+
+        .action-buttons {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .action-btn {
+            padding: 12px 20px;
+            border: none;
+            border-radius: 8px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .primary-btn {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white;
+        }
+
+        .secondary-btn {
+            background: #6c757d;
+            color: white;
+        }
+
+        .danger-btn {
+            background: #dc3545;
+            color: white;
+        }
+
+        .action-btn:hover {
+            transform: translateY(-2px);
+        }
+
+        .stats {
+            background: #e8f2ff;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            text-align: center;
+        }
+
+        .stat-item {
+            background: white;
+            padding: var(--spacing-md);
+            border-radius: var(--radius-sm);
+        }
+
+        .stat-number {
+            font-size: 1.2em;
+            font-weight: bold;
+            color: #667eea;
+        }
+
+        .stat-label {
+            font-size: 0.8em;
+            color: var(--text-secondary);
+        }
+
+        .footer {
+            background: #f8f9fa;
+            text-align: center;
+            padding: var(--spacing-lg);
+            color: var(--text-secondary);
+        }
+
+        @media (max-width: 1024px) {
+            .content {
+                grid-template-columns: 1fr;
+            }
+            
+            .controls-panel {
+                border-right: none;
+                border-bottom: 1px solid #e9ecef;
+                max-height: none;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="tool-container">
+        <!-- 工具头部 -->
+        <header class="tool-header">
+            <div class="tool-header-content">
+                <a href="../../index.html" class="back-btn">
+                    <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                        <path d="M10 4l-4 4 4 4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                    返回工具集
+                </a>
+                
+                <div class="tool-title">
+                    <h1>粒子效果生成器</h1>
+                    <p class="tool-subtitle">粒子效果生成器</p>
+                </div>
+                
+                <button class="theme-toggle" id="themeToggle" aria-label="切换主题">
+                    <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                        <circle cx="10" cy="10" r="4" stroke="currentColor" stroke-width="2"/>
+                        <path d="M10 2v2M10 16v2M18 10h-2M4 10H2M15.66 4.34l-1.41 1.41M5.75 14.25l-1.41 1.41M15.66 15.66l-1.41-1.41M5.75 5.75L4.34 4.34" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                    </svg>
+                </button>
+            </div>
+        </header>
+
+        <!-- 工具主内容 -->
+        <main class="tool-main">
+            <div class="tool-card">
+                <div class="tool-section">
+                    <h2>
+                        <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                            <rect x="3" y="3" width="14" height="14" rx="2" stroke="currentColor" stroke-width="2"/>
+                        </svg>
+                        工具功能
+                    </h2>
+                    
+                    
+            <div class="tool-card">
+                <div class="tool-section">
+                    <h2>
+                        <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                            <rect x="3" y="3" width="14" height="14" rx="2" stroke="currentColor" stroke-width="2"/>
+                        </svg>
+                        粒子效果生成器
+                    </h2>
+                    <div class="container">
+        <div class="header">
+            <h1>✨ 粒子效果生成器</h1>
+            <p>调整参数创建炫酷的粒子动画效果，支持实时预览和交互</p>
+        </div>
+
+        <div class="content">
+            <div class="controls-panel">
+                <div class="stats">
+                    <div class="stats-grid">
+                        <div class="stat-item">
+                            <div class="stat-number" id="particleCount">0</div>
+                            <div class="stat-label">粒子数量</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-number" id="fps">60</div>
+                            <div class="stat-label">帧率 FPS</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="control-group">
+                    <div class="control-title">🎯 基础设置</div>
+                    <div class="control-item">
+                        <label class="control-label">最大粒子数</label>
+                        <div class="control-input">
+                            <input type="range" class="slider" id="maxParticles" min="50" max="2000" value="500">
+                            <span class="value-display" id="maxParticlesValue">500</span>
+                        </div>
+                    </div>
+                    <div class="control-item">
+                        <label class="control-label">生成速率</label>
+                        <div class="control-input">
+                            <input type="range" class="slider" id="spawnRate" min="1" max="50" value="10">
+                            <span class="value-display" id="spawnRateValue">10</span>
+                        </div>
+                    </div>
+                    <div class="control-item">
+                        <label class="control-label">粒子生命周期</label>
+                        <div class="control-input">
+                            <input type="range" class="slider" id="lifetime" min="1" max="10" step="0.1" value="3">
+                            <span class="value-display" id="lifetimeValue">3.0s</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="control-group">
+                    <div class="control-title">📏 大小设置</div>
+                    <div class="control-item">
+                        <label class="control-label">初始大小</label>
+                        <div class="control-input">
+                            <input type="range" class="slider" id="initialSize" min="1" max="20" value="5">
+                            <span class="value-display" id="initialSizeValue">5px</span>
+                        </div>
+                    </div>
+                    <div class="control-item">
+                        <label class="control-label">大小变化</label>
+                        <div class="control-input">
+                            <input type="range" class="slider" id="sizeChange" min="-5" max="5" step="0.1" value="0">
+                            <span class="value-display" id="sizeChangeValue">0</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="control-group">
+                    <div class="control-title">🚀 运动设置</div>
+                    <div class="control-item">
+                        <label class="control-label">初始速度</label>
+                        <div class="control-input">
+                            <input type="range" class="slider" id="initialSpeed" min="10" max="200" value="50">
+                            <span class="value-display" id="initialSpeedValue">50</span>
+                        </div>
+                    </div>
+                    <div class="control-item">
+                        <label class="control-label">重力强度</label>
+                        <div class="control-input">
+                            <input type="range" class="slider" id="gravity" min="-100" max="100" value="20">
+                            <span class="value-display" id="gravityValue">20</span>
+                        </div>
+                    </div>
+                    <div class="control-item">
+                        <label class="control-label">阻力系数</label>
+                        <div class="control-input">
+                            <input type="range" class="slider" id="friction" min="0" max="1" step="0.01" value="0.02">
+                            <span class="value-display" id="frictionValue">0.02</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="control-group">
+                    <div class="control-title">🎨 颜色设置</div>
+                    <div class="control-item">
+                        <label class="control-label">起始颜色</label>
+                        <div class="control-input">
+                            <input type="color" class="color-input" id="startColor" value="#ff6b6b">
+                            <span class="value-display" id="startColorValue">#ff6b6b</span>
+                        </div>
+                    </div>
+                    <div class="control-item">
+                        <label class="control-label">结束颜色</label>
+                        <div class="control-input">
+                            <input type="color" class="color-input" id="endColor" value="#4ecdc4">
+                            <span class="value-display" id="endColorValue">#4ecdc4</span>
+                        </div>
+                    </div>
+                    <div class="control-item">
+                        <label class="control-label">透明度变化</label>
+                        <div class="control-input">
+                            <input type="range" class="slider" id="alphaDecay" min="0" max="1" step="0.01" value="0.02">
+                            <span class="value-display" id="alphaDecayValue">0.02</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="control-group">
+                    <div class="control-title">🎭 预设效果</div>
+                    <div class="preset-buttons">
+                        <button class="preset-btn" data-preset="fireworks">🎆 烟花</button>
+                        <button class="preset-btn" data-preset="snow">❄️ 雪花</button>
+                        <button class="preset-btn" data-preset="fire">🔥 火焰</button>
+                        <button class="preset-btn" data-preset="stars">⭐ 星空</button>
+                        <button class="preset-btn" data-preset="bubbles">🫧 气泡</button>
+                        <button class="preset-btn" data-preset="magic">✨ 魔法</button>
+                    </div>
+                </div>
+
+                <div class="action-buttons">
+                    <button class="action-btn primary-btn" id="playPauseBtn">⏸️ 暂停</button>
+                    <button class="action-btn secondary-btn" id="clearBtn">🗑️ 清空</button>
+                    <button class="action-btn danger-btn" id="resetBtn">🔄 重置</button>
+                </div>
+            </div>
+
+            <div class="canvas-container">
+                <canvas class="particle-canvas" id="particleCanvas"></canvas>
+            </div>
+        </div>
+
+        <div class="footer">
+            <p>© 小苏趣研AI | 粒子效果生成器</p>
+            <p style="margin-top: 10px; opacity: 0.8;">
+                <a href="#" target="_blank" style="color: #666; text-decoration: none;">小苏趣研AI</a> - 
+                实时粒子动画生成工具，支持多种预设效果和自定义参数，创造炫酷的视觉效果，适用于网页装饰和创意设计。
+            </p>
+        </div>
+    </div>
+
+    
+                </div>
+            </div>
+                    <!-- 结果显示区域 -->
+                    <div class="result-display" id="result">
+                        <pre id="resultContent">处理结果将在这里显示...</pre>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <!-- 工具页脚 -->
+        <footer class="tool-footer">
+            <p>由 <a href="../../index.html">AI工具集</a> 提供 | 原创工具</p>
+        </footer>
+    </div>
+
+    <!-- JavaScript -->
+    <script src="../../shared/js/utils.js"></script>
+    <script>
+        // 工具特定的JavaScript代码
+        class ToolApp {
+            constructor() {
+                this.init();
+            }
+
+            init() {
+                this.setupEventListeners();
+            }
+
+            setupEventListeners() {
+                document.getElementById('processBtn').addEventListener('click', () => this.process());
+                document.getElementById('clearBtn').addEventListener('click', () => this.clear());
+                document.getElementById('copyBtn').addEventListener('click', () => this.copyResult());
+                
+                // 实时处理（可选）
+                document.getElementById('input').addEventListener('input', 
+                    ToolUtils.debounce(() => this.process(), 300)
+                );
+            }
+
+            process() {
+                const input = document.getElementById('input').value;
+                const result = this.processInput(input);
+                this.displayResult(result);
+            }
+
+            processInput(input) {
+                
+        class Particle {
+            constructor(x, y, settings) {
+                this.x = x;
+                this.y = y;
+                this.vx = (Math.random() - 0.5) * settings.initialSpeed;
+                this.vy = (Math.random() - 0.5) * settings.initialSpeed;
+                this.size = settings.initialSize;
+                this.life = settings.lifetime;
+                this.maxLife = settings.lifetime;
+                this.alpha = 1;
+                this.settings = settings;
+                
+                // 颜色插值
+                this.startColor = this.hexToRgb(settings.startColor);
+                this.endColor = this.hexToRgb(settings.endColor);
+            }
+
+            hexToRgb(hex) {
+                const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+                return result ? {
+                    r: parseInt(result[1], 16),
+                    g: parseInt(result[2], 16),
+                    b: parseInt(result[3], 16)
+                } : null;
+            }
+
+            update() {
+                // 更新位置
+                this.x += this.vx;
+                this.y += this.vy;
+                
+                // 应用重力
+                this.vy += this.settings.gravity * 0.01;
+                
+                // 应用阻力
+                this.vx *= (1 - this.settings.friction);
+                this.vy *= (1 - this.settings.friction);
+                
+                // 更新大小
+                this.size += this.settings.sizeChange * 0.1;
+                if (this.size < 0) this.size = 0;
+                
+                // 更新生命周期
+                this.life -= 1/60; // 假设60FPS
+                
+                // 更新透明度
+                this.alpha -= this.settings.alphaDecay;
+                if (this.alpha < 0) this.alpha = 0;
+                
+                return this.life > 0 && this.alpha > 0;
+            }
+
+            draw(ctx) {
+                const lifeRatio = 1 - (this.life / this.maxLife);
+                
+                // 颜色插值
+                const r = Math.round(this.startColor.r + (this.endColor.r - this.startColor.r) * lifeRatio);
+                const g = Math.round(this.startColor.g + (this.endColor.g - this.startColor.g) * lifeRatio);
+                const b = Math.round(this.startColor.b + (this.endColor.b - this.startColor.b) * lifeRatio);
+                
+                ctx.save();
+                ctx.globalAlpha = this.alpha;
+                ctx.fillStyle = `rgb(${r}, ${g}, ${b})`;
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.restore();
+            }
+        }
+
+        class ParticleSystem {
+            constructor() {
+                this.canvas = document.getElementById('particleCanvas');
+                this.ctx = this.canvas.getContext('2d');
+                this.particles = [];
+                this.isPlaying = true;
+                this.lastTime = 0;
+                this.frameCount = 0;
+                this.fps = 60;
+                
+                this.settings = {
+                    maxParticles: 500,
+                    spawnRate: 10,
+                    lifetime: 3,
+                    initialSize: 5,
+                    sizeChange: 0,
+                    initialSpeed: 50,
+                    gravity: 20,
+                    friction: 0.02,
+                    startColor: '#ff6b6b',
+                    endColor: '#4ecdc4',
+                    alphaDecay: 0.02
+                };
+                
+                this.init();
+            }
+
+            init() {
+                this.setupCanvas();
+                this.setupEventListeners();
+                this.setupControls();
+                this.animate();
+            }
+
+            setupCanvas() {
+                const container = this.canvas.parentElement;
+                this.canvas.width = container.clientWidth;
+                this.canvas.height = container.clientHeight;
+            }
+
+            setupEventListeners() {
+                // 鼠标交互
+                this.canvas.addEventListener('mousemove', (e) => {
+                    if (this.isPlaying) {
+                        const rect = this.canvas.getBoundingClientRect();
+                        const x = e.clientX - rect.left;
+                        const y = e.clientY - rect.top;
+                        this.spawnParticles(x, y, this.settings.spawnRate);
+                    }
+                });
+
+                this.canvas.addEventListener('click', (e) => {
+                    const rect = this.canvas.getBoundingClientRect();
+                    const x = e.clientX - rect.left;
+                    const y = e.clientY - rect.top;
+                    this.spawnParticles(x, y, this.settings.spawnRate * 3);
+                });
+
+                // 控制按钮
+                document.getElementById('playPauseBtn').addEventListener('click', () => {
+                    this.togglePlayPause();
+                });
+
+                document.getElementById('clearBtn').addEventListener('click', () => {
+                    this.clearParticles();
+                });
+
+                document.getElementById('resetBtn').addEventListener('click', () => {
+                    this.resetSettings();
+                });
+
+                // 预设效果
+                document.querySelectorAll('.preset-btn').forEach(btn => {
+                    btn.addEventListener('click', (e) => {
+                        this.applyPreset(e.target.dataset.preset);
+                    });
+                });
+
+                // 窗口大小变化
+                window.addEventListener('resize', () => {
+                    this.setupCanvas();
+                });
+            }
+
+            setupControls() {
+                const controls = [
+                    'maxParticles', 'spawnRate', 'lifetime', 'initialSize', 'sizeChange',
+                    'initialSpeed', 'gravity', 'friction', 'alphaDecay'
+                ];
+
+                controls.forEach(control => {
+                    const slider = document.getElementById(control);
+                    const valueDisplay = document.getElementById(control + 'Value');
+                    
+                    slider.addEventListener('input', (e) => {
+                        let value = parseFloat(e.target.value);
+                        this.settings[control] = value;
+                        
+                        // 更新显示值
+                        if (control === 'lifetime') {
+                            valueDisplay.textContent = value.toFixed(1) + 's';
+                        } else if (control === 'initialSize') {
+                            valueDisplay.textContent = value + 'px';
+                        } else {
+                            valueDisplay.textContent = value;
+                        }
+                    });
+                });
+
+                // 颜色控件
+                ['startColor', 'endColor'].forEach(colorControl => {
+                    const colorInput = document.getElementById(colorControl);
+                    const valueDisplay = document.getElementById(colorControl + 'Value');
+                    
+                    colorInput.addEventListener('input', (e) => {
+                        this.settings[colorControl] = e.target.value;
+                        valueDisplay.textContent = e.target.value;
+                    });
+                });
+            }
+
+            spawnParticles(x, y, count) {
+                for (let i = 0; i < count; i++) {
+                    if (this.particles.length < this.settings.maxParticles) {
+                        this.particles.push(new Particle(x, y, this.settings));
+                    }
+                }
+            }
+
+            update() {
+                this.particles = this.particles.filter(particle => particle.update());
+                
+                // 更新统计信息
+                document.getElementById('particleCount').textContent = this.particles.length;
+            }
+
+            draw() {
+                this.ctx.fillStyle = 'rgba(0, 0, 0, 0.1)';
+                this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+                
+                this.particles.forEach(particle => {
+                    particle.draw(this.ctx);
+                });
+            }
+
+            animate(currentTime = 0) {
+                if (currentTime - this.lastTime >= 1000) {
+                    document.getElementById('fps').textContent = this.frameCount;
+                    this.frameCount = 0;
+                    this.lastTime = currentTime;
+                }
+                this.frameCount++;
+
+                if (this.isPlaying) {
+                    this.update();
+                }
+                this.draw();
+                
+                requestAnimationFrame((time) => this.animate(time));
+            }
+
+            togglePlayPause() {
+                this.isPlaying = !this.isPlaying;
+                const btn = document.getElementById('playPauseBtn');
+                btn.textContent = this.isPlaying ? '⏸️ 暂停' : '▶️ 播放';
+            }
+
+            clearParticles() {
+                this.particles = [];
+            }
+
+            resetSettings() {
+                // 重置所有设置到默认值
+                const defaults = {
+                    maxParticles: 500,
+                    spawnRate: 10,
+                    lifetime: 3,
+                    initialSize: 5,
+                    sizeChange: 0,
+                    initialSpeed: 50,
+                    gravity: 20,
+                    friction: 0.02,
+                    startColor: '#ff6b6b',
+                    endColor: '#4ecdc4',
+                    alphaDecay: 0.02
+                };
+
+                Object.keys(defaults).forEach(key => {
+                    this.settings[key] = defaults[key];
+                    const element = document.getElementById(key);
+                    if (element) {
+                        element.value = defaults[key];
+                        // 触发input事件更新显示
+                        element.dispatchEvent(new Event('input'));
+                    }
+                });
+
+                this.clearParticles();
+            }
+
+            applyPreset(preset) {
+                const presets = {
+                    fireworks: {
+                        maxParticles: 1000,
+                        spawnRate: 30,
+                        lifetime: 2,
+                        initialSize: 3,
+                        sizeChange: 1,
+                        initialSpeed: 150,
+                        gravity: 50,
+                        friction: 0.01,
+                        startColor: '#ffff00',
+                        endColor: '#ff0000',
+                        alphaDecay: 0.03
+                    },
+                    snow: {
+                        maxParticles: 800,
+                        spawnRate: 15,
+                        lifetime: 8,
+                        initialSize: 4,
+                        sizeChange: 0,
+                        initialSpeed: 20,
+                        gravity: 10,
+                        friction: 0.001,
+                        startColor: '#ffffff',
+                        endColor: '#e0e0e0',
+                        alphaDecay: 0.005
+                    },
+                    fire: {
+                        maxParticles: 600,
+                        spawnRate: 25,
+                        lifetime: 1.5,
+                        initialSize: 6,
+                        sizeChange: -2,
+                        initialSpeed: 80,
+                        gravity: -30,
+                        friction: 0.05,
+                        startColor: '#ff4500',
+                        endColor: '#ffff00',
+                        alphaDecay: 0.04
+                    },
+                    stars: {
+                        maxParticles: 400,
+                        spawnRate: 5,
+                        lifetime: 6,
+                        initialSize: 2,
+                        sizeChange: 0.5,
+                        initialSpeed: 30,
+                        gravity: 0,
+                        friction: 0,
+                        startColor: '#ffffff',
+                        endColor: '#ffff00',
+                        alphaDecay: 0.01
+                    },
+                    bubbles: {
+                        maxParticles: 300,
+                        spawnRate: 8,
+                        lifetime: 5,
+                        initialSize: 8,
+                        sizeChange: 1,
+                        initialSpeed: 40,
+                        gravity: -20,
+                        friction: 0.02,
+                        startColor: '#00ffff',
+                        endColor: '#0080ff',
+                        alphaDecay: 0.015
+                    },
+                    magic: {
+                        maxParticles: 1200,
+                        spawnRate: 20,
+                        lifetime: 4,
+                        initialSize: 3,
+                        sizeChange: 0.5,
+                        initialSpeed: 100,
+                        gravity: 0,
+                        friction: 0.03,
+                        startColor: '#ff00ff',
+                        endColor: '#00ffff',
+                        alphaDecay: 0.02
+                    }
+                };
+
+                if (presets[preset]) {
+                    Object.keys(presets[preset]).forEach(key => {
+                        this.settings[key] = presets[preset][key];
+                        const element = document.getElementById(key);
+                        if (element) {
+                            element.value = presets[preset][key];
+                            element.dispatchEvent(new Event('input'));
+                        }
+                    });
+                }
+            }
+        }
+
+        // 初始化
+        document.addEventListener('DOMContentLoaded', () => {
+            new ParticleSystem();
+        });
+    
+                return input;
+            }
+
+            displayResult(result) {
+                document.getElementById('resultContent').textContent = result;
+            }
+
+            clear() {
+                document.getElementById('input').value = '';
+                document.getElementById('resultContent').textContent = '处理结果将在这里显示...';
+            }
+
+            copyResult() {
+                const result = document.getElementById('resultContent').textContent;
+                if (result && result !== '处理结果将在这里显示...') {
+                    ToolUtils.copyToClipboard(result);
+                } else {
+                    ToolUtils.showToast('没有可复制的内容', 'warning');
+                }
+            }
+        }
+
+        // 初始化应用
+        document.addEventListener('DOMContentLoaded', () => {
+            new ToolApp();
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,675 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>人生进度条 - Life Progress Bar - AI工具集</title>
+    <meta name="description" content="人生进度条 - Life Progress Bar">
+    
+    <!-- 样式文件 -->
+    <link rel="stylesheet" href="../../shared/css/common.css">
+    
+    <!-- 工具特定样式 -->
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: var(--spacing-lg);
+            color: var(--text-primary);
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(45deg, #ff6b6b, #4ecdc4);
+            color: white;
+            text-align: center;
+            padding: 40px 20px;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .header p {
+            font-size: 1.1em;
+            opacity: 0.9;
+        }
+
+        .content {
+            padding: 40px;
+        }
+
+        .input-section {
+            background: #f8f9fa;
+            padding: 30px;
+            border-radius: var(--radius-lg);
+            margin-bottom: 40px;
+            text-align: center;
+        }
+
+        .input-group {
+            display: inline-block;
+            margin: var(--spacing-md) 20px;
+        }
+
+        .input-group label {
+            display: block;
+            font-weight: bold;
+            margin-bottom: 8px;
+            color: #555;
+        }
+
+        .input-group input {
+            padding: 12px 15px;
+            border: 2px solid #ddd;
+            border-radius: var(--radius-md);
+            font-size: 16px;
+            width: 120px;
+            text-align: center;
+            transition: border-color 0.3s;
+        }
+
+        .input-group input:focus {
+            outline: none;
+            border-color: #ff6b6b;
+        }
+
+        .calculate-btn {
+            background: linear-gradient(45deg, #ff6b6b, #ee5a52);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            font-size: 18px;
+            border-radius: 50px;
+            cursor: pointer;
+            margin: var(--spacing-lg) 10px;
+            transition: all 0.3s ease;
+            box-shadow: 0 10px 20px rgba(255, 107, 107, 0.3);
+        }
+
+        .calculate-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 15px 30px rgba(255, 107, 107, 0.4);
+        }
+
+        .progress-section {
+            display: none;
+        }
+
+        .progress-section.show {
+            display: block;
+        }
+
+        .progress-item {
+            background: white;
+            border-radius: var(--radius-lg);
+            padding: 25px;
+            margin-bottom: 25px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+            border-left: 5px solid #ff6b6b;
+        }
+
+        .progress-title {
+            font-size: 1.3em;
+            font-weight: bold;
+            margin-bottom: 15px;
+            color: var(--text-primary);
+            display: flex;
+            align-items: center;
+        }
+
+        .progress-title .icon {
+            font-size: 1.5em;
+            margin-right: 10px;
+        }
+
+        .progress-bar-container {
+            background: #f0f0f0;
+            border-radius: 25px;
+            height: 30px;
+            overflow: hidden;
+            margin-bottom: 15px;
+            position: relative;
+        }
+
+        .progress-bar {
+            height: 100%;
+            border-radius: 25px;
+            transition: width 1.5s ease;
+            background: linear-gradient(45deg, #ff6b6b, #4ecdc4);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .progress-bar::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent);
+            animation: shimmer 2s infinite;
+        }
+
+        @keyframes shimmer {
+            0% { left: -100%; }
+            100% { left: 100%; }
+        }
+
+        .progress-text {
+            text-align: center;
+            font-weight: bold;
+            color: white;
+            line-height: 30px;
+            position: absolute;
+            width: 100%;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.5);
+        }
+
+        .progress-details {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-top: 15px;
+        }
+
+        .detail-item {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: var(--radius-md);
+            text-align: center;
+        }
+
+        .detail-value {
+            font-size: 1.5em;
+            font-weight: bold;
+            color: #ff6b6b;
+            display: block;
+        }
+
+        .detail-label {
+            color: var(--text-secondary);
+            font-size: 0.9em;
+            margin-top: 5px;
+        }
+
+        .milestone-section {
+            background: #f8f9fa;
+            padding: 25px;
+            border-radius: var(--radius-lg);
+            margin-top: 30px;
+        }
+
+        .milestone-title {
+            font-size: 1.4em;
+            font-weight: bold;
+            margin-bottom: 20px;
+            color: var(--text-primary);
+            text-align: center;
+        }
+
+        .milestone-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+        }
+
+        .milestone-item {
+            background: white;
+            padding: 15px;
+            border-radius: var(--radius-md);
+            text-align: center;
+            transition: transform 0.3s ease;
+        }
+
+        .milestone-item:hover {
+            transform: translateY(-5px);
+        }
+
+        .milestone-age {
+            font-size: 1.2em;
+            font-weight: bold;
+            color: #4ecdc4;
+            display: block;
+        }
+
+        .milestone-desc {
+            color: var(--text-secondary);
+            font-size: 0.9em;
+            margin-top: 5px;
+        }
+
+        .milestone-item.reached {
+            background: linear-gradient(45deg, #4ecdc4, #44a08d);
+            color: white;
+        }
+
+        .milestone-item.reached .milestone-age {
+            color: white;
+        }
+
+        .milestone-item.reached .milestone-desc {
+            color: rgba(255,255,255,0.9);
+        }
+
+        .footer {
+            text-align: center;
+            padding: var(--spacing-lg);
+            color: var(--text-secondary);
+            font-size: 0.9em;
+            border-top: 1px solid #eee;
+            margin-top: 40px;
+        }
+
+        @media (max-width: 768px) {
+            .header h1 {
+                font-size: 2em;
+            }
+            
+            .content {
+                padding: var(--spacing-lg);
+            }
+            
+            .input-group {
+                display: block;
+                margin: 15px 0;
+            }
+            
+            .input-group input {
+                width: 200px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="tool-container">
+        <!-- 工具头部 -->
+        <header class="tool-header">
+            <div class="tool-header-content">
+                <a href="../../index.html" class="back-btn">
+                    <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                        <path d="M10 4l-4 4 4 4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                    返回工具集
+                </a>
+                
+                <div class="tool-title">
+                    <h1>人生进度条 - Life Progress Bar</h1>
+                    <p class="tool-subtitle">人生进度条 - Life Progress Bar</p>
+                </div>
+                
+                <button class="theme-toggle" id="themeToggle" aria-label="切换主题">
+                    <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                        <circle cx="10" cy="10" r="4" stroke="currentColor" stroke-width="2"/>
+                        <path d="M10 2v2M10 16v2M18 10h-2M4 10H2M15.66 4.34l-1.41 1.41M5.75 14.25l-1.41 1.41M15.66 15.66l-1.41-1.41M5.75 5.75L4.34 4.34" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                    </svg>
+                </button>
+            </div>
+        </header>
+
+        <!-- 工具主内容 -->
+        <main class="tool-main">
+            <div class="tool-card">
+                <div class="tool-section">
+                    <h2>
+                        <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                            <rect x="3" y="3" width="14" height="14" rx="2" stroke="currentColor" stroke-width="2"/>
+                        </svg>
+                        工具功能
+                    </h2>
+                    
+                    
+            <div class="tool-card">
+                <div class="tool-section">
+                    <h2>
+                        <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                            <rect x="3" y="3" width="14" height="14" rx="2" stroke="currentColor" stroke-width="2"/>
+                        </svg>
+                        人生进度条 - Life Progress Bar
+                    </h2>
+                    <div class="container">
+        <div class="header">
+            <h1>⏰ 人生进度条</h1>
+            <p>时间是最珍贵的财富，让我们一起看看人生的进度吧</p>
+        </div>
+
+        <div class="content">
+            <div class="input-section">
+                <h2 style="margin-bottom: 20px; color: #333;">请输入您的出生日期</h2>
+                <div class="input-group">
+                    <label for="birthYear">出生年份</label>
+                    <input type="number" id="birthYear" placeholder="1990" min="1900" max="2024">
+                </div>
+                <div class="input-group">
+                    <label for="birthMonth">出生月份</label>
+                    <input type="number" id="birthMonth" placeholder="6" min="1" max="12">
+                </div>
+                <div class="input-group">
+                    <label for="birthDay">出生日期</label>
+                    <input type="number" id="birthDay" placeholder="15" min="1" max="31">
+                </div>
+                <div class="input-group">
+                    <label for="lifeExpectancy">预期寿命</label>
+                    <input type="number" id="lifeExpectancy" placeholder="80" min="50" max="120" value="80">
+                </div>
+                <br>
+                <button class="calculate-btn" onclick="calculateProgress()">计算我的人生进度</button>
+            </div>
+
+            <div class="progress-section" id="progressSection">
+                <div class="progress-item">
+                    <div class="progress-title">
+                        <span class="icon">🎂</span>
+                        人生总进度
+                    </div>
+                    <div class="progress-bar-container">
+                        <div class="progress-bar" id="lifeProgressBar" style="width: 0%"></div>
+                        <div class="progress-text" id="lifeProgressText">0%</div>
+                    </div>
+                    <div class="progress-details">
+                        <div class="detail-item">
+                            <span class="detail-value" id="currentAge">0</span>
+                            <div class="detail-label">当前年龄</div>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-value" id="remainingYears">0</span>
+                            <div class="detail-label">预计剩余年数</div>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-value" id="livedDays">0</span>
+                            <div class="detail-label">已活天数</div>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-value" id="remainingDays">0</span>
+                            <div class="detail-label">预计剩余天数</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="progress-item">
+                    <div class="progress-title">
+                        <span class="icon">📅</span>
+                        今年进度
+                    </div>
+                    <div class="progress-bar-container">
+                        <div class="progress-bar" id="yearProgressBar" style="width: 0%"></div>
+                        <div class="progress-text" id="yearProgressText">0%</div>
+                    </div>
+                    <div class="progress-details">
+                        <div class="detail-item">
+                            <span class="detail-value" id="yearPassed">0</span>
+                            <div class="detail-label">已过天数</div>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-value" id="yearRemaining">0</span>
+                            <div class="detail-label">剩余天数</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="progress-item">
+                    <div class="progress-title">
+                        <span class="icon">🗓️</span>
+                        本月进度
+                    </div>
+                    <div class="progress-bar-container">
+                        <div class="progress-bar" id="monthProgressBar" style="width: 0%"></div>
+                        <div class="progress-text" id="monthProgressText">0%</div>
+                    </div>
+                    <div class="progress-details">
+                        <div class="detail-item">
+                            <span class="detail-value" id="monthPassed">0</span>
+                            <div class="detail-label">已过天数</div>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-value" id="monthRemaining">0</span>
+                            <div class="detail-label">剩余天数</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="milestone-section">
+                    <div class="milestone-title">🏆 人生里程碑</div>
+                    <div class="milestone-grid" id="milestoneGrid">
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="footer">
+            由 <strong>小苏趣研AI</strong> 制作 | 珍惜时光，不负韶华
+        </div>
+    </div>
+
+    
+                </div>
+            </div>
+                    <!-- 结果显示区域 -->
+                    <div class="result-display" id="result">
+                        <pre id="resultContent">处理结果将在这里显示...</pre>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <!-- 工具页脚 -->
+        <footer class="tool-footer">
+            <p>由 <a href="../../index.html">AI工具集</a> 提供 | 原创工具</p>
+        </footer>
+    </div>
+
+    <!-- JavaScript -->
+    <script src="../../shared/js/utils.js"></script>
+    <script>
+        // 工具特定的JavaScript代码
+        class ToolApp {
+            constructor() {
+                this.init();
+            }
+
+            init() {
+                this.setupEventListeners();
+            }
+
+            setupEventListeners() {
+                document.getElementById('processBtn').addEventListener('click', () => this.process());
+                document.getElementById('clearBtn').addEventListener('click', () => this.clear());
+                document.getElementById('copyBtn').addEventListener('click', () => this.copyResult());
+                
+                // 实时处理（可选）
+                document.getElementById('input').addEventListener('input', 
+                    ToolUtils.debounce(() => this.process(), 300)
+                );
+            }
+
+            process() {
+                const input = document.getElementById('input').value;
+                const result = this.processInput(input);
+                this.displayResult(result);
+            }
+
+            processInput(input) {
+                
+        function calculateProgress() {
+            const birthYear = parseInt(document.getElementById('birthYear').value);
+            const birthMonth = parseInt(document.getElementById('birthMonth').value);
+            const birthDay = parseInt(document.getElementById('birthDay').value);
+            const lifeExpectancy = parseInt(document.getElementById('lifeExpectancy').value);
+
+            if (!birthYear || !birthMonth || !birthDay || !lifeExpectancy) {
+                alert('请填写完整的出生日期和预期寿命！');
+                return;
+            }
+
+            if (birthMonth < 1 || birthMonth > 12) {
+                alert('月份必须在1-12之间！');
+                return;
+            }
+
+            if (birthDay < 1 || birthDay > 31) {
+                alert('日期必须在1-31之间！');
+                return;
+            }
+
+            const birthDate = new Date(birthYear, birthMonth - 1, birthDay);
+            const today = new Date();
+            const expectedDeathDate = new Date(birthYear + lifeExpectancy, birthMonth - 1, birthDay);
+
+            // 计算已活天数
+            const livedDays = Math.floor((today - birthDate) / (1000 * 60 * 60 * 24));
+            const totalDays = Math.floor((expectedDeathDate - birthDate) / (1000 * 60 * 60 * 24));
+            const remainingDays = totalDays - livedDays;
+
+            // 计算当前年龄
+            const currentAge = Math.floor(livedDays / 365.25);
+            const remainingYears = lifeExpectancy - currentAge;
+
+            // 计算人生进度百分比
+            const lifeProgress = Math.min((livedDays / totalDays) * 100, 100);
+
+            // 计算今年进度
+            const yearStart = new Date(today.getFullYear(), 0, 1);
+            const yearEnd = new Date(today.getFullYear() + 1, 0, 1);
+            const yearTotalDays = Math.floor((yearEnd - yearStart) / (1000 * 60 * 60 * 24));
+            const yearPassedDays = Math.floor((today - yearStart) / (1000 * 60 * 60 * 24));
+            const yearProgress = (yearPassedDays / yearTotalDays) * 100;
+
+            // 计算本月进度
+            const monthStart = new Date(today.getFullYear(), today.getMonth(), 1);
+            const monthEnd = new Date(today.getFullYear(), today.getMonth() + 1, 1);
+            const monthTotalDays = Math.floor((monthEnd - monthStart) / (1000 * 60 * 60 * 24));
+            const monthPassedDays = today.getDate();
+            const monthProgress = (monthPassedDays / monthTotalDays) * 100;
+
+            // 更新显示
+            updateProgressBar('lifeProgressBar', 'lifeProgressText', lifeProgress);
+            updateProgressBar('yearProgressBar', 'yearProgressText', yearProgress);
+            updateProgressBar('monthProgressBar', 'monthProgressText', monthProgress);
+
+            document.getElementById('currentAge').textContent = currentAge;
+            document.getElementById('remainingYears').textContent = remainingYears;
+            document.getElementById('livedDays').textContent = livedDays.toLocaleString();
+            document.getElementById('remainingDays').textContent = remainingDays.toLocaleString();
+
+            document.getElementById('yearPassed').textContent = yearPassedDays;
+            document.getElementById('yearRemaining').textContent = yearTotalDays - yearPassedDays;
+
+            document.getElementById('monthPassed').textContent = monthPassedDays;
+            document.getElementById('monthRemaining').textContent = monthTotalDays - monthPassedDays;
+
+            // 生成里程碑
+            generateMilestones(currentAge);
+
+            // 显示结果区域
+            document.getElementById('progressSection').classList.add('show');
+        }
+
+        function updateProgressBar(barId, textId, percentage) {
+            const bar = document.getElementById(barId);
+            const text = document.getElementById(textId);
+            
+            setTimeout(() => {
+                bar.style.width = percentage + '%';
+                text.textContent = percentage.toFixed(1) + '%';
+            }, 300);
+        }
+
+        function generateMilestones(currentAge) {
+            const milestones = [
+                { age: 1, desc: '学会走路' },
+                { age: 6, desc: '开始上学' },
+                { age: 12, desc: '进入青春期' },
+                { age: 18, desc: '成年独立' },
+                { age: 22, desc: '大学毕业' },
+                { age: 25, desc: '事业起步' },
+                { age: 30, desc: '而立之年' },
+                { age: 35, desc: '事业有成' },
+                { age: 40, desc: '不惑之年' },
+                { age: 50, desc: '知天命' },
+                { age: 60, desc: '花甲之年' },
+                { age: 70, desc: '古稀之年' },
+                { age: 80, desc: '耄耋之年' }
+            ];
+
+            const milestoneGrid = document.getElementById('milestoneGrid');
+            milestoneGrid.innerHTML = '';
+
+            milestones.forEach(milestone => {
+                const item = document.createElement('div');
+                item.className = 'milestone-item';
+                if (currentAge >= milestone.age) {
+                    item.classList.add('reached');
+                }
+
+                item.innerHTML = `
+                    <span class="milestone-age">${milestone.age}岁</span>
+                    <div class="milestone-desc">${milestone.desc}</div>
+                `;
+
+                milestoneGrid.appendChild(item);
+            });
+        }
+
+        // 页面加载时设置默认值
+        window.onload = function() {
+            const today = new Date();
+            const defaultBirthYear = today.getFullYear() - 25;
+            document.getElementById('birthYear').value = defaultBirthYear;
+            document.getElementById('birthMonth').value = 6;
+            document.getElementById('birthDay').value = 15;
+        };
+
+        // 支持回车键计算
+        document.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                calculateProgress();
+            }
+        });
+    
+                return input;
+            }
+
+            displayResult(result) {
+                document.getElementById('resultContent').textContent = result;
+            }
+
+            clear() {
+                document.getElementById('input').value = '';
+                document.getElementById('resultContent').textContent = '处理结果将在这里显示...';
+            }
+
+            copyResult() {
+                const result = document.getElementById('resultContent').textContent;
+                if (result && result !== '处理结果将在这里显示...') {
+                    ToolUtils.copyToClipboard(result);
+                } else {
+                    ToolUtils.showToast('没有可复制的内容', 'warning');
+                }
+            }
+        }
+
+        // 初始化应用
+        document.addEventListener('DOMContentLoaded', () => {
+            new ToolApp();
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,1953 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>目标管理工具 - AI工具集</title>
+    <meta name="description" content="目标管理工具">
+    
+    <!-- 外部依赖 -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css"
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css"
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"
+    <!-- 样式文件 -->
+    <link rel="stylesheet" href="../../shared/css/common.css">
+    
+    <!-- 工具特定样式 -->
+    <style>
+        :root {
+            --primary-color: #4f46e5;
+            --primary-light: #818cf8;
+            --secondary-color: #06b6d4;
+            --success-color: #10b981;
+            --warning-color: #f59e0b;
+            --danger-color: #ef4444;
+            --dark-color: #1f2937;
+            --light-color: #f9fafb;
+            --gray-color: #6b7280;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f5f7ff;
+            color: var(--text-primary);
+        }
+        
+        .navbar-brand {
+            font-weight: 700;
+            color: var(--primary-color);
+        }
+        
+        .card {
+            border-radius: var(--radius-md) !important;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05) !important;
+            border: none !important;
+            transition: transform 0.2s, box-shadow 0.2s !important;
+        }
+        
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 15px rgba(0, 0, 0, 0.1);
+        }
+        
+        .progress {
+            height: 8px;
+            border-radius: 4px;
+        }
+        
+        .goal-card {
+            border-left: 4px solid var(--primary-color);
+        }
+        
+        .goal-card.completed {
+            border-left-color: var(--success-color);
+        }
+        
+        .goal-card.paused {
+            border-left-color: var(--warning-color);
+        }
+        
+        .action-card {
+            border-left: 4px solid var(--secondary-color);
+        }
+        
+        .action-card.completed {
+            border-left-color: var(--success-color);
+        }
+        
+        .badge-category {
+            background-color: #e9ecef;
+            color: var(--dark-color);
+        }
+        
+        .badge-status-active {
+            background-color: var(--primary-light);
+            color: white;
+        }
+        
+        .badge-status-completed {
+            background-color: var(--success-color);
+            color: white;
+        }
+        
+        .badge-status-paused {
+            background-color: var(--warning-color);
+            color: white;
+        }
+        
+        .nav-tabs .nav-link {
+            color: var(--gray-color);
+            border: none;
+            font-weight: 500;
+            padding: var(--spacing-md) 15px;
+        }
+        
+        .nav-tabs .nav-link.active {
+            color: var(--primary-color);
+            background: none;
+            border-bottom: 2px solid var(--primary-color);
+        }
+        
+        .star-rating .bi-star-fill {
+            color: #d1d5db;
+        }
+        
+        .star-rating .filled {
+            color: #f59e0b;
+        }
+        
+        .chart-container {
+            height: 200px;
+            position: relative;
+        }
+        
+        .streak-badge {
+            background-color: var(--primary-color);
+            color: white;
+            font-size: 1.2rem;
+            padding: 5px 15px;
+            border-radius: 20px;
+        }
+        
+        .ai-message {
+            background-color: #f3f4f6;
+            border-radius: var(--radius-md);
+            padding: var(--spacing-md) 15px;
+            max-width: 80%;
+        }
+        
+        .user-message {
+            background-color: #e0e7ff;
+            border-radius: var(--radius-md);
+            padding: var(--spacing-md) 15px;
+            max-width: 80%;
+            margin-left: auto;
+        }
+        
+        .chat-container {
+            height: 400px;
+            overflow-y: auto;
+        }
+        
+        .btn-primary {
+            background-color: var(--primary-color);
+            border-color: var(--primary-color);
+        }
+        
+        .btn-outline-primary {
+            color: var(--primary-color);
+            border-color: var(--primary-color);
+        }
+        
+        .modal-content {
+            border-radius: var(--radius-md);
+            border: none;
+        }
+        
+        @media (max-width: 768px) {
+            .container {
+                padding: var(--spacing-md);
+                margin: var(--spacing-sm);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="tool-container">
+        <!-- 工具头部 -->
+        <header class="tool-header">
+            <div class="tool-header-content">
+                <a href="../../index.html" class="back-btn">
+                    <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                        <path d="M10 4l-4 4 4 4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                    返回工具集
+                </a>
+                
+                <div class="tool-title">
+                    <h1>目标管理工具</h1>
+                    <p class="tool-subtitle">目标管理工具</p>
+                </div>
+                
+                <button class="theme-toggle" id="themeToggle" aria-label="切换主题">
+                    <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                        <circle cx="10" cy="10" r="4" stroke="currentColor" stroke-width="2"/>
+                        <path d="M10 2v2M10 16v2M18 10h-2M4 10H2M15.66 4.34l-1.41 1.41M5.75 14.25l-1.41 1.41M15.66 15.66l-1.41-1.41M5.75 5.75L4.34 4.34" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                    </svg>
+                </button>
+            </div>
+        </header>
+
+        <!-- 工具主内容 -->
+        <main class="tool-main">
+            <div class="tool-card">
+                <div class="tool-section">
+                    <h2>
+                        <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                            <rect x="3" y="3" width="14" height="14" rx="2" stroke="currentColor" stroke-width="2"/>
+                        </svg>
+                        工具功能
+                    </h2>
+                    
+                    
+            <div class="tool-card">
+                <div class="tool-section">
+                    <h2>
+                        <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                            <rect x="3" y="3" width="14" height="14" rx="2" stroke="currentColor" stroke-width="2"/>
+                        </svg>
+                        目标管理工具
+                    </h2>
+                    <div class="container">
+                        <div class="container py-4">
+        <header class="mb-4">
+            <h1 class="display-5 fw-bold text-primary mb-0"><i class="bi bi-bullseye me-2"></i>目标管理中心</h1>
+            <p class="text-muted">记录每日行动，达成长期目标</p>
+        </header>
+
+        <ul class="nav nav-tabs mb-4" id="myTab" role="tablist">
+            <li class="nav-item" role="presentation">
+                <button class="nav-link active" id="overview-tab" data-bs-toggle="tab" data-bs-target="#overview" type="button" role="tab" aria-controls="overview" aria-selected="true">
+                    <i class="bi bi-house-door me-1"></i> 概览
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="goals-tab" data-bs-toggle="tab" data-bs-target="#goals" type="button" role="tab" aria-controls="goals" aria-selected="false">
+                    <i class="bi bi-bullseye me-1"></i> 目标管理
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="actions-tab" data-bs-toggle="tab" data-bs-target="#actions" type="button" role="tab" aria-controls="actions" aria-selected="false">
+                    <i class="bi bi-calendar-check me-1"></i> 行动记录
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="coach-tab" data-bs-toggle="tab" data-bs-target="#coach" type="button" role="tab" aria-controls="coach" aria-selected="false">
+                    <i class="bi bi-robot me-1"></i> AI教练
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="stats-tab" data-bs-toggle="tab" data-bs-target="#stats" type="button" role="tab" aria-controls="stats" aria-selected="false">
+                    <i class="bi bi-graph-up me-1"></i> 进度统计
+                </button>
+            </li>
+        </ul>
+
+        <div class="tab-content" id="myTabContent">
+            <!-- 概览页面 -->
+            <div class="tab-pane fade show active" id="overview" role="tabpanel" aria-labelledby="overview-tab">
+                <!-- 状态卡片 -->
+                <div class="row g-4 mb-4">
+                    <div class="col-md-3">
+                        <div class="card h-100">
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between align-items-center mb-2">
+                                    <h6 class="card-subtitle text-muted">活跃目标</h6>
+                                    <i class="bi bi-bullseye text-primary fs-4"></i>
+                                </div>
+                                <h2 class="card-title mb-0" id="active-goals-count">0</h2>
+                                <p class="text-muted small">正在进行中</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="card h-100">
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between align-items-center mb-2">
+                                    <h6 class="card-subtitle text-muted">今日行动</h6>
+                                    <i class="bi bi-calendar-check text-primary fs-4"></i>
+                                </div>
+                                <h2 class="card-title mb-0" id="today-actions-count">0</h2>
+                                <p class="text-muted small">已完成行动</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="card h-100">
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between align-items-center mb-2">
+                                    <h6 class="card-subtitle text-muted">平均进度</h6>
+                                    <i class="bi bi-graph-up text-primary fs-4"></i>
+                                </div>
+                                <h2 class="card-title mb-0" id="average-progress">0%</h2>
+                                <p class="text-muted small">总体完成度</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="card h-100">
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between align-items-center mb-2">
+                                    <h6 class="card-subtitle text-muted">连续天数</h6>
+                                    <i class="bi bi-award text-primary fs-4"></i>
+                                </div>
+                                <h2 class="card-title mb-0" id="streak-days">0</h2>
+                                <p class="text-muted small">坚持记录</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 目标进度 -->
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5 class="mb-0">目标进度</h5>
+                        <p class="text-muted small mb-0">查看您的目标完成情况</p>
+                    </div>
+                    <div class="card-body">
+                        <div id="goals-progress-container">
+                            <!-- 目标进度将动态插入 -->
+                            <div class="text-center py-5 text-muted">
+                                <i class="bi bi-bullseye fs-1 mb-3 d-block"></i>
+                                <p>暂无目标数据</p>
+                                <button class="btn btn-primary" data-bs-toggle="tab" data-bs-target="#goals">
+                                    <i class="bi bi-plus-circle me-1"></i>添加目标
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 今日行动 -->
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0">今日行动</h5>
+                        <p class="text-muted small mb-0">今天的行动记录</p>
+                    </div>
+                    <div class="card-body">
+                        <div id="today-actions-container">
+                            <!-- 今日行动将动态插入 -->
+                            <div class="text-center py-5 text-muted" id="no-actions-today">
+                                <i class="bi bi-calendar fs-1 mb-3 d-block"></i>
+                                <p>今天还没有记录行动</p>
+                                <button class="btn btn-primary" data-bs-toggle="tab" data-bs-target="#actions">
+                                    <i class="bi bi-plus-circle me-1"></i>记录行动
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 目标管理 -->
+            <div class="tab-pane fade" id="goals" role="tabpanel" aria-labelledby="goals-tab">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <div>
+                        <h2 class="h4 mb-1">目标管理</h2>
+                        <p class="text-muted mb-0">创建和管理您的目标</p>
+                    </div>
+                    <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#goalModal">
+                        <i class="bi bi-plus-circle me-1"></i>新建目标
+                    </button>
+                </div>
+
+                <div class="row g-4" id="goals-container">
+                    <!-- 目标卡片将动态插入 -->
+                    <div class="col-12 text-center py-5 text-muted" id="no-goals">
+                        <i class="bi bi-bullseye fs-1 mb-3 d-block"></i>
+                        <p>还没有目标</p>
+                        <p>创建您的第一个目标，开始您的成长之旅</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 行动记录 -->
+            <div class="tab-pane fade" id="actions" role="tabpanel" aria-labelledby="actions-tab">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <div>
+                        <h2 class="h4 mb-1">行动记录</h2>
+                        <p class="text-muted mb-0">记录您的每日行动和进展</p>
+                    </div>
+                    <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#actionModal">
+                        <i class="bi bi-plus-circle me-1"></i>记录行动
+                    </button>
+                </div>
+
+                <div id="actions-by-date-container">
+                    <!-- 按日期分组的行动将动态插入 -->
+                    <div class="text-center py-5 text-muted" id="no-actions">
+                        <i class="bi bi-calendar fs-1 mb-3 d-block"></i>
+                        <p>还没有行动记录</p>
+                        <p>记录您的第一个行动，追踪您的进展</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- AI教练 -->
+            <div class="tab-pane fade" id="coach" role="tabpanel" aria-labelledby="coach-tab">
+                <div class="mb-4">
+                    <h2 class="h4 mb-1">AI教练</h2>
+                    <p class="text-muted mb-0">获得个性化的建议和反馈</p>
+                </div>
+
+                <!-- 数据分析概览 -->
+                <div class="row g-4 mb-4">
+                    <div class="col-md-3">
+                        <div class="card h-100">
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between align-items-center mb-2">
+                                    <h6 class="card-subtitle text-muted">活跃目标</h6>
+                                    <i class="bi bi-graph-up text-primary fs-4"></i>
+                                </div>
+                                <h2 class="card-title mb-0" id="coach-active-goals">0</h2>
+                                <p class="text-muted small">平均进度 <span id="coach-avg-progress">0</span>%</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="card h-100">
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between align-items-center mb-2">
+                                    <h6 class="card-subtitle text-muted">完成行动</h6>
+                                    <i class="bi bi-check-circle text-primary fs-4"></i>
+                                </div>
+                                <h2 class="card-title mb-0" id="coach-completed-actions">0</h2>
+                                <p class="text-muted small">总计完成数</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="card h-100">
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between align-items-center mb-2">
+                                    <h6 class="card-subtitle text-muted">满意度</h6>
+                                    <i class="bi bi-star-fill text-warning fs-4"></i>
+                                </div>
+                                <h2 class="card-title mb-0" id="coach-avg-rating">0</h2>
+                                <p class="text-muted small">平均评分 /5</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="card h-100">
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between align-items-center mb-2">
+                                    <h6 class="card-subtitle text-muted">本周行动</h6>
+                                    <i class="bi bi-calendar-week text-primary fs-4"></i>
+                                </div>
+                                <h2 class="card-title mb-0" id="coach-recent-actions">0</h2>
+                                <p class="text-muted small">最近7天</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- AI建议卡片 -->
+                <div class="row g-4 mb-4">
+                    <div class="col-md-6">
+                        <div class="card h-100">
+                            <div class="card-header">
+                                <h5 class="mb-0"><i class="bi bi-lightbulb-fill text-warning me-2"></i>智能建议</h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="p-3 bg-light rounded-3 border-start border-warning border-4 mb-3">
+                                    <p class="mb-0">根据你的进度分析，建议将目标分解为更小的每日任务，这样更容易获得成就感和保持动力。</p>
+                                </div>
+                                <div class="p-3 bg-light rounded-3 border-start border-primary border-4">
+                                    <p class="mb-0">注意保持记录的习惯，连续记录可以帮助你建立持久的改变。</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="card h-100">
+                            <div class="card-header">
+                                <h5 class="mb-0"><i class="bi bi-graph-up-arrow text-success me-2"></i>进度洞察</h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="p-3 bg-light rounded-3 border-start border-success border-4 mb-3">
+                                    <p class="mb-0">你的行动记录显示出很好的一致性，这是成功的关键因素。</p>
+                                </div>
+                                <div class="p-3 bg-light rounded-3 border-start border-info border-4">
+                                    <p class="mb-0">建议设置每周回顾时间，评估进度并调整策略。</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 对话界面 -->
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0"><i class="bi bi-robot me-2"></i>与AI教练对话</h5>
+                        <p class="text-muted small mb-0">询问关于目标管理的任何问题，获得个性化建议</p>
+                    </div>
+                    <div class="card-body">
+                        <div class="chat-container p-3 bg-light rounded-3 mb-3" id="chat-messages">
+                            <!-- AI首条消息 -->
+                            <div class="d-flex mb-3">
+                                <div class="rounded-circle bg-primary p-2 text-white me-2">
+                                    <i class="bi bi-robot"></i>
+                                </div>
+                                <div class="ai-message">
+                                    <p class="mb-1">你好！我是你的AI教练。我已经分析了你的目标和行动记录，准备为你提供个性化的建议和反馈。有什么想要讨论的吗？</p>
+                                    <small class="text-muted">刚刚</small>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="input-group">
+                            <input type="text" class="form-control" id="chat-input" placeholder="输入您的问题...">
+                            <button class="btn btn-primary" id="send-message">
+                                <i class="bi bi-send"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 进度统计 -->
+            <div class="tab-pane fade" id="stats" role="tabpanel" aria-labelledby="stats-tab">
+                <div class="mb-4">
+                    <h2 class="h4 mb-1">进度统计</h2>
+                    <p class="text-muted mb-0">查看您的目标完成情况和行动数据</p>
+                </div>
+
+                <!-- 总体统计 -->
+                <div class="row g-4 mb-4">
+                    <div class="col-md-3">
+                        <div class="card h-100">
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between align-items-center mb-2">
+                                    <h6 class="card-subtitle text-muted">总目标数</h6>
+                                    <i class="bi bi-bullseye text-primary fs-4"></i>
+                                </div>
+                                <h2 class="card-title mb-0" id="stats-total-goals">0</h2>
+                                <p class="text-muted small">
+                                    <span id="stats-active-goals">0</span> 个进行中, 
+                                    <span id="stats-completed-goals">0</span> 个已完成
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="card h-100">
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between align-items-center mb-2">
+                                    <h6 class="card-subtitle text-muted">行动记录</h6>
+                                    <i class="bi bi-calendar text-primary fs-4"></i>
+                                </div>
+                                <h2 class="card-title mb-0" id="stats-total-actions">0</h2>
+                                <p class="text-muted small">
+                                    <span id="stats-completed-actions">0</span> 个已完成 
+                                    (<span id="stats-completion-rate">0</span>%)
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="card h-100">
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between align-items-center mb-2">
+                                    <h6 class="card-subtitle text-muted">平均满意度</h6>
+                                    <i class="bi bi-award text-primary fs-4"></i>
+                                </div>
+                                <h2 class="card-title mb-0" id="stats-avg-rating">0.0</h2>
+                                <p class="text-muted small">满分 5.0</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="card h-100">
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between align-items-center mb-2">
+                                    <h6 class="card-subtitle text-muted">连续天数</h6>
+                                    <i class="bi bi-clock-history text-primary fs-4"></i>
+                                </div>
+                                <h2 class="card-title mb-0" id="stats-streak-days">0</h2>
+                                <p class="text-muted small">坚持记录</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 目标进度详情 -->
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5 class="mb-0">目标进度详情</h5>
+                        <p class="text-muted small mb-0">各个目标的完成情况</p>
+                    </div>
+                    <div class="card-body">
+                        <div id="stats-goals-progress">
+                            <!-- 目标进度详情将动态插入 -->
+                            <div class="text-center py-5 text-muted" id="stats-no-goals">
+                                <i class="bi bi-bullseye fs-1 mb-3 d-block"></i>
+                                <p>暂无目标数据</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 分类统计和最近7天行动 -->
+                <div class="row g-4">
+                    <div class="col-md-6">
+                        <div class="card h-100">
+                            <div class="card-header">
+                                <h5 class="mb-0"><i class="bi bi-bar-chart me-2"></i>目标分类统计</h5>
+                            </div>
+                            <div class="card-body">
+                                <div id="category-stats">
+                                    <!-- 分类统计将动态插入 -->
+                                    <canvas id="categoryChart"></canvas>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="card h-100">
+                            <div class="card-header">
+                                <h5 class="mb-0"><i class="bi bi-graph-up me-2"></i>最近7天行动</h5>
+                            </div>
+                            <div class="card-body">
+                                <div id="weekly-stats">
+                                    <!-- 周统计将动态插入 -->
+                                    <canvas id="weeklyChart"></canvas>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 成就徽章系统 -->
+                <div class="card mt-4">
+                    <div class="card-header">
+                        <h5 class="mb-0"><i class="bi bi-trophy me-2"></i>成就徽章</h5>
+                        <p class="text-muted small mb-0">您的成就和里程碑</p>
+                    </div>
+                    <div class="card-body">
+                        <div class="row g-4" id="achievements">
+                            <div class="col-md-3 col-sm-6">
+                                <div class="text-center p-3 rounded-3 bg-light">
+                                    <i class="bi bi-check-circle-fill text-success fs-1 mb-2"></i>
+                                    <h6>第一个目标</h6>
+                                    <p class="text-muted small mb-0">创建您的第一个目标</p>
+                                </div>
+                            </div>
+                            <div class="col-md-3 col-sm-6">
+                                <div class="text-center p-3 rounded-3 bg-light">
+                                    <i class="bi bi-calendar-check-fill text-primary fs-1 mb-2"></i>
+                                    <h6>连续记录</h6>
+                                    <p class="text-muted small mb-0">连续7天记录行动</p>
+                                </div>
+                            </div>
+                            <div class="col-md-3 col-sm-6">
+                                <div class="text-center p-3 rounded-3 bg-light">
+                                    <i class="bi bi-star-fill text-warning fs-1 mb-2"></i>
+                                    <h6>高效行动</h6>
+                                    <p class="text-muted small mb-0">完成10个5星行动</p>
+                                </div>
+                            </div>
+                            <div class="col-md-3 col-sm-6">
+                                <div class="text-center p-3 rounded-3 bg-light">
+                                    <i class="bi bi-trophy-fill text-danger fs-1 mb-2"></i>
+                                    <h6>目标达成</h6>
+                                    <p class="text-muted small mb-0">完成您的第一个目标</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 必要的模态框将在此处添加 -->
+    <!-- 目标模态框 -->
+    <div class="modal fade" id="goalModal" tabindex="-1" aria-labelledby="goalModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="goalModalLabel">创建新目标</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="goalForm">
+                        <input type="hidden" id="goalId">
+                        <div class="mb-3">
+                            <label for="goalTitle" class="form-label">目标标题</label>
+                            <input type="text" class="form-control" id="goalTitle" placeholder="例如：学习编程" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="goalDescription" class="form-label">目标描述</label>
+                            <textarea class="form-control" id="goalDescription" rows="3" placeholder="详细描述您的目标..." required></textarea>
+                        </div>
+                        <div class="mb-3">
+                            <label for="goalCategory" class="form-label">目标分类</label>
+                            <select class="form-select" id="goalCategory" required>
+                                <option value="" selected disabled>选择分类</option>
+                                <option value="技能提升">技能提升</option>
+                                <option value="健康">健康</option>
+                                <option value="财务">财务</option>
+                                <option value="人际关系">人际关系</option>
+                                <option value="兴趣爱好">兴趣爱好</option>
+                                <option value="工作">工作</option>
+                                <option value="其他">其他</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label for="goalTargetDate" class="form-label">目标日期</label>
+                            <input type="date" class="form-control" id="goalTargetDate" required>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+                    <button type="button" class="btn btn-primary" id="saveGoalBtn">保存</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 行动模态框 -->
+    <div class="modal fade" id="actionModal" tabindex="-1" aria-labelledby="actionModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="actionModalLabel">记录新行动</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="actionForm">
+                        <input type="hidden" id="actionId">
+                        <div class="mb-3">
+                            <label for="actionGoalId" class="form-label">关联目标</label>
+                            <select class="form-select" id="actionGoalId" required>
+                                <option value="" selected disabled>选择目标</option>
+                                <!-- 动态填充活跃目标 -->
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label for="actionTitle" class="form-label">行动标题</label>
+                            <input type="text" class="form-control" id="actionTitle" placeholder="例如：完成React教程第3章" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="actionDescription" class="form-label">行动描述</label>
+                            <textarea class="form-control" id="actionDescription" rows="2" placeholder="详细描述您的行动和感受..." required></textarea>
+                        </div>
+                        <div class="mb-3">
+                            <label for="actionDate" class="form-label">日期</label>
+                            <input type="date" class="form-control" id="actionDate" required>
+                        </div>
+                        <div class="mb-3 form-check">
+                            <input type="checkbox" class="form-check-input" id="actionCompleted">
+                            <label class="form-check-label" for="actionCompleted">已完成</label>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">满意度评分</label>
+                            <div class="star-rating d-flex">
+                                <i class="bi bi-star-fill me-1" data-rating="1"></i>
+                                <i class="bi bi-star-fill me-1" data-rating="2"></i>
+                                <i class="bi bi-star-fill me-1" data-rating="3"></i>
+                                <i class="bi bi-star-fill me-1" data-rating="4"></i>
+                                <i class="bi bi-star-fill" data-rating="5"></i>
+                            </div>
+                            <input type="hidden" id="actionRating" value="0">
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+                    <button type="button" class="btn btn-primary" id="saveActionBtn">保存</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- JavaScript依赖 -->
+    
+    
+    
+                    </div>
+                </div>
+            </div>
+                    <!-- 结果显示区域 -->
+                    <div class="result-display" id="result">
+                        <pre id="resultContent">处理结果将在这里显示...</pre>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <!-- 工具页脚 -->
+        <footer class="tool-footer">
+            <p>由 <a href="../../index.html">AI工具集</a> 提供 | 原创工具</p>
+        </footer>
+    </div>
+
+    <!-- JavaScript -->
+    <script src="../../shared/js/utils.js"></script>
+    <script>
+        // 工具特定的JavaScript代码
+        class ToolApp {
+            constructor() {
+                this.init();
+            }
+
+            init() {
+                this.setupEventListeners();
+            }
+
+            setupEventListeners() {
+                document.getElementById('processBtn').addEventListener('click', () => this.process());
+                document.getElementById('clearBtn').addEventListener('click', () => this.clear());
+                document.getElementById('copyBtn').addEventListener('click', () => this.copyResult());
+                
+                // 实时处理（可选）
+                document.getElementById('input').addEventListener('input', 
+                    ToolUtils.debounce(() => this.process(), 300)
+                );
+            }
+
+            process() {
+                const input = document.getElementById('input').value;
+                const result = this.processInput(input);
+                this.displayResult(result);
+            }
+
+            processInput(input) {
+                
+        // 数据模型
+        let goals = [];
+        let actions = [];
+
+        // 从本地存储加载数据
+        function loadData() {
+            const savedGoals = localStorage.getItem('goals');
+            const savedActions = localStorage.getItem('actions');
+            
+            if (savedGoals) {
+                goals = JSON.parse(savedGoals);
+            } else {
+                // 默认示例数据
+                goals = [
+                    {
+                        id: "1",
+                        title: "学习编程",
+                        description: "掌握React和Next.js开发",
+                        category: "技能提升",
+                        targetDate: "2024-06-30",
+                        progress: 65,
+                        status: "active"
+                    },
+                    {
+                        id: "2",
+                        title: "健身计划",
+                        description: "每周运动3次，提升体能",
+                        category: "健康",
+                        targetDate: "2024-05-31",
+                        progress: 40,
+                        status: "active"
+                    }
+                ];
+                saveGoals();
+            }
+            
+            if (savedActions) {
+                actions = JSON.parse(savedActions);
+            } else {
+                // 默认示例数据
+                const today = new Date().toISOString().split('T')[0];
+                actions = [
+                    {
+                        id: "1",
+                        goalId: "1",
+                        title: "完成React教程第3章",
+                        description: "学习了组件状态管理和生命周期",
+                        date: today,
+                        completed: true,
+                        rating: 4
+                    },
+                    {
+                        id: "2",
+                        goalId: "2",
+                        title: "晨跑30分钟",
+                        description: "在公园跑了3公里，感觉很好",
+                        date: today,
+                        completed: true,
+                        rating: 5
+                    }
+                ];
+                saveActions();
+            }
+        }
+
+        // 保存数据到本地存储
+        function saveGoals() {
+            localStorage.setItem('goals', JSON.stringify(goals));
+        }
+
+        function saveActions() {
+            localStorage.setItem('actions', JSON.stringify(actions));
+        }
+
+        // 概览页面渲染
+        function renderOverview() {
+            // 更新统计数字
+            const activeGoals = goals.filter(goal => goal.status === 'active');
+            const today = new Date().toISOString().split('T')[0];
+            const todayActions = actions.filter(action => action.date === today);
+            const completedTodayActions = todayActions.filter(action => action.completed);
+            
+            document.getElementById('active-goals-count').textContent = activeGoals.length;
+            document.getElementById('today-actions-count').textContent = completedTodayActions.length;
+            
+            // 计算平均进度
+            let avgProgress = 0;
+            if (activeGoals.length > 0) {
+                avgProgress = Math.round(
+                    activeGoals.reduce((sum, goal) => sum + goal.progress, 0) / activeGoals.length
+                );
+            }
+            document.getElementById('average-progress').textContent = `${avgProgress}%`;
+            
+            // 计算连续天数（简化版本）
+            document.getElementById('streak-days').textContent = calculateStreakDays();
+            
+            // 渲染目标进度
+            const goalsContainer = document.getElementById('goals-progress-container');
+            if (goals.length > 0) {
+                let html = '';
+                goals.forEach(goal => {
+                    const statusClass = goal.status === 'active' ? 'primary' : goal.status === 'completed' ? 'success' : 'warning';
+                    const statusText = goal.status === 'active' ? '进行中' : goal.status === 'completed' ? '已完成' : '暂停';
+                    
+                    html += `
+                    <div class="mb-4">
+                        <div class="d-flex justify-content-between align-items-start mb-2">
+                            <div>
+                                <h5 class="mb-0">${goal.title}</h5>
+                                <p class="text-muted small mb-0">${goal.description}</p>
+                            </div>
+                            <div class="d-flex gap-1">
+                                <span class="badge bg-secondary">${goal.category}</span>
+                                <span class="badge bg-${statusClass}">${statusText}</span>
+                            </div>
+                        </div>
+                        <div class="d-flex align-items-center gap-2">
+                            <div class="progress flex-grow-1">
+                                <div class="progress-bar bg-${statusClass}" role="progressbar" style="width: ${goal.progress}%" aria-valuenow="${goal.progress}" aria-valuemin="0" aria-valuemax="100"></div>
+                            </div>
+                            <span class="small">${goal.progress}%</span>
+                        </div>
+                    </div>
+                    `;
+                });
+                goalsContainer.innerHTML = html;
+            }
+            
+            // 渲染今日行动
+            const actionsContainer = document.getElementById('today-actions-container');
+            const noActionsTodayEl = document.getElementById('no-actions-today');
+            
+            if (todayActions.length > 0) {
+                let html = '';
+                todayActions.forEach(action => {
+                    const goalTitle = getGoalTitle(action.goalId);
+                    
+                    html += `
+                    <div class="d-flex align-items-center gap-3 p-3 bg-light rounded-3 mb-2 action-card ${action.completed ? 'completed' : ''}">
+                        <i class="bi ${action.completed ? 'bi-check-circle-fill text-success' : 'bi-circle text-muted'} fs-5"></i>
+                        <div class="flex-grow-1">
+                            <h6 class="mb-0">${action.title}</h6>
+                            <p class="text-muted small mb-0">${action.description}</p>
+                            <small class="text-muted">目标: ${goalTitle}</small>
+                        </div>
+                        <div class="star-rating">
+                            ${generateRatingStars(action.rating)}
+                        </div>
+                    </div>
+                    `;
+                });
+                actionsContainer.innerHTML = html;
+                noActionsTodayEl.style.display = 'none';
+            } else {
+                noActionsTodayEl.style.display = 'block';
+            }
+        }
+
+        // 目标管理页面渲染
+        function renderGoals() {
+            const goalsContainer = document.getElementById('goals-container');
+            const noGoalsEl = document.getElementById('no-goals');
+            
+            if (goals.length > 0) {
+                let html = '';
+                goals.forEach(goal => {
+                    const statusClass = goal.status === 'active' ? 'primary' : goal.status === 'completed' ? 'success' : 'warning';
+                    const statusText = goal.status === 'active' ? '进行中' : goal.status === 'completed' ? '已完成' : '暂停';
+                    const formattedDate = new Date(goal.targetDate).toLocaleDateString('zh-CN');
+                    
+                    html += `
+                    <div class="col-md-4">
+                        <div class="card h-100 goal-card ${goal.status}">
+                            <div class="card-header">
+                                <div class="d-flex justify-content-between align-items-start">
+                                    <h5 class="card-title mb-0">${goal.title}</h5>
+                                    <div class="dropdown">
+                                        <button class="btn btn-sm btn-light" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                            <i class="bi bi-three-dots-vertical"></i>
+                                        </button>
+                                        <ul class="dropdown-menu">
+                                            <li><a class="dropdown-item edit-goal" href="#" data-id="${goal.id}"><i class="bi bi-pencil me-2"></i>编辑</a></li>
+                                            <li><a class="dropdown-item delete-goal" href="#" data-id="${goal.id}"><i class="bi bi-trash me-2"></i>删除</a></li>
+                                        </ul>
+                                    </div>
+                                </div>
+                                <p class="card-text text-muted small mb-0">${goal.description}</p>
+                            </div>
+                            <div class="card-body">
+                                <div class="d-flex gap-2 mb-3">
+                                    <span class="badge badge-category">${goal.category}</span>
+                                    <span class="badge badge-status-${goal.status}">${statusText}</span>
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <div class="d-flex justify-content-between text-sm mb-1">
+                                        <span class="small">进度</span>
+                                        <span class="small">${goal.progress}%</span>
+                                    </div>
+                                    <div class="progress">
+                                        <div class="progress-bar bg-${statusClass}" role="progressbar" style="width: ${goal.progress}%" aria-valuenow="${goal.progress}" aria-valuemin="0" aria-valuemax="100"></div>
+                                    </div>
+                                </div>
+                                
+                                <div class="d-flex align-items-center mb-3 text-muted small">
+                                    <i class="bi bi-calendar me-2"></i>
+                                    <span>目标日期: ${formattedDate}</span>
+                                </div>
+                                
+                                <div class="d-flex justify-content-between">
+                                    <select class="form-select form-select-sm w-auto goal-status-select" data-id="${goal.id}">
+                                        <option value="active" ${goal.status === 'active' ? 'selected' : ''}>进行中</option>
+                                        <option value="paused" ${goal.status === 'paused' ? 'selected' : ''}>暂停</option>
+                                        <option value="completed" ${goal.status === 'completed' ? 'selected' : ''}>已完成</option>
+                                    </select>
+                                    <button class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#actionModal" onclick="prepareActionForGoal('${goal.id}')">
+                                        <i class="bi bi-plus-circle me-1"></i>记录行动
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    `;
+                });
+                goalsContainer.innerHTML = html;
+                noGoalsEl.style.display = 'none';
+                
+                // 添加事件监听器
+                document.querySelectorAll('.edit-goal').forEach(el => {
+                    el.addEventListener('click', e => {
+                        e.preventDefault();
+                        const goalId = el.dataset.id;
+                        editGoal(goalId);
+                    });
+                });
+                
+                document.querySelectorAll('.delete-goal').forEach(el => {
+                    el.addEventListener('click', e => {
+                        e.preventDefault();
+                        const goalId = el.dataset.id;
+                        deleteGoal(goalId);
+                    });
+                });
+                
+                document.querySelectorAll('.goal-status-select').forEach(el => {
+                    el.addEventListener('change', e => {
+                        const goalId = el.dataset.id;
+                        const newStatus = el.value;
+                        updateGoalStatus(goalId, newStatus);
+                    });
+                });
+            } else {
+                noGoalsEl.style.display = 'block';
+            }
+        }
+        
+        // 行动记录页面渲染
+        function renderActions() {
+            const actionsContainer = document.getElementById('actions-by-date-container');
+            const noActionsEl = document.getElementById('no-actions');
+            
+            // 填充目标下拉菜单
+            const actionGoalIdSelect = document.getElementById('actionGoalId');
+            actionGoalIdSelect.innerHTML = '<option value="" selected disabled>选择目标</option>';
+            goals.filter(goal => goal.status === 'active').forEach(goal => {
+                actionGoalIdSelect.innerHTML += `<option value="${goal.id}">${goal.title}</option>`;
+            });
+            
+            if (actions.length > 0) {
+                // 按日期分组
+                const groupedActions = {};
+                actions.forEach(action => {
+                    if (!groupedActions[action.date]) {
+                        groupedActions[action.date] = [];
+                    }
+                    groupedActions[action.date].push(action);
+                });
+                
+                // 按日期排序（从新到旧）
+                const sortedDates = Object.keys(groupedActions).sort((a, b) => new Date(b) - new Date(a));
+                
+                let html = '';
+                sortedDates.forEach(date => {
+                    const formattedDate = new Date(date).toLocaleDateString('zh-CN', {
+                        year: 'numeric',
+                        month: 'long',
+                        day: 'numeric',
+                        weekday: 'long'
+                    });
+                    
+                    html += `
+                    <div class="card mb-4">
+                        <div class="card-header">
+                            <h5 class="mb-0"><i class="bi bi-calendar-date me-2"></i>${formattedDate}</h5>
+                            <p class="text-muted small mb-0">${groupedActions[date].length} 个行动记录</p>
+                        </div>
+                        <div class="card-body">
+                    `;
+                    
+                    groupedActions[date].forEach(action => {
+                        const goalTitle = getGoalTitle(action.goalId);
+                        
+                        html += `
+                        <div class="d-flex align-items-center gap-3 p-3 bg-light rounded-3 mb-2 action-card ${action.completed ? 'completed' : ''}">
+                            <div class="form-check">
+                                <input class="form-check-input toggle-action" type="checkbox" ${action.completed ? 'checked' : ''} data-id="${action.id}">
+                            </div>
+                            <div class="flex-grow-1">
+                                <h6 class="mb-0">${action.title}</h6>
+                                <p class="text-muted small mb-0">${action.description}</p>
+                                <small class="text-muted">目标: ${goalTitle}</small>
+                            </div>
+                            <div class="star-rating">
+                                ${generateRatingStars(action.rating)}
+                            </div>
+                            <div class="dropdown">
+                                <button class="btn btn-sm btn-light" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                    <i class="bi bi-three-dots-vertical"></i>
+                                </button>
+                                <ul class="dropdown-menu">
+                                    <li><a class="dropdown-item edit-action" href="#" data-id="${action.id}"><i class="bi bi-pencil me-2"></i>编辑</a></li>
+                                    <li><a class="dropdown-item delete-action" href="#" data-id="${action.id}"><i class="bi bi-trash me-2"></i>删除</a></li>
+                                </ul>
+                            </div>
+                        </div>
+                        `;
+                    });
+                    
+                    html += `
+                        </div>
+                    </div>
+                    `;
+                });
+                
+                actionsContainer.innerHTML = html;
+                noActionsEl.style.display = 'none';
+                
+                // 添加事件监听器
+                document.querySelectorAll('.toggle-action').forEach(el => {
+                    el.addEventListener('change', e => {
+                        const actionId = el.dataset.id;
+                        toggleActionCompleted(actionId);
+                    });
+                });
+                
+                document.querySelectorAll('.edit-action').forEach(el => {
+                    el.addEventListener('click', e => {
+                        e.preventDefault();
+                        const actionId = el.dataset.id;
+                        editAction(actionId);
+                    });
+                });
+                
+                document.querySelectorAll('.delete-action').forEach(el => {
+                    el.addEventListener('click', e => {
+                        e.preventDefault();
+                        const actionId = el.dataset.id;
+                        deleteAction(actionId);
+                    });
+                });
+            } else {
+                noActionsEl.style.display = 'block';
+            }
+        }
+
+        // 辅助函数
+        function getGoalTitle(goalId) {
+            const goal = goals.find(g => g.id === goalId);
+            return goal ? goal.title : '未知目标';
+        }
+        
+        function calculateStreakDays() {
+            // 简化版，仅计算连续几天有行动记录
+            const dates = [...new Set(actions.map(a => a.date))].sort((a, b) => new Date(b) - new Date(a));
+            if (dates.length === 0) return 0;
+            
+            let streak = 1;
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+            
+            let lastDate = new Date(dates[0]);
+            lastDate.setHours(0, 0, 0, 0);
+            
+            // 如果最近的记录不是今天，则从0开始计算
+            if (lastDate.getTime() !== today.getTime()) return 0;
+            
+            for (let i = 1; i < dates.length; i++) {
+                const currentDate = new Date(dates[i]);
+                currentDate.setHours(0, 0, 0, 0);
+                
+                const expectedDate = new Date(lastDate);
+                expectedDate.setDate(expectedDate.getDate() - 1);
+                
+                if (currentDate.getTime() === expectedDate.getTime()) {
+                    streak++;
+                    lastDate = currentDate;
+                } else {
+                    break;
+                }
+            }
+            
+            return streak;
+        }
+        
+        function generateRatingStars(rating) {
+            let stars = '';
+            for (let i = 1; i <= 5; i++) {
+                stars += `<i class="bi bi-star-fill ${i <= rating ? 'filled' : ''}"></i>`;
+            }
+            return stars;
+        }
+
+        // 目标管理操作
+        function createGoal() {
+            const title = document.getElementById('goalTitle').value;
+            const description = document.getElementById('goalDescription').value;
+            const category = document.getElementById('goalCategory').value;
+            const targetDate = document.getElementById('goalTargetDate').value;
+            const goalId = document.getElementById('goalId').value;
+            
+            if (goalId) {
+                // 更新现有目标
+                const index = goals.findIndex(g => g.id === goalId);
+                if (index !== -1) {
+                    goals[index] = {
+                        ...goals[index],
+                        title,
+                        description,
+                        category,
+                        targetDate
+                    };
+                }
+            } else {
+                // 创建新目标
+                const newGoal = {
+                    id: Date.now().toString(),
+                    title,
+                    description,
+                    category,
+                    targetDate,
+                    progress: 0,
+                    status: 'active'
+                };
+                goals.push(newGoal);
+            }
+            
+            saveGoals();
+            renderAllSections();
+            
+            // 关闭模态框
+            const goalModal = bootstrap.Modal.getInstance(document.getElementById('goalModal'));
+            goalModal.hide();
+        }
+        
+        function editGoal(goalId) {
+            const goal = goals.find(g => g.id === goalId);
+            if (!goal) return;
+            
+            document.getElementById('goalId').value = goal.id;
+            document.getElementById('goalTitle').value = goal.title;
+            document.getElementById('goalDescription').value = goal.description;
+            document.getElementById('goalCategory').value = goal.category;
+            document.getElementById('goalTargetDate').value = goal.targetDate;
+            
+            document.getElementById('goalModalLabel').textContent = '编辑目标';
+            
+            const goalModal = new bootstrap.Modal(document.getElementById('goalModal'));
+            goalModal.show();
+        }
+        
+        function deleteGoal(goalId) {
+            if (confirm('确定要删除这个目标吗？相关的行动记录也会被删除。')) {
+                goals = goals.filter(g => g.id !== goalId);
+                actions = actions.filter(a => a.goalId !== goalId);
+                saveGoals();
+                saveActions();
+                renderAllSections();
+            }
+        }
+        
+        function updateGoalStatus(goalId, status) {
+            const index = goals.findIndex(g => g.id === goalId);
+            if (index !== -1) {
+                goals[index].status = status;
+                
+                // 如果标记为完成，设置进度为100%
+                if (status === 'completed') {
+                    goals[index].progress = 100;
+                }
+                
+                saveGoals();
+                renderAllSections();
+            }
+        }
+        
+        // 行动记录操作
+        function createAction() {
+            const goalId = document.getElementById('actionGoalId').value;
+            const title = document.getElementById('actionTitle').value;
+            const description = document.getElementById('actionDescription').value;
+            const date = document.getElementById('actionDate').value;
+            const completed = document.getElementById('actionCompleted').checked;
+            const rating = parseInt(document.getElementById('actionRating').value) || 3;
+            const actionId = document.getElementById('actionId').value;
+            
+            if (actionId) {
+                // 更新现有行动
+                const index = actions.findIndex(a => a.id === actionId);
+                if (index !== -1) {
+                    const oldAction = actions[index];
+                    actions[index] = {
+                        ...oldAction,
+                        goalId,
+                        title,
+                        description,
+                        date,
+                        completed,
+                        rating
+                    };
+                    
+                    // 如果完成状态发生变化，更新目标进度
+                    if (oldAction.completed !== completed) {
+                        updateGoalProgress(goalId);
+                    }
+                }
+            } else {
+                // 创建新行动
+                const newAction = {
+                    id: Date.now().toString(),
+                    goalId,
+                    title,
+                    description,
+                    date,
+                    completed,
+                    rating
+                };
+                actions.push(newAction);
+                
+                // 更新目标进度
+                if (completed) {
+                    updateGoalProgress(goalId);
+                }
+            }
+            
+            saveActions();
+            renderAllSections();
+            
+            // 关闭模态框
+            const actionModal = bootstrap.Modal.getInstance(document.getElementById('actionModal'));
+            actionModal.hide();
+        }
+        
+        function editAction(actionId) {
+            const action = actions.find(a => a.id === actionId);
+            if (!action) return;
+            
+            document.getElementById('actionId').value = action.id;
+            document.getElementById('actionGoalId').value = action.goalId;
+            document.getElementById('actionTitle').value = action.title;
+            document.getElementById('actionDescription').value = action.description;
+            document.getElementById('actionDate').value = action.date;
+            document.getElementById('actionCompleted').checked = action.completed;
+            document.getElementById('actionRating').value = action.rating;
+            
+            // 更新星级显示
+            updateRatingStars(action.rating);
+            
+            document.getElementById('actionModalLabel').textContent = '编辑行动';
+            
+            const actionModal = new bootstrap.Modal(document.getElementById('actionModal'));
+            actionModal.show();
+        }
+        
+        function deleteAction(actionId) {
+            if (confirm('确定要删除这个行动记录吗？')) {
+                const action = actions.find(a => a.id === actionId);
+                const goalId = action ? action.goalId : null;
+                
+                actions = actions.filter(a => a.id !== actionId);
+                saveActions();
+                
+                // 更新相关目标的进度
+                if (goalId) {
+                    updateGoalProgress(goalId);
+                }
+                
+                renderAllSections();
+            }
+        }
+        
+        function toggleActionCompleted(actionId) {
+            const index = actions.findIndex(a => a.id === actionId);
+            if (index !== -1) {
+                actions[index].completed = !actions[index].completed;
+                saveActions();
+                
+                // 更新相关目标的进度
+                updateGoalProgress(actions[index].goalId);
+                renderAllSections();
+            }
+        }
+        
+        function updateGoalProgress(goalId) {
+            const goalActions = actions.filter(a => a.goalId === goalId);
+            if (goalActions.length === 0) return;
+            
+            const completedActions = goalActions.filter(a => a.completed);
+            const progress = Math.round((completedActions.length / goalActions.length) * 100);
+            
+            const index = goals.findIndex(g => g.id === goalId);
+            if (index !== -1) {
+                goals[index].progress = progress;
+                
+                // 如果进度达到100%，可选择自动完成目标
+                if (progress === 100) {
+                    // 这里可以添加询问用户是否要将目标标记为已完成的逻辑
+                    // 或者自动标记
+                    // goals[index].status = 'completed';
+                }
+                
+                saveGoals();
+            }
+        }
+        
+        function updateRatingStars(rating) {
+            document.querySelectorAll('.star-rating .bi-star-fill').forEach(star => {
+                const starRating = parseInt(star.dataset.rating);
+                if (starRating <= rating) {
+                    star.classList.add('filled');
+                } else {
+                    star.classList.remove('filled');
+                }
+            });
+        }
+        
+        function prepareActionForGoal(goalId) {
+            // 重置表单
+            document.getElementById('actionId').value = '';
+            document.getElementById('actionGoalId').value = goalId;
+            document.getElementById('actionTitle').value = '';
+            document.getElementById('actionDescription').value = '';
+            document.getElementById('actionDate').value = new Date().toISOString().split('T')[0];
+            document.getElementById('actionCompleted').checked = false;
+            document.getElementById('actionRating').value = '3';
+            updateRatingStars(3);
+            
+            document.getElementById('actionModalLabel').textContent = '记录新行动';
+        }
+
+        // 渲染所有部分
+        function renderAllSections() {
+            renderOverview();
+            renderGoals();
+            renderActions();
+            renderAICoach();
+            renderStats();
+        }
+
+        // AI教练页面渲染
+        function renderAICoach() {
+            // 数据分析
+            const activeGoals = goals.filter(goal => goal.status === 'active');
+            const completedActions = actions.filter(action => action.completed);
+            
+            let avgProgress = 0;
+            if (activeGoals.length > 0) {
+                avgProgress = Math.round(
+                    activeGoals.reduce((sum, goal) => sum + goal.progress, 0) / activeGoals.length
+                );
+            }
+            
+            let avgRating = 0;
+            if (actions.length > 0) {
+                avgRating = (actions.reduce((sum, action) => sum + action.rating, 0) / actions.length).toFixed(1);
+            }
+            
+            // 获取最近7天的行动
+            const weekAgo = new Date();
+            weekAgo.setDate(weekAgo.getDate() - 7);
+            const recentActions = actions.filter(action => {
+                const actionDate = new Date(action.date);
+                return actionDate >= weekAgo;
+            }).length;
+            
+            // 更新统计数据
+            document.getElementById('coach-active-goals').textContent = activeGoals.length;
+            document.getElementById('coach-avg-progress').textContent = avgProgress;
+            document.getElementById('coach-completed-actions').textContent = completedActions.length;
+            document.getElementById('coach-avg-rating').textContent = avgRating;
+            document.getElementById('coach-recent-actions').textContent = recentActions;
+            
+            // 聊天功能设置
+            document.getElementById('send-message').addEventListener('click', sendChatMessage);
+            document.getElementById('chat-input').addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    sendChatMessage();
+                }
+            });
+        }
+        
+        // AI聊天功能
+        let chatMessages = [
+            {
+                id: '1',
+                type: 'ai',
+                content: '你好！我是你的AI教练。我已经分析了你的目标和行动记录，准备为你提供个性化的建议和反馈。有什么想要讨论的吗？',
+                timestamp: new Date().toISOString()
+            }
+        ];
+        
+        function sendChatMessage() {
+            const inputEl = document.getElementById('chat-input');
+            const message = inputEl.value.trim();
+            
+            if (message === '') return;
+            
+            // 添加用户消息
+            const userMessage = {
+                id: Date.now().toString(),
+                type: 'user',
+                content: message,
+                timestamp: new Date().toISOString()
+            };
+            
+            chatMessages.push(userMessage);
+            renderChatMessage(userMessage);
+            inputEl.value = '';
+            
+            // 模拟AI思考
+            setTimeout(() => {
+                const aiResponse = generateAIResponse(message);
+                chatMessages.push(aiResponse);
+                renderChatMessage(aiResponse);
+                
+                // 滚动到底部
+                const chatContainer = document.getElementById('chat-messages');
+                chatContainer.scrollTop = chatContainer.scrollHeight;
+            }, 1000);
+        }
+        
+        function renderChatMessage(message) {
+            const chatContainer = document.getElementById('chat-messages');
+            const messageEl = document.createElement('div');
+            messageEl.className = `d-flex mb-3 ${message.type === 'user' ? 'justify-content-end' : ''}`;
+            
+            if (message.type === 'user') {
+                messageEl.innerHTML = `
+                <div class="user-message">
+                    <p class="mb-1">${message.content}</p>
+                    <small class="text-muted">刚刚</small>
+                </div>
+                <div class="rounded-circle bg-info p-2 text-white ms-2">
+                    <i class="bi bi-person"></i>
+                </div>
+                `;
+            } else {
+                messageEl.innerHTML = `
+                <div class="rounded-circle bg-primary p-2 text-white me-2">
+                    <i class="bi bi-robot"></i>
+                </div>
+                <div class="ai-message">
+                    <p class="mb-1">${message.content}</p>
+                    <small class="text-muted">刚刚</small>
+                </div>
+                `;
+            }
+            
+            chatContainer.appendChild(messageEl);
+            
+            // 滚动到底部
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+        }
+        
+        function generateAIResponse(userMessage) {
+            // 分析用户数据
+            const analysis = {
+                activeGoals: goals.filter(g => g.status === 'active').length,
+                completedGoals: goals.filter(g => g.status === 'completed').length,
+                completedActions: actions.filter(a => a.completed).length,
+                avgRating: actions.length > 0 ? 
+                    (actions.reduce((sum, a) => sum + a.rating, 0) / actions.length).toFixed(1) : 0,
+                streakDays: calculateStreakDays()
+            };
+            
+            // 基于用户消息和数据生成回复
+            const responses = [
+                `根据你的目标进度分析，我建议你可以将大目标分解成更小的可执行步骤，这样更容易获得成就感和保持动力。`,
+                `你目前有${analysis.activeGoals}个活跃目标，已完成${analysis.completedActions}个行动。建议专注于1-2个最重要的目标，这样能够更好地集中精力。`,
+                `我注意到你的平均满意度是${analysis.avgRating}/5。这表明你对自己的表现还是比较满意的。建议继续保持这种积极的态度！`,
+                `你已经连续记录了${analysis.streakDays}天，这是很好的习惯！坚持记录可以帮助你保持动力并追踪进展。`,
+                `从你的行动记录来看，你在某些方面表现很好。建议建立一个奖励机制，当完成重要里程碑时给自己一些奖励。`,
+                `设定明确的每周目标可以帮助你更好地规划时间和精力，建议尝试每周日做下一周的计划。`,
+                `记得在完成一个重要目标后给自己一些时间休息和庆祝，这样可以避免倦怠并保持长期动力。`
+            ];
+            
+            // 根据用户输入选择更相关的回复
+            let response = '';
+            
+            if (userMessage.toLowerCase().includes('目标')) {
+                response = `你目前有${analysis.activeGoals}个进行中的目标和${analysis.completedGoals}个已完成的目标。建议专注于最重要的目标，并将它们分解为可管理的小步骤。`;
+            } else if (userMessage.toLowerCase().includes('行动') || userMessage.toLowerCase().includes('记录')) {
+                response = `你已经记录了${actions.length}个行动，其中${analysis.completedActions}个已完成。持续记录是保持进步的关键！`;
+            } else if (userMessage.toLowerCase().includes('进度') || userMessage.toLowerCase().includes('统计')) {
+                response = `你的目标平均完成度为${document.getElementById('average-progress').textContent}。继续保持这种节奏，你会在不久的将来看到更多成果。`;
+            } else if (userMessage.toLowerCase().includes('建议') || userMessage.toLowerCase().includes('如何')) {
+                response = `根据你的进度情况，我建议你：1) 每天设定1-3个小目标；2) 在完成行动后立即记录；3) 每周回顾进展并调整计划。这些习惯将帮助你更高效地实现目标。`;
+            } else {
+                // 随机选择一个通用回复
+                response = responses[Math.floor(Math.random() * responses.length)];
+            }
+            
+            return {
+                id: Date.now().toString(),
+                type: 'ai',
+                content: response,
+                timestamp: new Date().toISOString()
+            };
+        }
+
+        // 进度统计页面渲染
+        function renderStats() {
+            // 计算统计数据
+            const totalGoals = goals.length;
+            const activeGoals = goals.filter(g => g.status === 'active').length;
+            const completedGoals = goals.filter(g => g.status === 'completed').length;
+            const totalActions = actions.length;
+            const completedActions = actions.filter(a => a.completed).length;
+            const completionRate = totalActions > 0 ? Math.round((completedActions / totalActions) * 100) : 0;
+            
+            let avgRating = 0;
+            if (actions.length > 0) {
+                avgRating = (actions.reduce((sum, a) => sum + a.rating, 0) / actions.length).toFixed(1);
+            }
+            
+            const streakDays = calculateStreakDays();
+            
+            // 更新统计卡片
+            document.getElementById('stats-total-goals').textContent = totalGoals;
+            document.getElementById('stats-active-goals').textContent = activeGoals;
+            document.getElementById('stats-completed-goals').textContent = completedGoals;
+            document.getElementById('stats-total-actions').textContent = totalActions;
+            document.getElementById('stats-completed-actions').textContent = completedActions;
+            document.getElementById('stats-completion-rate').textContent = completionRate;
+            document.getElementById('stats-avg-rating').textContent = avgRating;
+            document.getElementById('stats-streak-days').textContent = streakDays;
+            
+            // 渲染目标进度详情
+            renderGoalProgressDetails();
+            
+            // 渲染分类统计图表
+            renderCategoryChart();
+            
+            // 渲染最近7天行动图表
+            renderWeeklyChart();
+            
+            // 更新成就徽章
+            updateAchievements();
+        }
+        
+        function renderGoalProgressDetails() {
+            const container = document.getElementById('stats-goals-progress');
+            const noGoalsEl = document.getElementById('stats-no-goals');
+            
+            if (goals.length > 0) {
+                let html = '';
+                goals.forEach(goal => {
+                    const statusClass = goal.status === 'active' ? 'primary' : goal.status === 'completed' ? 'success' : 'warning';
+                    const statusText = goal.status === 'active' ? '进行中' : goal.status === 'completed' ? '已完成' : '暂停';
+                    const formattedDate = new Date(goal.targetDate).toLocaleDateString('zh-CN');
+                    const relatedActions = actions.filter(a => a.goalId === goal.id);
+                    const completedRelatedActions = relatedActions.filter(a => a.completed).length;
+                    
+                    html += `
+                    <div class="mb-4">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <div class="d-flex align-items-center gap-2">
+                                <h5 class="mb-0">${goal.title}</h5>
+                                <span class="badge bg-secondary">${goal.category}</span>
+                                <span class="badge bg-${statusClass}">${statusText}</span>
+                            </div>
+                            <span class="fw-bold">${goal.progress}%</span>
+                        </div>
+                        <div class="progress mb-2">
+                            <div class="progress-bar bg-${statusClass}" role="progressbar" style="width: ${goal.progress}%" aria-valuenow="${goal.progress}" aria-valuemin="0" aria-valuemax="100"></div>
+                        </div>
+                        <div class="d-flex justify-content-between text-muted small">
+                            <span>目标日期: ${formattedDate}</span>
+                            <span>${completedRelatedActions} / ${relatedActions.length} 个行动已完成</span>
+                        </div>
+                    </div>
+                    `;
+                });
+                container.innerHTML = html;
+                noGoalsEl.style.display = 'none';
+            } else {
+                noGoalsEl.style.display = 'block';
+            }
+        }
+        
+        function renderCategoryChart() {
+            // 按分类统计目标
+            const categories = {};
+            goals.forEach(goal => {
+                categories[goal.category] = (categories[goal.category] || 0) + 1;
+            });
+            
+            const categoryLabels = Object.keys(categories);
+            const categoryData = Object.values(categories);
+            
+            // 使用Chart.js创建饼图
+            const ctx = document.getElementById('categoryChart').getContext('2d');
+            
+            // 检查是否已存在图表，如果存在则销毁
+            if (window.categoryChart) {
+                window.categoryChart.destroy();
+            }
+            
+            if (categoryLabels.length > 0) {
+                window.categoryChart = new Chart(ctx, {
+                    type: 'pie',
+                    data: {
+                        labels: categoryLabels,
+                        datasets: [{
+                            data: categoryData,
+                            backgroundColor: [
+                                '#4f46e5', '#06b6d4', '#10b981', '#f59e0b', '#ef4444',
+                                '#8b5cf6', '#ec4899', '#14b8a6', '#f97316', '#6366f1'
+                            ]
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        plugins: {
+                            legend: {
+                                position: 'bottom'
+                            }
+                        }
+                    }
+                });
+            } else {
+                document.getElementById('categoryChart').parentElement.innerHTML = 
+                    '<div class="text-center py-5 text-muted"><p>暂无分类数据</p></div>';
+            }
+        }
+        
+        function renderWeeklyChart() {
+            // 获取最近7天的数据
+            const last7Days = [];
+            for (let i = 6; i >= 0; i--) {
+                const date = new Date();
+                date.setDate(date.getDate() - i);
+                last7Days.push(date.toISOString().split('T')[0]);
+            }
+            
+            const actionsByDate = {};
+            last7Days.forEach(date => {
+                const dayActions = actions.filter(a => a.date === date);
+                actionsByDate[date] = {
+                    total: dayActions.length,
+                    completed: dayActions.filter(a => a.completed).length
+                };
+            });
+            
+            const labels = last7Days.map(date => {
+                const d = new Date(date);
+                return d.toLocaleDateString('zh-CN', { weekday: 'short', month: 'short', day: 'numeric' });
+            });
+            
+            const totalData = last7Days.map(date => actionsByDate[date].total);
+            const completedData = last7Days.map(date => actionsByDate[date].completed);
+            
+            // 使用Chart.js创建柱状图
+            const ctx = document.getElementById('weeklyChart').getContext('2d');
+            
+            // 检查是否已存在图表，如果存在则销毁
+            if (window.weeklyChart) {
+                window.weeklyChart.destroy();
+            }
+            
+            window.weeklyChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [
+                        {
+                            label: '总行动',
+                            data: totalData,
+                            backgroundColor: 'rgba(79, 70, 229, 0.5)',
+                            borderColor: 'rgba(79, 70, 229, 1)',
+                            borderWidth: 1
+                        },
+                        {
+                            label: '已完成',
+                            data: completedData,
+                            backgroundColor: 'rgba(16, 185, 129, 0.5)',
+                            borderColor: 'rgba(16, 185, 129, 1)',
+                            borderWidth: 1
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                stepSize: 1
+                            }
+                        }
+                    }
+                }
+            });
+        }
+        
+        function updateAchievements() {
+            const achievements = document.getElementById('achievements').querySelectorAll('.col-md-3');
+            
+            // 第一个目标
+            if (goals.length > 0) {
+                achievements[0].querySelector('div').classList.add('bg-success', 'bg-opacity-10');
+                achievements[0].querySelector('i').classList.add('text-success');
+            }
+            
+            // 连续记录7天
+            if (calculateStreakDays() >= 7) {
+                achievements[1].querySelector('div').classList.add('bg-primary', 'bg-opacity-10');
+                achievements[1].querySelector('i').classList.add('text-primary');
+            }
+            
+            // 高效行动
+            const highRatingActions = actions.filter(a => a.rating === 5 && a.completed);
+            if (highRatingActions.length >= 10) {
+                achievements[2].querySelector('div').classList.add('bg-warning', 'bg-opacity-10');
+                achievements[2].querySelector('i').classList.add('text-warning');
+            }
+            
+            // 目标达成
+            if (goals.filter(g => g.status === 'completed').length > 0) {
+                achievements[3].querySelector('div').classList.add('bg-danger', 'bg-opacity-10');
+                achievements[3].querySelector('i').classList.add('text-danger');
+            }
+        }
+
+        // 设置事件监听器
+        function setupEventListeners() {
+            // 目标模态框重置
+            document.getElementById('goalModal').addEventListener('hidden.bs.modal', function () {
+                document.getElementById('goalId').value = '';
+                document.getElementById('goalTitle').value = '';
+                document.getElementById('goalDescription').value = '';
+                document.getElementById('goalCategory').value = '';
+                document.getElementById('goalTargetDate').value = '';
+                document.getElementById('goalModalLabel').textContent = '创建新目标';
+            });
+            
+            // 保存目标
+            document.getElementById('saveGoalBtn').addEventListener('click', createGoal);
+            
+            // 行动模态框重置
+            document.getElementById('actionModal').addEventListener('hidden.bs.modal', function () {
+                document.getElementById('actionId').value = '';
+                document.getElementById('actionGoalId').value = '';
+                document.getElementById('actionTitle').value = '';
+                document.getElementById('actionDescription').value = '';
+                document.getElementById('actionDate').value = new Date().toISOString().split('T')[0];
+                document.getElementById('actionCompleted').checked = false;
+                document.getElementById('actionRating').value = '3';
+                document.getElementById('actionModalLabel').textContent = '记录新行动';
+                updateRatingStars(3);
+            });
+            
+            // 保存行动
+            document.getElementById('saveActionBtn').addEventListener('click', createAction);
+            
+            // 星级评分
+            document.querySelectorAll('.star-rating .bi-star-fill').forEach(star => {
+                star.addEventListener('click', function() {
+                    const rating = parseInt(this.dataset.rating);
+                    document.getElementById('actionRating').value = rating;
+                    updateRatingStars(rating);
+                });
+            });
+        }
+
+        // 初始化应用
+        function initApp() {
+            loadData();
+            renderAllSections();
+            setupEventListeners();
+        }
+
+        // 当文档加载完成时初始化应用
+        document.addEventListener('DOMContentLoaded', initApp);
+    
+                return input;
+            }
+
+            displayResult(result) {
+                document.getElementById('resultContent').textContent = result;
+            }
+
+            clear() {
+                document.getElementById('input').value = '';
+                document.getElementById('resultContent').textContent = '处理结果将在这里显示...';
+            }
+
+            copyResult() {
+                const result = document.getElementById('resultContent').textContent;
+                if (result && result !== '处理结果将在这里显示...') {
+                    ToolUtils.copyToClipboard(result);
+                } else {
+                    ToolUtils.showToast('没有可复制的内容', 'warning');
+                }
+            }
+        }
+
+        // 初始化应用
+        document.addEventListener('DOMContentLoaded', () => {
+            new ToolApp();
+        });
+    </script>
+</body>
+</html>

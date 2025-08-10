@@ -1,0 +1,598 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>图片信息查看器 - 小苏趣研AI - AI工具集</title>
+    <meta name="description" content="图片信息查看器 - 小苏趣研AI">
+    
+    <!-- 样式文件 -->
+    <link rel="stylesheet" href="../../shared/css/common.css">
+    
+    <!-- 工具特定样式 -->
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: var(--spacing-lg);
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            text-align: center;
+            padding: 40px 20px;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            font-weight: 700;
+        }
+
+        .header p {
+            font-size: 1.1em;
+            opacity: 0.9;
+        }
+
+        .content {
+            padding: 40px;
+        }
+
+        .upload-area {
+            border: 3px dashed #667eea;
+            border-radius: var(--radius-lg);
+            padding: 60px 20px;
+            text-align: center;
+            background: #f8f9ff;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            margin-bottom: 30px;
+        }
+
+        .upload-area:hover {
+            border-color: #764ba2;
+            background: #f0f2ff;
+        }
+
+        .upload-area.dragover {
+            border-color: #28a745;
+            background: #f0fff4;
+        }
+
+        .upload-icon {
+            font-size: 4em;
+            color: #667eea;
+            margin-bottom: 20px;
+        }
+
+        .upload-text {
+            font-size: 1.2em;
+            color: var(--text-primary);
+            margin-bottom: 10px;
+        }
+
+        .upload-hint {
+            color: var(--text-secondary);
+            font-size: 0.9em;
+        }
+
+        .file-input {
+            display: none;
+        }
+
+        .btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            border-radius: 25px;
+            font-size: 1em;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin: var(--spacing-md) 5px;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .image-section {
+            display: none;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin-top: 30px;
+        }
+
+        .image-preview {
+            background: #f8f9fa;
+            border-radius: var(--radius-lg);
+            padding: var(--spacing-lg);
+            text-align: center;
+        }
+
+        .preview-image {
+            max-width: 100%;
+            max-height: 400px;
+            border-radius: var(--radius-md);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+        }
+
+        .image-info {
+            background: #f8f9fa;
+            border-radius: var(--radius-lg);
+            padding: var(--spacing-lg);
+        }
+
+        .info-title {
+            font-size: 1.3em;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .info-grid {
+            display: grid;
+            gap: 15px;
+        }
+
+        .info-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px;
+            background: white;
+            border-radius: var(--radius-md);
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: #555;
+        }
+
+        .info-value {
+            color: var(--text-primary);
+            font-family: monospace;
+            background: #f0f2ff;
+            padding: 5px 10px;
+            border-radius: var(--radius-sm);
+        }
+
+        .technical-info {
+            margin-top: 30px;
+            background: #f8f9fa;
+            border-radius: var(--radius-lg);
+            padding: var(--spacing-lg);
+            display: none;
+        }
+
+        .tech-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 15px;
+            margin-top: 15px;
+        }
+
+        .actions {
+            text-align: center;
+            margin-top: 30px;
+        }
+
+        .footer {
+            background: #f8f9fa;
+            text-align: center;
+            padding: var(--spacing-lg);
+            color: var(--text-secondary);
+        }
+
+        @media (max-width: 768px) {
+            .image-section {
+                grid-template-columns: 1fr;
+            }
+            
+            .tech-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="tool-container">
+        <!-- 工具头部 -->
+        <header class="tool-header">
+            <div class="tool-header-content">
+                <a href="../../index.html" class="back-btn">
+                    <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                        <path d="M10 4l-4 4 4 4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                    返回工具集
+                </a>
+                
+                <div class="tool-title">
+                    <h1>图片信息查看器 - 小苏趣研AI</h1>
+                    <p class="tool-subtitle">图片信息查看器 - 小苏趣研AI</p>
+                </div>
+                
+                <button class="theme-toggle" id="themeToggle" aria-label="切换主题">
+                    <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                        <circle cx="10" cy="10" r="4" stroke="currentColor" stroke-width="2"/>
+                        <path d="M10 2v2M10 16v2M18 10h-2M4 10H2M15.66 4.34l-1.41 1.41M5.75 14.25l-1.41 1.41M15.66 15.66l-1.41-1.41M5.75 5.75L4.34 4.34" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                    </svg>
+                </button>
+            </div>
+        </header>
+
+        <!-- 工具主内容 -->
+        <main class="tool-main">
+            <div class="tool-card">
+                <div class="tool-section">
+                    <h2>
+                        <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                            <rect x="3" y="3" width="14" height="14" rx="2" stroke="currentColor" stroke-width="2"/>
+                        </svg>
+                        工具功能
+                    </h2>
+                    
+                    
+            <div class="tool-card">
+                <div class="tool-section">
+                    <h2>
+                        <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                            <rect x="3" y="3" width="14" height="14" rx="2" stroke="currentColor" stroke-width="2"/>
+                        </svg>
+                        图片信息查看器 - 小苏趣研AI
+                    </h2>
+                    <div class="container">
+        <div class="header">
+            <h1>📷 图片信息查看器</h1>
+            <p>上传本地图片，查看详细的文件信息和技术参数</p>
+        </div>
+
+        <div class="content">
+            <div class="upload-area" id="uploadArea">
+                <div class="upload-icon">🖼️</div>
+                <div class="upload-text">点击或拖拽图片到此处</div>
+                <div class="upload-hint">支持 JPG、PNG、GIF、WebP 等格式</div>
+                <input type="file" id="fileInput" class="file-input" accept="image/*">
+            </div>
+
+            <div class="image-section" id="imageSection">
+                <div class="image-preview">
+                    <h3 class="info-title">图片预览</h3>
+                    <img id="previewImage" class="preview-image" alt="预览图片">
+                </div>
+
+                <div class="image-info">
+                    <h3 class="info-title">基本信息</h3>
+                    <div class="info-grid">
+                        <div class="info-item">
+                            <span class="info-label">文件名</span>
+                            <span class="info-value" id="fileName">-</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">文件大小</span>
+                            <span class="info-value" id="fileSize">-</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">文件类型</span>
+                            <span class="info-value" id="fileType">-</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">图片尺寸</span>
+                            <span class="info-value" id="imageDimensions">-</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">宽高比</span>
+                            <span class="info-value" id="aspectRatio">-</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">像素总数</span>
+                            <span class="info-value" id="totalPixels">-</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="technical-info" id="technicalInfo">
+                <h3 class="info-title">技术信息</h3>
+                <div class="tech-grid">
+                    <div class="info-item">
+                        <span class="info-label">MIME类型</span>
+                        <span class="info-value" id="mimeType">-</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">最后修改</span>
+                        <span class="info-value" id="lastModified">-</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">颜色深度</span>
+                        <span class="info-value" id="colorDepth">-</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">数据URL大小</span>
+                        <span class="info-value" id="dataUrlSize">-</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="actions">
+                <button class="btn" onclick="selectNewImage()">📁 选择新图片</button>
+                <button class="btn" onclick="copyImageInfo()">📋 复制信息</button>
+            </div>
+        </div>
+
+        <div class="footer">
+            <p>© <a href="#" target="_blank">小苏趣研AI</a> | 图片信息查看器</p>
+            <p style="margin-top: 10px; opacity: 0.8;">
+                专业的图片信息分析工具，快速获取图片的详细技术参数和基本信息，支持多种图片格式。
+            </p>
+        </div>
+    </div>
+
+    
+                </div>
+            </div>
+                    <!-- 结果显示区域 -->
+                    <div class="result-display" id="result">
+                        <pre id="resultContent">处理结果将在这里显示...</pre>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <!-- 工具页脚 -->
+        <footer class="tool-footer">
+            <p>由 <a href="../../index.html">AI工具集</a> 提供 | 原创工具</p>
+        </footer>
+    </div>
+
+    <!-- JavaScript -->
+    <script src="../../shared/js/utils.js"></script>
+    <script>
+        // 工具特定的JavaScript代码
+        class ToolApp {
+            constructor() {
+                this.init();
+            }
+
+            init() {
+                this.setupEventListeners();
+            }
+
+            setupEventListeners() {
+                document.getElementById('processBtn').addEventListener('click', () => this.process());
+                document.getElementById('clearBtn').addEventListener('click', () => this.clear());
+                document.getElementById('copyBtn').addEventListener('click', () => this.copyResult());
+                
+                // 实时处理（可选）
+                document.getElementById('input').addEventListener('input', 
+                    ToolUtils.debounce(() => this.process(), 300)
+                );
+            }
+
+            process() {
+                const input = document.getElementById('input').value;
+                const result = this.processInput(input);
+                this.displayResult(result);
+            }
+
+            processInput(input) {
+                
+        class ImageInfoViewer {
+            constructor() {
+                this.setupEventListeners();
+            }
+
+            setupEventListeners() {
+                const uploadArea = document.getElementById('uploadArea');
+                const fileInput = document.getElementById('fileInput');
+
+                uploadArea.addEventListener('click', () => fileInput.click());
+                fileInput.addEventListener('change', (e) => this.handleFileSelect(e));
+
+                // 拖拽事件
+                uploadArea.addEventListener('dragover', (e) => {
+                    e.preventDefault();
+                    uploadArea.classList.add('dragover');
+                });
+
+                uploadArea.addEventListener('dragleave', () => {
+                    uploadArea.classList.remove('dragover');
+                });
+
+                uploadArea.addEventListener('drop', (e) => {
+                    e.preventDefault();
+                    uploadArea.classList.remove('dragover');
+                    const files = e.dataTransfer.files;
+                    if (files.length > 0) {
+                        this.processFile(files[0]);
+                    }
+                });
+            }
+
+            handleFileSelect(e) {
+                const file = e.target.files[0];
+                if (file) {
+                    this.processFile(file);
+                }
+            }
+
+            processFile(file) {
+                if (!file.type.startsWith('image/')) {
+                    alert('请选择图片文件！');
+                    return;
+                }
+
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    const img = new Image();
+                    img.onload = () => {
+                        this.displayImageInfo(file, img, e.target.result);
+                    };
+                    img.src = e.target.result;
+                };
+                reader.readAsDataURL(file);
+            }
+
+            displayImageInfo(file, img, dataUrl) {
+                // 显示预览图片
+                document.getElementById('previewImage').src = dataUrl;
+
+                // 基本信息
+                document.getElementById('fileName').textContent = file.name;
+                document.getElementById('fileSize').textContent = this.formatFileSize(file.size);
+                document.getElementById('fileType').textContent = file.type.split('/')[1].toUpperCase();
+                document.getElementById('imageDimensions').textContent = `${img.width} × ${img.height}`;
+                
+                // 计算宽高比
+                const gcd = this.getGCD(img.width, img.height);
+                const aspectWidth = img.width / gcd;
+                const aspectHeight = img.height / gcd;
+                document.getElementById('aspectRatio').textContent = `${aspectWidth}:${aspectHeight}`;
+                
+                // 像素总数
+                const totalPixels = img.width * img.height;
+                document.getElementById('totalPixels').textContent = this.formatNumber(totalPixels);
+
+                // 技术信息
+                document.getElementById('mimeType').textContent = file.type;
+                document.getElementById('lastModified').textContent = new Date(file.lastModified).toLocaleString('zh-CN');
+                document.getElementById('colorDepth').textContent = '24位 (RGB)';
+                document.getElementById('dataUrlSize').textContent = this.formatFileSize(dataUrl.length);
+
+                // 显示信息区域
+                document.getElementById('imageSection').style.display = 'grid';
+                document.getElementById('technicalInfo').style.display = 'block';
+            }
+
+            formatFileSize(bytes) {
+                if (bytes === 0) return '0 Bytes';
+                const k = 1024;
+                const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+                const i = Math.floor(Math.log(bytes) / Math.log(k));
+                return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+            }
+
+            formatNumber(num) {
+                return num.toLocaleString('zh-CN');
+            }
+
+            getGCD(a, b) {
+                return b === 0 ? a : this.getGCD(b, a % b);
+            }
+
+            selectNewImage() {
+                document.getElementById('fileInput').click();
+            }
+
+            copyImageInfo() {
+                const fileName = document.getElementById('fileName').textContent;
+                const fileSize = document.getElementById('fileSize').textContent;
+                const fileType = document.getElementById('fileType').textContent;
+                const dimensions = document.getElementById('imageDimensions').textContent;
+                const aspectRatio = document.getElementById('aspectRatio').textContent;
+                const totalPixels = document.getElementById('totalPixels').textContent;
+
+                const info = `图片信息
+===================
+文件名: ${fileName}
+文件大小: ${fileSize}
+文件类型: ${fileType}
+图片尺寸: ${dimensions}
+宽高比: ${aspectRatio}
+像素总数: ${totalPixels}
+生成时间: ${new Date().toLocaleString('zh-CN')}`;
+
+                navigator.clipboard.writeText(info).then(() => {
+                    this.showMessage('图片信息已复制到剪贴板');
+                }).catch(() => {
+                    this.showMessage('复制失败', 'error');
+                });
+            }
+
+            showMessage(message, type = 'success') {
+                const messageDiv = document.createElement('div');
+                messageDiv.textContent = message;
+                messageDiv.style.cssText = `
+                    position: fixed;
+                    top: 20px;
+                    right: 20px;
+                    background: ${type === 'error' ? '#dc3545' : '#28a745'};
+                    color: white;
+                    padding: 15px 20px;
+                    border-radius: 8px;
+                    z-index: 1000;
+                    font-weight: bold;
+                    box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+                `;
+
+                document.body.appendChild(messageDiv);
+
+                setTimeout(() => {
+                    messageDiv.remove();
+                }, 3000);
+            }
+        }
+
+        function selectNewImage() {
+            viewer.selectNewImage();
+        }
+
+        function copyImageInfo() {
+            viewer.copyImageInfo();
+        }
+
+        // 初始化
+        let viewer;
+        document.addEventListener('DOMContentLoaded', () => {
+            viewer = new ImageInfoViewer();
+        });
+    
+                return input;
+            }
+
+            displayResult(result) {
+                document.getElementById('resultContent').textContent = result;
+            }
+
+            clear() {
+                document.getElementById('input').value = '';
+                document.getElementById('resultContent').textContent = '处理结果将在这里显示...';
+            }
+
+            copyResult() {
+                const result = document.getElementById('resultContent').textContent;
+                if (result && result !== '处理结果将在这里显示...') {
+                    ToolUtils.copyToClipboard(result);
+                } else {
+                    ToolUtils.showToast('没有可复制的内容', 'warning');
+                }
+            }
+        }
+
+        // 初始化应用
+        document.addEventListener('DOMContentLoaded', () => {
+            new ToolApp();
+        });
+    </script>
+</body>
+</html>

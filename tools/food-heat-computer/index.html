@@ -1,0 +1,598 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>食物热量转换器 - 健康管理工具 - AI工具集</title>
+    <meta name="description" content="食物热量转换器 - 健康管理工具">
+    
+    <!-- 样式文件 -->
+    <link rel="stylesheet" href="../../shared/css/common.css">
+    
+    <!-- 工具特定样式 -->
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: var(--spacing-lg);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .container {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            width: 100%;
+            max-width: 800px;
+        }
+
+        h1 {
+            text-align: center;
+            color: var(--text-primary);
+            margin-bottom: 30px;
+            font-size: 2.5em;
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .calculator-section {
+            background: white;
+            border-radius: var(--radius-lg);
+            padding: 25px;
+            margin-bottom: 30px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+            border: 1px solid #e0e0e0;
+        }
+
+        .input-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #555;
+            font-size: 1.1em;
+        }
+
+        select, input {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: var(--radius-md);
+            font-size: 16px;
+            transition: all 0.3s ease;
+        }
+
+        select:focus, input:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .weight-input {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .weight-input input {
+            flex: 1;
+        }
+
+        .unit {
+            background: #f8f9fa;
+            padding: 12px 15px;
+            border-radius: var(--radius-md);
+            font-weight: 600;
+            color: var(--text-secondary);
+            border: 2px solid #e0e0e0;
+        }
+
+        .calculate-btn {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 25px;
+            font-size: 1.1em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            width: 100%;
+            margin: var(--spacing-lg) 0;
+        }
+
+        .calculate-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(102, 126, 234, 0.3);
+        }
+
+        .result {
+            background: linear-gradient(45deg, #4CAF50, #45a049);
+            color: white;
+            padding: var(--spacing-lg);
+            border-radius: var(--radius-lg);
+            text-align: center;
+            font-size: 1.3em;
+            font-weight: 600;
+            margin-top: 20px;
+            display: none;
+        }
+
+        .food-info {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: var(--radius-md);
+            margin-top: 15px;
+            border-left: 4px solid #667eea;
+        }
+
+        .food-list {
+            background: white;
+            border-radius: var(--radius-lg);
+            padding: 25px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+            border: 1px solid #e0e0e0;
+        }
+
+        .food-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .food-item {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: var(--radius-md);
+            border: 1px solid #e0e0e0;
+            transition: all 0.3s ease;
+        }
+
+        .food-item:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .food-name {
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 5px;
+        }
+
+        .food-calories {
+            color: #667eea;
+            font-weight: 500;
+        }
+
+        .category-title {
+            font-size: 1.2em;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin: 25px 0 15px 0;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #667eea;
+        }
+
+        .nutrition-info {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .nutrition-item {
+            background: #f0f4ff;
+            padding: 15px;
+            border-radius: var(--radius-md);
+            text-align: center;
+            border: 1px solid #e0e8ff;
+        }
+
+        .nutrition-value {
+            font-size: 1.5em;
+            font-weight: 600;
+            color: #667eea;
+        }
+
+        .nutrition-label {
+            color: var(--text-secondary);
+            font-size: 0.9em;
+            margin-top: 5px;
+        }
+
+        .footer {
+            text-align: center;
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 1px solid #e0e0e0;
+            color: #888;
+            font-size: 0.9em;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: var(--spacing-lg);
+            }
+            
+            h1 {
+                font-size: 2em;
+            }
+            
+            .nutrition-info {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="tool-container">
+        <!-- 工具头部 -->
+        <header class="tool-header">
+            <div class="tool-header-content">
+                <a href="../../index.html" class="back-btn">
+                    <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                        <path d="M10 4l-4 4 4 4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                    返回工具集
+                </a>
+                
+                <div class="tool-title">
+                    <h1>食物热量转换器 - 健康管理工具</h1>
+                    <p class="tool-subtitle">食物热量转换器 - 健康管理工具</p>
+                </div>
+                
+                <button class="theme-toggle" id="themeToggle" aria-label="切换主题">
+                    <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                        <circle cx="10" cy="10" r="4" stroke="currentColor" stroke-width="2"/>
+                        <path d="M10 2v2M10 16v2M18 10h-2M4 10H2M15.66 4.34l-1.41 1.41M5.75 14.25l-1.41 1.41M15.66 15.66l-1.41-1.41M5.75 5.75L4.34 4.34" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                    </svg>
+                </button>
+            </div>
+        </header>
+
+        <!-- 工具主内容 -->
+        <main class="tool-main">
+            <div class="tool-card">
+                <div class="tool-section">
+                    <h2>
+                        <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                            <rect x="3" y="3" width="14" height="14" rx="2" stroke="currentColor" stroke-width="2"/>
+                        </svg>
+                        工具功能
+                    </h2>
+                    
+                    
+            <div class="tool-card">
+                <div class="tool-section">
+                    <h2>
+                        <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                            <rect x="3" y="3" width="14" height="14" rx="2" stroke="currentColor" stroke-width="2"/>
+                        </svg>
+                        食物热量转换器 - 健康管理工具
+                    </h2>
+                    <div class="container">
+        <h1>🍎 食物热量转换器</h1>
+        
+        <div class="calculator-section">
+            <h2 style="margin-bottom: 20px; color: #333;">热量计算器</h2>
+            
+            <div class="input-group">
+                <label for="foodSelect">选择食物：</label>
+                <select id="foodSelect">
+                    <option value="">请选择食物...</option>
+                </select>
+            </div>
+            
+            <div class="input-group">
+                <label for="weightInput">重量：</label>
+                <div class="weight-input">
+                    <input type="number" id="weightInput" placeholder="输入重量" min="0" step="0.1">
+                    <span class="unit">克</span>
+                </div>
+            </div>
+            
+            <button class="calculate-btn" onclick="calculateCalories()">计算热量</button>
+            
+            <div id="result" class="result"></div>
+            
+            <div id="foodInfo" class="food-info" style="display: none;">
+                <div class="nutrition-info">
+                    <div class="nutrition-item">
+                        <div class="nutrition-value" id="caloriesPer100g">0</div>
+                        <div class="nutrition-label">千卡/100克</div>
+                    </div>
+                    <div class="nutrition-item">
+                        <div class="nutrition-value" id="proteinContent">0</div>
+                        <div class="nutrition-label">蛋白质(g)</div>
+                    </div>
+                    <div class="nutrition-item">
+                        <div class="nutrition-value" id="fatContent">0</div>
+                        <div class="nutrition-label">脂肪(g)</div>
+                    </div>
+                    <div class="nutrition-item">
+                        <div class="nutrition-value" id="carbContent">0</div>
+                        <div class="nutrition-label">碳水化合物(g)</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="food-list">
+            <h2 style="margin-bottom: 20px; color: #333;">常见食物热量表</h2>
+            <div id="foodDatabase"></div>
+        </div>
+
+        <div class="footer">
+            <p>© 小苏趣研AI 食物热量转换器 | 在浏览器中安全地计算食物热量</p>
+        </div>
+    </div>
+
+    
+                </div>
+            </div>
+                    <!-- 结果显示区域 -->
+                    <div class="result-display" id="result">
+                        <pre id="resultContent">处理结果将在这里显示...</pre>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <!-- 工具页脚 -->
+        <footer class="tool-footer">
+            <p>由 <a href="../../index.html">AI工具集</a> 提供 | 原创工具</p>
+        </footer>
+    </div>
+
+    <!-- JavaScript -->
+    <script src="../../shared/js/utils.js"></script>
+    <script>
+        // 工具特定的JavaScript代码
+        class ToolApp {
+            constructor() {
+                this.init();
+            }
+
+            init() {
+                this.setupEventListeners();
+            }
+
+            setupEventListeners() {
+                document.getElementById('processBtn').addEventListener('click', () => this.process());
+                document.getElementById('clearBtn').addEventListener('click', () => this.clear());
+                document.getElementById('copyBtn').addEventListener('click', () => this.copyResult());
+                
+                // 实时处理（可选）
+                document.getElementById('input').addEventListener('input', 
+                    ToolUtils.debounce(() => this.process(), 300)
+                );
+            }
+
+            process() {
+                const input = document.getElementById('input').value;
+                const result = this.processInput(input);
+                this.displayResult(result);
+            }
+
+            processInput(input) {
+                
+        // 食物数据库 - 每100克的热量和营养成分
+        const foodDatabase = {
+            "主食类": {
+                "米饭": { calories: 116, protein: 2.6, fat: 0.3, carbs: 25.9 },
+                "面条": { calories: 137, protein: 4.2, fat: 0.5, carbs: 28.5 },
+                "馒头": { calories: 223, protein: 7.0, fat: 1.1, carbs: 47.0 },
+                "面包": { calories: 312, protein: 8.3, fat: 5.1, carbs: 58.6 },
+                "燕麦": { calories: 367, protein: 15.0, fat: 6.7, carbs: 61.0 },
+                "红薯": { calories: 99, protein: 1.1, fat: 0.2, carbs: 24.7 },
+                "土豆": { calories: 81, protein: 2.0, fat: 0.2, carbs: 17.8 }
+            },
+            "肉类": {
+                "猪肉(瘦)": { calories: 155, protein: 20.3, fat: 7.9, carbs: 0 },
+                "牛肉": { calories: 125, protein: 19.9, fat: 4.2, carbs: 0 },
+                "鸡胸肉": { calories: 133, protein: 19.4, fat: 5.0, carbs: 0 },
+                "鸡蛋": { calories: 144, protein: 13.3, fat: 8.8, carbs: 2.8 },
+                "鱼肉": { calories: 104, protein: 17.6, fat: 3.4, carbs: 0 },
+                "虾": { calories: 87, protein: 16.4, fat: 1.5, carbs: 0 }
+            },
+            "蔬菜类": {
+                "白菜": { calories: 17, protein: 1.1, fat: 0.1, carbs: 3.4 },
+                "菠菜": { calories: 28, protein: 2.6, fat: 0.3, carbs: 4.5 },
+                "西红柿": { calories: 15, protein: 0.9, fat: 0.2, carbs: 3.3 },
+                "黄瓜": { calories: 15, protein: 0.8, fat: 0.1, carbs: 2.9 },
+                "胡萝卜": { calories: 25, protein: 1.0, fat: 0.2, carbs: 6.0 },
+                "青椒": { calories: 22, protein: 1.0, fat: 0.2, carbs: 5.4 },
+                "西兰花": { calories: 36, protein: 4.1, fat: 0.6, carbs: 4.3 }
+            },
+            "水果类": {
+                "苹果": { calories: 54, protein: 0.2, fat: 0.2, carbs: 13.5 },
+                "香蕉": { calories: 93, protein: 1.4, fat: 0.2, carbs: 22.0 },
+                "橙子": { calories: 48, protein: 1.0, fat: 0.1, carbs: 11.1 },
+                "葡萄": { calories: 54, protein: 0.5, fat: 0.2, carbs: 13.1 },
+                "草莓": { calories: 30, protein: 1.0, fat: 0.2, carbs: 7.4 },
+                "西瓜": { calories: 25, protein: 0.6, fat: 0.1, carbs: 6.8 },
+                "梨": { calories: 51, protein: 0.1, fat: 0.1, carbs: 13.6 }
+            },
+            "坚果类": {
+                "花生": { calories: 298, protein: 12.0, fat: 25.4, carbs: 16.0 },
+                "核桃": { calories: 670, protein: 14.9, fat: 64.0, carbs: 9.6 },
+                "杏仁": { calories: 562, protein: 22.0, fat: 50.6, carbs: 9.5 },
+                "腰果": { calories: 559, protein: 17.3, fat: 46.3, carbs: 26.7 }
+            },
+            "饮品类": {
+                "牛奶": { calories: 54, protein: 3.4, fat: 3.2, carbs: 3.4 },
+                "酸奶": { calories: 72, protein: 2.5, fat: 2.7, carbs: 9.3 },
+                "豆浆": { calories: 31, protein: 1.8, fat: 1.1, carbs: 3.8 },
+                "可乐": { calories: 43, protein: 0, fat: 0, carbs: 10.6 },
+                "橙汁": { calories: 45, protein: 0.7, fat: 0.2, carbs: 10.4 }
+            }
+        };
+
+        // 初始化页面
+        function initializePage() {
+            populateFoodSelect();
+            displayFoodDatabase();
+        }
+
+        // 填充食物选择下拉菜单
+        function populateFoodSelect() {
+            const select = document.getElementById('foodSelect');
+            
+            Object.keys(foodDatabase).forEach(category => {
+                const optgroup = document.createElement('optgroup');
+                optgroup.label = category;
+                
+                Object.keys(foodDatabase[category]).forEach(food => {
+                    const option = document.createElement('option');
+                    option.value = `${category}|${food}`;
+                    option.textContent = food;
+                    optgroup.appendChild(option);
+                });
+                
+                select.appendChild(optgroup);
+            });
+        }
+
+        // 显示食物数据库
+        function displayFoodDatabase() {
+            const container = document.getElementById('foodDatabase');
+            
+            Object.keys(foodDatabase).forEach(category => {
+                const categoryDiv = document.createElement('div');
+                categoryDiv.innerHTML = `<div class="category-title">${category}</div>`;
+                
+                const foodGrid = document.createElement('div');
+                foodGrid.className = 'food-grid';
+                
+                Object.keys(foodDatabase[category]).forEach(food => {
+                    const foodData = foodDatabase[category][food];
+                    const foodItem = document.createElement('div');
+                    foodItem.className = 'food-item';
+                    foodItem.innerHTML = `
+                        <div class="food-name">${food}</div>
+                        <div class="food-calories">${foodData.calories} 千卡/100克</div>
+                    `;
+                    foodGrid.appendChild(foodItem);
+                });
+                
+                categoryDiv.appendChild(foodGrid);
+                container.appendChild(categoryDiv);
+            });
+        }
+
+        // 当选择食物时显示营养信息
+        document.getElementById('foodSelect').addEventListener('change', function() {
+            const value = this.value;
+            if (value) {
+                const [category, food] = value.split('|');
+                const foodData = foodDatabase[category][food];
+                
+                document.getElementById('caloriesPer100g').textContent = foodData.calories;
+                document.getElementById('proteinContent').textContent = foodData.protein;
+                document.getElementById('fatContent').textContent = foodData.fat;
+                document.getElementById('carbContent').textContent = foodData.carbs;
+                
+                document.getElementById('foodInfo').style.display = 'block';
+            } else {
+                document.getElementById('foodInfo').style.display = 'none';
+            }
+        });
+
+        // 计算热量
+        function calculateCalories() {
+            const foodSelect = document.getElementById('foodSelect');
+            const weightInput = document.getElementById('weightInput');
+            const result = document.getElementById('result');
+            
+            if (!foodSelect.value) {
+                alert('请选择食物！');
+                return;
+            }
+            
+            const weight = parseFloat(weightInput.value);
+            if (!weight || weight <= 0) {
+                alert('请输入有效的重量！');
+                return;
+            }
+            
+            const [category, food] = foodSelect.value.split('|');
+            const foodData = foodDatabase[category][food];
+            
+            // 计算实际热量和营养成分
+            const actualCalories = Math.round((foodData.calories * weight) / 100);
+            const actualProtein = Math.round((foodData.protein * weight) / 100 * 10) / 10;
+            const actualFat = Math.round((foodData.fat * weight) / 100 * 10) / 10;
+            const actualCarbs = Math.round((foodData.carbs * weight) / 100 * 10) / 10;
+            
+            result.innerHTML = `
+                <div style="font-size: 1.5em; margin-bottom: 15px;">
+                    ${weight}克 ${food} = ${actualCalories} 千卡
+                </div>
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 10px; font-size: 0.9em;">
+                    <div>蛋白质: ${actualProtein}g</div>
+                    <div>脂肪: ${actualFat}g</div>
+                    <div>碳水: ${actualCarbs}g</div>
+                </div>
+            `;
+            result.style.display = 'block';
+            
+            // 滚动到结果
+            result.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        }
+
+        // 输入框回车键计算
+        document.getElementById('weightInput').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                calculateCalories();
+            }
+        });
+
+        // 页面加载完成后初始化
+        document.addEventListener('DOMContentLoaded', initializePage);
+    
+                return input;
+            }
+
+            displayResult(result) {
+                document.getElementById('resultContent').textContent = result;
+            }
+
+            clear() {
+                document.getElementById('input').value = '';
+                document.getElementById('resultContent').textContent = '处理结果将在这里显示...';
+            }
+
+            copyResult() {
+                const result = document.getElementById('resultContent').textContent;
+                if (result && result !== '处理结果将在这里显示...') {
+                    ToolUtils.copyToClipboard(result);
+                } else {
+                    ToolUtils.showToast('没有可复制的内容', 'warning');
+                }
+            }
+        }
+
+        // 初始化应用
+        document.addEventListener('DOMContentLoaded', () => {
+            new ToolApp();
+        });
+    </script>
+</body>
+</html>

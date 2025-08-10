@@ -1,0 +1,853 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>屏幕破裂效果 - 小苏趣研AI - AI工具集</title>
+    <meta name="description" content="屏幕破裂效果 - 小苏趣研AI">
+    
+    <!-- 样式文件 -->
+    <link rel="stylesheet" href="../../shared/css/common.css">
+    
+    <!-- 工具特定样式 -->
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            overflow: hidden;
+            cursor: crosshair;
+            position: relative;
+        }
+
+        .header {
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(255, 255, 255, 0.95);
+            padding: 15px 30px;
+            border-radius: 25px;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+            text-align: center;
+            z-index: 1000;
+            backdrop-filter: blur(10px);
+        }
+
+        .header h1 {
+            font-size: 1.5em;
+            color: var(--text-primary);
+            margin-bottom: 5px;
+        }
+
+        .header p {
+            color: var(--text-secondary);
+            font-size: 0.9em;
+        }
+
+        .controls {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(255, 255, 255, 0.95);
+            padding: 15px;
+            border-radius: 20px;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+            display: flex;
+            gap: 10px;
+            z-index: 1000;
+            backdrop-filter: blur(10px);
+        }
+
+        .btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: var(--spacing-md) 20px;
+            border-radius: var(--radius-lg);
+            font-size: 0.9em;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-danger {
+            background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
+        }
+
+        .crack-canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            pointer-events: none;
+            z-index: 100;
+        }
+
+        .crack-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: radial-gradient(circle at var(--x, 50%) var(--y, 50%), 
+                         rgba(0,0,0,0.8) 0%, 
+                         rgba(0,0,0,0.4) 30%, 
+                         transparent 70%);
+            opacity: 0;
+            transition: opacity 0.5s ease;
+            pointer-events: none;
+            z-index: 99;
+        }
+
+        .crack-overlay.active {
+            opacity: 1;
+        }
+
+        .impact-point {
+            position: fixed;
+            width: 20px;
+            height: 20px;
+            background: radial-gradient(circle, rgba(255,255,255,0.8) 0%, transparent 70%);
+            border-radius: 50%;
+            pointer-events: none;
+            z-index: 101;
+            animation: impactFlash 0.3s ease-out;
+        }
+
+        @keyframes impactFlash {
+            0% {
+                transform: scale(0);
+                opacity: 1;
+            }
+            50% {
+                transform: scale(2);
+                opacity: 0.8;
+            }
+            100% {
+                transform: scale(4);
+                opacity: 0;
+            }
+        }
+
+        .crack-sound {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 3em;
+            color: rgba(255, 255, 255, 0.8);
+            pointer-events: none;
+            z-index: 102;
+            animation: soundWave 0.5s ease-out;
+        }
+
+        @keyframes soundWave {
+            0% {
+                transform: translate(-50%, -50%) scale(0);
+                opacity: 1;
+            }
+            100% {
+                transform: translate(-50%, -50%) scale(3);
+                opacity: 0;
+            }
+        }
+
+        .stats {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: rgba(255, 255, 255, 0.95);
+            padding: 15px;
+            border-radius: var(--radius-lg);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+            z-index: 1000;
+            backdrop-filter: blur(10px);
+        }
+
+        .stats h3 {
+            color: var(--text-primary);
+            margin-bottom: 10px;
+            font-size: 1em;
+        }
+
+        .stat-item {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 5px;
+            font-size: 0.9em;
+        }
+
+        .stat-label {
+            color: var(--text-secondary);
+        }
+
+        .stat-value {
+            color: var(--text-primary);
+            font-weight: bold;
+        }
+
+        .footer {
+            position: fixed;
+            bottom: 80px;
+            left: 50%;
+            transform: translateX(-50%);
+            color: rgba(255, 255, 255, 0.8);
+            text-align: center;
+            font-size: 0.8em;
+            z-index: 1000;
+        }
+
+        @media (max-width: 768px) {
+            .header {
+                top: 10px;
+                padding: var(--spacing-md) 20px;
+            }
+            
+            .header h1 {
+                font-size: 1.2em;
+            }
+            
+            .controls {
+                bottom: 10px;
+                padding: var(--spacing-md);
+            }
+            
+            .stats {
+                top: 10px;
+                right: 10px;
+                padding: var(--spacing-md);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="tool-container">
+        <!-- 工具头部 -->
+        <header class="tool-header">
+            <div class="tool-header-content">
+                <a href="../../index.html" class="back-btn">
+                    <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                        <path d="M10 4l-4 4 4 4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                    返回工具集
+                </a>
+                
+                <div class="tool-title">
+                    <h1>屏幕破裂效果 - 小苏趣研AI</h1>
+                    <p class="tool-subtitle">屏幕破裂效果 - 小苏趣研AI</p>
+                </div>
+                
+                <button class="theme-toggle" id="themeToggle" aria-label="切换主题">
+                    <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                        <circle cx="10" cy="10" r="4" stroke="currentColor" stroke-width="2"/>
+                        <path d="M10 2v2M10 16v2M18 10h-2M4 10H2M15.66 4.34l-1.41 1.41M5.75 14.25l-1.41 1.41M15.66 15.66l-1.41-1.41M5.75 5.75L4.34 4.34" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                    </svg>
+                </button>
+            </div>
+        </header>
+
+        <!-- 工具主内容 -->
+        <main class="tool-main">
+            <div class="tool-card">
+                <div class="tool-section">
+                    <h2>
+                        <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                            <rect x="3" y="3" width="14" height="14" rx="2" stroke="currentColor" stroke-width="2"/>
+                        </svg>
+                        工具功能
+                    </h2>
+                    
+                    
+            <div class="tool-card">
+                <div class="tool-section">
+                    <h2>
+                        <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                            <rect x="3" y="3" width="14" height="14" rx="2" stroke="currentColor" stroke-width="2"/>
+                        </svg>
+                        屏幕破裂效果 - 小苏趣研AI
+                    </h2>
+                    <div class="container">
+                        <div class="header">
+        <h1>💥 屏幕破裂效果</h1>
+        <p>点击屏幕任意位置创造破裂效果</p>
+    </div>
+
+    <div class="stats">
+        <h3>📊 统计信息</h3>
+        <div class="stat-item">
+            <span class="stat-label">破裂次数:</span>
+            <span class="stat-value" id="crackCount">0</span>
+        </div>
+        <div class="stat-item">
+            <span class="stat-label">裂纹总数:</span>
+            <span class="stat-value" id="totalCracks">0</span>
+        </div>
+        <div class="stat-item">
+            <span class="stat-label">屏幕损坏:</span>
+            <span class="stat-value" id="damageLevel">0%</span>
+        </div>
+    </div>
+
+    <canvas class="crack-canvas" id="crackCanvas"></canvas>
+    <div class="crack-overlay" id="crackOverlay"></div>
+
+    <div class="controls">
+        <button class="btn" onclick="toggleSound()">
+            <span id="soundIcon">🔊</span> 音效
+        </button>
+        <button class="btn" onclick="changeStyle()">
+            🎨 样式
+        </button>
+        <button class="btn btn-danger" onclick="clearCracks()">
+            🧹 清除
+        </button>
+        <button class="btn" onclick="autoDemo()">
+            🎬 演示
+        </button>
+    </div>
+
+    <div class="footer">
+        <p>© <a href="#" target="_blank" style="color: rgba(255,255,255,0.8);">小苏趣研AI</a> | 屏幕破裂效果</p>
+        <p style="margin-top: 5px;">逼真的屏幕破裂模拟器，支持多种破裂样式和音效</p>
+    </div>
+
+    
+                    </div>
+                </div>
+            </div>
+                    <!-- 结果显示区域 -->
+                    <div class="result-display" id="result">
+                        <pre id="resultContent">处理结果将在这里显示...</pre>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <!-- 工具页脚 -->
+        <footer class="tool-footer">
+            <p>由 <a href="../../index.html">AI工具集</a> 提供 | 原创工具</p>
+        </footer>
+    </div>
+
+    <!-- JavaScript -->
+    <script src="../../shared/js/utils.js"></script>
+    <script>
+        // 工具特定的JavaScript代码
+        class ToolApp {
+            constructor() {
+                this.init();
+            }
+
+            init() {
+                this.setupEventListeners();
+            }
+
+            setupEventListeners() {
+                document.getElementById('processBtn').addEventListener('click', () => this.process());
+                document.getElementById('clearBtn').addEventListener('click', () => this.clear());
+                document.getElementById('copyBtn').addEventListener('click', () => this.copyResult());
+                
+                // 实时处理（可选）
+                document.getElementById('input').addEventListener('input', 
+                    ToolUtils.debounce(() => this.process(), 300)
+                );
+            }
+
+            process() {
+                const input = document.getElementById('input').value;
+                const result = this.processInput(input);
+                this.displayResult(result);
+            }
+
+            processInput(input) {
+                
+        class ScreenCrackEffect {
+            constructor() {
+                this.canvas = document.getElementById('crackCanvas');
+                this.ctx = this.canvas.getContext('2d');
+                this.overlay = document.getElementById('crackOverlay');
+                
+                this.cracks = [];
+                this.crackCount = 0;
+                this.totalCracks = 0;
+                this.soundEnabled = true;
+                this.currentStyle = 0;
+                this.styles = ['glass', 'spider', 'lightning', 'shatter'];
+                
+                this.setupCanvas();
+                this.setupEventListeners();
+                this.updateStats();
+            }
+            
+            setupCanvas() {
+                this.resizeCanvas();
+                window.addEventListener('resize', () => this.resizeCanvas());
+            }
+            
+            resizeCanvas() {
+                this.canvas.width = window.innerWidth;
+                this.canvas.height = window.innerHeight;
+            }
+            
+            setupEventListeners() {
+                document.addEventListener('click', (e) => {
+                    if (e.target.closest('.controls') || e.target.closest('.header') || e.target.closest('.stats')) {
+                        return;
+                    }
+                    this.createCrack(e.clientX, e.clientY);
+                });
+                
+                document.addEventListener('touchstart', (e) => {
+                    e.preventDefault();
+                    const touch = e.touches[0];
+                    this.createCrack(touch.clientX, touch.clientY);
+                });
+            }
+            
+            createCrack(x, y) {
+                const style = this.styles[this.currentStyle];
+                
+                // 创建撞击点效果
+                this.createImpactEffect(x, y);
+                
+                // 播放音效
+                if (this.soundEnabled) {
+                    this.playBreakSound();
+                }
+                
+                // 创建裂纹
+                const crack = this.generateCrack(x, y, style);
+                this.cracks.push(crack);
+                
+                // 绘制裂纹
+                this.drawCrack(crack);
+                
+                // 更新统计
+                this.crackCount++;
+                this.totalCracks += crack.lines.length;
+                this.updateStats();
+                
+                // 更新覆盖层
+                this.updateOverlay(x, y);
+            }
+            
+            generateCrack(centerX, centerY, style) {
+                const crack = {
+                    center: { x: centerX, y: centerY },
+                    lines: [],
+                    style: style
+                };
+                
+                switch (style) {
+                    case 'glass':
+                        crack.lines = this.generateGlassCrack(centerX, centerY);
+                        break;
+                    case 'spider':
+                        crack.lines = this.generateSpiderCrack(centerX, centerY);
+                        break;
+                    case 'lightning':
+                        crack.lines = this.generateLightningCrack(centerX, centerY);
+                        break;
+                    case 'shatter':
+                        crack.lines = this.generateShatterCrack(centerX, centerY);
+                        break;
+                }
+                
+                return crack;
+            }
+            
+            generateGlassCrack(centerX, centerY) {
+                const lines = [];
+                const numLines = 5 + Math.random() * 8;
+                
+                for (let i = 0; i < numLines; i++) {
+                    const angle = (Math.PI * 2 * i) / numLines + (Math.random() - 0.5) * 0.5;
+                    const length = 50 + Math.random() * 150;
+                    
+                    const line = {
+                        start: { x: centerX, y: centerY },
+                        end: {
+                            x: centerX + Math.cos(angle) * length,
+                            y: centerY + Math.sin(angle) * length
+                        },
+                        width: 1 + Math.random() * 2
+                    };
+                    
+                    lines.push(line);
+                    
+                    // 添加分支
+                    if (Math.random() > 0.6) {
+                        const branchAngle = angle + (Math.random() - 0.5) * 1;
+                        const branchLength = length * 0.6;
+                        const branchStart = {
+                            x: centerX + Math.cos(angle) * length * 0.7,
+                            y: centerY + Math.sin(angle) * length * 0.7
+                        };
+                        
+                        lines.push({
+                            start: branchStart,
+                            end: {
+                                x: branchStart.x + Math.cos(branchAngle) * branchLength,
+                                y: branchStart.y + Math.sin(branchAngle) * branchLength
+                            },
+                            width: 0.5 + Math.random()
+                        });
+                    }
+                }
+                
+                return lines;
+            }
+            
+            generateSpiderCrack(centerX, centerY) {
+                const lines = [];
+                const numRadial = 6 + Math.random() * 6;
+                
+                // 径向裂纹
+                for (let i = 0; i < numRadial; i++) {
+                    const angle = (Math.PI * 2 * i) / numRadial;
+                    const length = 80 + Math.random() * 120;
+                    
+                    lines.push({
+                        start: { x: centerX, y: centerY },
+                        end: {
+                            x: centerX + Math.cos(angle) * length,
+                            y: centerY + Math.sin(angle) * length
+                        },
+                        width: 1.5 + Math.random() * 1.5
+                    });
+                }
+                
+                // 环形裂纹
+                const numRings = 2 + Math.random() * 3;
+                for (let ring = 1; ring <= numRings; ring++) {
+                    const radius = 30 * ring + Math.random() * 20;
+                    const segments = 8 + Math.random() * 8;
+                    
+                    for (let i = 0; i < segments; i++) {
+                        const angle1 = (Math.PI * 2 * i) / segments;
+                        const angle2 = (Math.PI * 2 * (i + 1)) / segments;
+                        
+                        if (Math.random() > 0.3) {
+                            lines.push({
+                                start: {
+                                    x: centerX + Math.cos(angle1) * radius,
+                                    y: centerY + Math.sin(angle1) * radius
+                                },
+                                end: {
+                                    x: centerX + Math.cos(angle2) * radius,
+                                    y: centerY + Math.sin(angle2) * radius
+                                },
+                                width: 0.8 + Math.random() * 1.2
+                            });
+                        }
+                    }
+                }
+                
+                return lines;
+            }
+            
+            generateLightningCrack(centerX, centerY) {
+                const lines = [];
+                const numBranches = 3 + Math.random() * 5;
+                
+                for (let i = 0; i < numBranches; i++) {
+                    const angle = Math.random() * Math.PI * 2;
+                    let currentX = centerX;
+                    let currentY = centerY;
+                    
+                    const segments = 8 + Math.random() * 12;
+                    
+                    for (let j = 0; j < segments; j++) {
+                        const segmentLength = 15 + Math.random() * 25;
+                        const segmentAngle = angle + (Math.random() - 0.5) * 0.8;
+                        
+                        const nextX = currentX + Math.cos(segmentAngle) * segmentLength;
+                        const nextY = currentY + Math.sin(segmentAngle) * segmentLength;
+                        
+                        lines.push({
+                            start: { x: currentX, y: currentY },
+                            end: { x: nextX, y: nextY },
+                            width: 1 + Math.random() * 2
+                        });
+                        
+                        currentX = nextX;
+                        currentY = nextY;
+                        
+                        // 随机分支
+                        if (Math.random() > 0.7 && j > 2) {
+                            const branchAngle = segmentAngle + (Math.random() - 0.5) * 1.5;
+                            const branchLength = segmentLength * 0.8;
+                            
+                            lines.push({
+                                start: { x: currentX, y: currentY },
+                                end: {
+                                    x: currentX + Math.cos(branchAngle) * branchLength,
+                                    y: currentY + Math.sin(branchAngle) * branchLength
+                                },
+                                width: 0.5 + Math.random()
+                            });
+                        }
+                    }
+                }
+                
+                return lines;
+            }
+            
+            generateShatterCrack(centerX, centerY) {
+                const lines = [];
+                const numShards = 8 + Math.random() * 12;
+                
+                for (let i = 0; i < numShards; i++) {
+                    const angle = (Math.PI * 2 * i) / numShards + (Math.random() - 0.5) * 0.3;
+                    const distance = 40 + Math.random() * 100;
+                    
+                    // 主裂纹
+                    const endX = centerX + Math.cos(angle) * distance;
+                    const endY = centerY + Math.sin(angle) * distance;
+                    
+                    lines.push({
+                        start: { x: centerX, y: centerY },
+                        end: { x: endX, y: endY },
+                        width: 2 + Math.random() * 2
+                    });
+                    
+                    // 连接相邻裂纹
+                    if (i > 0) {
+                        const prevAngle = (Math.PI * 2 * (i - 1)) / numShards;
+                        const prevEndX = centerX + Math.cos(prevAngle) * (40 + Math.random() * 100);
+                        const prevEndY = centerY + Math.sin(prevAngle) * (40 + Math.random() * 100);
+                        
+                        if (Math.random() > 0.4) {
+                            lines.push({
+                                start: { x: endX, y: endY },
+                                end: { x: prevEndX, y: prevEndY },
+                                width: 1 + Math.random()
+                            });
+                        }
+                    }
+                }
+                
+                return lines;
+            }
+            
+            drawCrack(crack) {
+                this.ctx.strokeStyle = 'rgba(0, 0, 0, 0.8)';
+                this.ctx.lineCap = 'round';
+                this.ctx.lineJoin = 'round';
+                
+                crack.lines.forEach(line => {
+                    this.ctx.lineWidth = line.width;
+                    this.ctx.beginPath();
+                    this.ctx.moveTo(line.start.x, line.start.y);
+                    this.ctx.lineTo(line.end.x, line.end.y);
+                    this.ctx.stroke();
+                    
+                    // 添加白色高光
+                    this.ctx.strokeStyle = 'rgba(255, 255, 255, 0.3)';
+                    this.ctx.lineWidth = line.width * 0.3;
+                    this.ctx.stroke();
+                    
+                    this.ctx.strokeStyle = 'rgba(0, 0, 0, 0.8)';
+                });
+            }
+            
+            createImpactEffect(x, y) {
+                const impact = document.createElement('div');
+                impact.className = 'impact-point';
+                impact.style.left = (x - 10) + 'px';
+                impact.style.top = (y - 10) + 'px';
+                document.body.appendChild(impact);
+                
+                setTimeout(() => {
+                    impact.remove();
+                }, 300);
+                
+                // 添加声音视觉效果
+                const soundEffect = document.createElement('div');
+                soundEffect.className = 'crack-sound';
+                soundEffect.textContent = '💥';
+                document.body.appendChild(soundEffect);
+                
+                setTimeout(() => {
+                    soundEffect.remove();
+                }, 500);
+            }
+            
+            updateOverlay(x, y) {
+                const xPercent = (x / window.innerWidth) * 100;
+                const yPercent = (y / window.innerHeight) * 100;
+                
+                this.overlay.style.setProperty('--x', xPercent + '%');
+                this.overlay.style.setProperty('--y', yPercent + '%');
+                this.overlay.classList.add('active');
+                
+                setTimeout(() => {
+                    this.overlay.classList.remove('active');
+                }, 1000);
+            }
+            
+            playBreakSound() {
+                try {
+                    const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                    
+                    // 创建破裂音效
+                    const oscillator = audioContext.createOscillator();
+                    const gainNode = audioContext.createGain();
+                    const filter = audioContext.createBiquadFilter();
+                    
+                    oscillator.connect(filter);
+                    filter.connect(gainNode);
+                    gainNode.connect(audioContext.destination);
+                    
+                    oscillator.type = 'sawtooth';
+                    oscillator.frequency.setValueAtTime(200, audioContext.currentTime);
+                    oscillator.frequency.exponentialRampToValueAtTime(50, audioContext.currentTime + 0.1);
+                    
+                    filter.type = 'highpass';
+                    filter.frequency.setValueAtTime(100, audioContext.currentTime);
+                    
+                    gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+                    gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.2);
+                    
+                    oscillator.start(audioContext.currentTime);
+                    oscillator.stop(audioContext.currentTime + 0.2);
+                } catch (error) {
+                    console.log('无法播放音效');
+                }
+            }
+            
+            updateStats() {
+                document.getElementById('crackCount').textContent = this.crackCount;
+                document.getElementById('totalCracks').textContent = this.totalCracks;
+                
+                const damageLevel = Math.min(100, (this.totalCracks / 50) * 100);
+                document.getElementById('damageLevel').textContent = Math.round(damageLevel) + '%';
+            }
+            
+            toggleSound() {
+                this.soundEnabled = !this.soundEnabled;
+                const icon = document.getElementById('soundIcon');
+                icon.textContent = this.soundEnabled ? '🔊' : '🔇';
+            }
+            
+            changeStyle() {
+                this.currentStyle = (this.currentStyle + 1) % this.styles.length;
+                const styleName = this.styles[this.currentStyle];
+                this.showMessage(`切换到 ${styleName} 样式`);
+            }
+            
+            clearCracks() {
+                this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+                this.cracks = [];
+                this.crackCount = 0;
+                this.totalCracks = 0;
+                this.updateStats();
+                this.showMessage('屏幕已修复');
+            }
+            
+            autoDemo() {
+                const positions = [
+                    { x: window.innerWidth * 0.3, y: window.innerHeight * 0.3 },
+                    { x: window.innerWidth * 0.7, y: window.innerHeight * 0.4 },
+                    { x: window.innerWidth * 0.5, y: window.innerHeight * 0.6 },
+                    { x: window.innerWidth * 0.2, y: window.innerHeight * 0.7 },
+                    { x: window.innerWidth * 0.8, y: window.innerHeight * 0.2 }
+                ];
+                
+                positions.forEach((pos, index) => {
+                    setTimeout(() => {
+                        this.createCrack(pos.x, pos.y);
+                    }, index * 500);
+                });
+            }
+            
+            showMessage(message) {
+                const messageDiv = document.createElement('div');
+                messageDiv.textContent = message;
+                messageDiv.style.cssText = `
+                    position: fixed;
+                    top: 50%;
+                    left: 50%;
+                    transform: translate(-50%, -50%);
+                    background: rgba(0, 0, 0, 0.8);
+                    color: white;
+                    padding: 15px 25px;
+                    border-radius: 25px;
+                    z-index: 1001;
+                    font-weight: bold;
+                    backdrop-filter: blur(10px);
+                `;
+                
+                document.body.appendChild(messageDiv);
+                
+                setTimeout(() => {
+                    messageDiv.remove();
+                }, 2000);
+            }
+        }
+        
+        let crackEffect;
+        
+        function toggleSound() {
+            crackEffect.toggleSound();
+        }
+        
+        function changeStyle() {
+            crackEffect.changeStyle();
+        }
+        
+        function clearCracks() {
+            crackEffect.clearCracks();
+        }
+        
+        function autoDemo() {
+            crackEffect.autoDemo();
+        }
+        
+        // 初始化
+        document.addEventListener('DOMContentLoaded', () => {
+            crackEffect = new ScreenCrackEffect();
+        });
+    
+                return input;
+            }
+
+            displayResult(result) {
+                document.getElementById('resultContent').textContent = result;
+            }
+
+            clear() {
+                document.getElementById('input').value = '';
+                document.getElementById('resultContent').textContent = '处理结果将在这里显示...';
+            }
+
+            copyResult() {
+                const result = document.getElementById('resultContent').textContent;
+                if (result && result !== '处理结果将在这里显示...') {
+                    ToolUtils.copyToClipboard(result);
+                } else {
+                    ToolUtils.showToast('没有可复制的内容', 'warning');
+                }
+            }
+        }
+
+        // 初始化应用
+        document.addEventListener('DOMContentLoaded', () => {
+            new ToolApp();
+        });
+    </script>
+</body>
+</html>
